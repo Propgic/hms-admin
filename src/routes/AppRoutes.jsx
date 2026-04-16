@@ -1,0 +1,114 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import Spinner from '../components/ui/Spinner';
+
+// Layouts
+import AuthLayout from '../layouts/AuthLayout';
+import DashboardLayout from '../layouts/DashboardLayout';
+
+// Auth pages
+import Login from '../pages/auth/Login';
+import ForgotPassword from '../pages/auth/ForgotPassword';
+import ResetPassword from '../pages/auth/ResetPassword';
+
+// Dashboard
+import Dashboard from '../pages/dashboard/Dashboard';
+
+// Hospitals
+import HospitalList from '../pages/hospitals/HospitalList';
+import HospitalDetail from '../pages/hospitals/HospitalDetail';
+
+// Plans
+import PlanList from '../pages/plans/PlanList';
+
+// Billing
+import BillingList from '../pages/billing/BillingList';
+
+// FAQs
+import FAQList from '../pages/faqs/FAQList';
+
+// Activity Logs
+import ActivityLogList from '../pages/activity-logs/ActivityLogList';
+
+// Reports
+import ReportsDashboard from '../pages/reports/ReportsDashboard';
+
+// Settings
+import SettingsPage from '../pages/settings/SettingsPage';
+
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
+function PublicRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
+export default function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route
+        element={
+          <PublicRoute>
+            <AuthLayout />
+          </PublicRoute>
+        }
+      >
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+      </Route>
+
+      {/* Protected routes */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/hospitals" element={<HospitalList />} />
+        <Route path="/hospitals/:id" element={<HospitalDetail />} />
+        <Route path="/plans" element={<PlanList />} />
+        <Route path="/billing" element={<BillingList />} />
+        <Route path="/faqs" element={<FAQList />} />
+        <Route path="/activity-logs" element={<ActivityLogList />} />
+        <Route path="/reports" element={<ReportsDashboard />} />
+        <Route path="/settings" element={<SettingsPage />} />
+      </Route>
+
+      {/* Catch all */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
