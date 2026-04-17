@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import api from '../api/axios';
 import endpoints from '../api/endpoints';
 import { AuthContext } from './authContext';
@@ -9,25 +9,7 @@ export function AuthProvider({ children }) {
     return stored ? JSON.parse(stored) : null;
   });
   const [token, setToken] = useState(() => localStorage.getItem('hms_admin_token'));
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (token) {
-      api
-        .get(endpoints.auth.me)
-        .then((res) => {
-          const u = res.data.data || res.data.user || res.data;
-          setUser(u);
-          localStorage.setItem('hms_admin_user', JSON.stringify(u));
-        })
-        .catch(() => {
-          logout();
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, []);
+  const [loading] = useState(false);
 
   const login = useCallback(async (email, password) => {
     const res = await api.post(endpoints.auth.login, { email, password });

@@ -1,13 +1,27 @@
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
 
 export default function DashboardLayout() {
+  const [collapsed, setCollapsed] = useState(() => {
+    return localStorage.getItem('hms_admin_sidebar_collapsed') === '1';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('hms_admin_sidebar_collapsed', collapsed ? '1' : '0');
+  }, [collapsed]);
+
+  const sidebarWidth = collapsed ? 80 : 264;
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      <Topbar />
-      <main className="ml-64 mt-16 p-6">
+    <div className="min-h-screen bg-slate-50">
+      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
+      <Topbar leftOffset={sidebarWidth} />
+      <main
+        className="pt-16 p-6 transition-[margin] duration-200"
+        style={{ marginLeft: sidebarWidth }}
+      >
         <Outlet />
       </main>
     </div>

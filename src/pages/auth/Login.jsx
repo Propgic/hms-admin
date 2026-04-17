@@ -4,9 +4,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
 
 const schema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
@@ -17,6 +16,7 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -41,41 +41,88 @@ export default function Login() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">Sign in</h2>
-        <p className="text-sm text-gray-500 mt-1">Enter your credentials to continue</p>
+    <div>
+      <div className="mb-8">
+        <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-100">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-600" /> Administrator portal
+        </span>
+        <h1 className="mt-4 text-3xl font-bold text-slate-900 tracking-tight">Welcome back</h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Sign in to continue managing your hospital network.
+        </p>
       </div>
 
-      <Input
-        label="Email"
-        type="email"
-        placeholder="admin@example.com"
-        error={errors.email?.message}
-        {...register('email')}
-      />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div>
+          <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+            Professional email
+          </label>
+          <div className="mt-2 relative">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="email"
+              placeholder="name@hospital.com"
+              autoComplete="email"
+              className="w-full pl-10 pr-3 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition"
+              {...register('email')}
+            />
+          </div>
+          {errors.email && <p className="mt-1.5 text-xs text-red-600">{errors.email.message}</p>}
+        </div>
 
-      <Input
-        label="Password"
-        type="password"
-        placeholder="Enter your password"
-        error={errors.password?.message}
-        {...register('password')}
-      />
+        <div>
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              Password
+            </label>
+            <Link to="/forgot-password" className="text-xs font-medium text-blue-600 hover:text-blue-700">
+              Forgot password?
+            </Link>
+          </div>
+          <div className="mt-2 relative">
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              className="w-full pl-10 pr-10 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition"
+              {...register('password')}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+          {errors.password && <p className="mt-1.5 text-xs text-red-600">{errors.password.message}</p>}
+        </div>
 
-      <div className="flex items-center justify-between">
-        <label className="flex items-center gap-2 text-sm text-gray-600">
-          <input type="checkbox" className="rounded border-gray-300" />
-          Remember me
+        <label className="flex items-center gap-2.5 text-sm text-slate-600 select-none cursor-pointer">
+          <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+          Keep me signed in on this workstation
         </label>
-        <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
-          Forgot password?
-        </Link>
-      </div>
 
-      <Button type="submit" loading={loading} className="w-full">
-        Sign in
-      </Button>
-    </form>
+        <button
+          type="submit"
+          disabled={loading}
+          className="group w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl shadow-sm disabled:opacity-60 disabled:cursor-not-allowed transition"
+        >
+          {loading ? 'Signing in…' : (
+            <>
+              Sign in to dashboard
+              <ArrowRight className="w-4 h-4 transition group-hover:translate-x-0.5" />
+            </>
+          )}
+        </button>
+      </form>
+
+      <div className="mt-8 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600">
+        <p className="font-medium text-slate-700">Demo credentials</p>
+        <p className="mt-1">admin@hms.com · Admin@123</p>
+      </div>
+    </div>
   );
 }
