@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bell, ChevronDown, LogOut, User, Settings, Sun, Moon, Monitor } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
+import { getPageTitle } from '../utils/pageTitles';
 
 const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -15,13 +16,15 @@ function formatToday() {
   };
 }
 
-export default function Topbar({ leftOffset = 248 }) {
+export default function Topbar({ leftOffset = 248, gutter = 12 }) {
   const { user, logout } = useAuth();
   const { theme, setTheme, isDark } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const today = formatToday();
+  const pageTitle = getPageTitle(location.pathname);
 
   useEffect(() => {
     function handleClick(e) {
@@ -46,13 +49,18 @@ export default function Topbar({ leftOffset = 248 }) {
 
   return (
     <header
-      className="fixed top-0 right-0 h-16 flex items-center justify-end px-6 gap-4 z-30 transition-[left] duration-200 border-b"
+      className="fixed h-16 flex items-center px-6 gap-4 z-30 transition-[left] duration-200 border rounded-2xl"
       style={{
         left: leftOffset,
+        top: gutter,
+        right: gutter,
         backgroundColor: 'var(--topbar-bg)',
         borderColor: 'var(--topbar-border)',
       }}
     >
+      <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate mr-auto">
+        {pageTitle}
+      </h1>
       <div className="hidden sm:flex items-center text-[13px] text-slate-500 dark:text-slate-400">
         <span className="font-semibold text-slate-900 dark:text-slate-100">{today.day}</span>
         <span className="mx-2 text-slate-300 dark:text-slate-600">|</span>

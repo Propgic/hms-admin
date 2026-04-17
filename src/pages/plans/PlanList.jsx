@@ -112,10 +112,7 @@ export default function PlanList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Subscription Plans</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage subscription plans and pricing</p>
-        </div>
+        <p className="text-sm text-gray-500">Manage subscription plans and pricing</p>
         <Button icon={Plus} onClick={() => { setEditingPlan(null); setFormOpen(true); }}>
           Add Plan
         </Button>

@@ -17,7 +17,7 @@ const navItems = [
   { label: 'Settings', path: '/settings', icon: Settings },
 ];
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
   const location = useLocation();
   const { isDark } = useTheme();
 
@@ -53,12 +53,14 @@ export default function Sidebar({ collapsed, onToggle }) {
       collapsedWidth="80px"
       backgroundColor={palette.bg}
       rootStyles={{
-        borderRight: `1px solid ${palette.border}`,
-        height: '100vh',
+        border: `1px solid ${palette.border}`,
+        borderRadius: 16,
+        height: `calc(100vh - ${gutter * 2}px)`,
         position: 'fixed',
-        left: 0,
-        top: 0,
+        left: gutter,
+        top: gutter,
         color: palette.item,
+        overflow: 'hidden',
       }}
     >
       <div className="flex flex-col h-full relative">
@@ -77,15 +79,16 @@ export default function Sidebar({ collapsed, onToggle }) {
         <div className="mx-5 border-t border-slate-100 dark:border-slate-800" />
 
         {/* Menu */}
-        <div className="flex-1 overflow-y-auto pt-4 pb-16">
+        <div className="flex-1 min-h-0 overflow-y-auto pt-4 pb-4">
           <Menu
             menuItemStyles={{
               button: ({ active }) => ({
                 height: '44px',
-                margin: '3px 12px',
+                margin: collapsed ? '3px 10px' : '3px 12px',
                 borderRadius: '10px',
-                paddingLeft: '14px',
-                paddingRight: '14px',
+                paddingLeft: collapsed ? 0 : '14px',
+                paddingRight: collapsed ? 0 : '14px',
+                justifyContent: collapsed ? 'center' : 'flex-start',
                 color: active ? palette.activeText : palette.item,
                 backgroundColor: active ? palette.activeBg : 'transparent',
                 fontSize: '14px',
@@ -100,6 +103,11 @@ export default function Sidebar({ collapsed, onToggle }) {
               icon: ({ active }) => ({
                 color: active ? palette.activeText : palette.itemIcon,
                 marginRight: collapsed ? 0 : '12px',
+                marginLeft: 0,
+              }),
+              label: () => ({
+                display: collapsed ? 'none' : 'block',
+                opacity: collapsed ? 0 : 1,
               }),
             }}
           >
@@ -117,13 +125,15 @@ export default function Sidebar({ collapsed, onToggle }) {
         </div>
 
         {/* Collapse toggle at bottom */}
-        <button
-          onClick={onToggle}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 transition"
-          title={collapsed ? 'Expand' : 'Collapse'}
-        >
-          {collapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
-        </button>
+        <div className="shrink-0 flex justify-center py-4" style={{ backgroundColor: palette.bg }}>
+          <button
+            onClick={onToggle}
+            className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 transition"
+            title={collapsed ? 'Expand' : 'Collapse'}
+          >
+            {collapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
     </ProSidebar>
   );

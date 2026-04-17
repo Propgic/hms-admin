@@ -81,10 +81,7 @@ export default function ReportsDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
-        <p className="text-sm text-gray-500 mt-1">Platform-wide performance metrics and trends</p>
-      </div>
+      <p className="text-sm text-gray-500">Platform-wide performance metrics and trends</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card) => <StatCard key={card.label} {...card} />)}

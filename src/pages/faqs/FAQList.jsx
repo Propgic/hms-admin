@@ -176,10 +176,7 @@ export default function FAQList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">FAQs</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage frequently asked questions and categories</p>
-        </div>
+        <p className="text-sm text-gray-500">Manage frequently asked questions and categories</p>
         <Button
           icon={Plus}
           onClick={() => {

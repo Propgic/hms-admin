@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --app-bg: #f8fafc;
+  --app-bg: #f9fafb;
   --surface: #ffffff;
   --surface-muted: #f1f5f9;
   --surface-hover: #f8fafc;
@@ -122,3 +122,7 @@ body {
 }
 :where(.dark) input::placeholder,
 :where(.dark) textarea::placeholder { color: #64748b; }
+
+/* Hide menu labels in collapsed react-pro-sidebar */
+.ps-collapsed .ps-menu-label,
+.ps-collapsed .ps-submenu-expand-icon { display: none !important; }

@@ -93,10 +93,7 @@ export default function ActivityLogList() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Activity Logs</h1>
-        <p className="text-sm text-gray-500 mt-1">Track all platform activities and actions</p>
-      </div>
+      <p className="text-sm text-gray-500">Track all platform activities and actions</p>
 
       <div className="flex items-center gap-3">
         <Select
