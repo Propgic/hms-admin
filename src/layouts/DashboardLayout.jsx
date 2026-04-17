@@ -12,10 +12,10 @@ export default function DashboardLayout() {
     localStorage.setItem('hms_admin_sidebar_collapsed', collapsed ? '1' : '0');
   }, [collapsed]);
 
-  const sidebarWidth = collapsed ? 80 : 264;
+  const sidebarWidth = collapsed ? 80 : 248;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--app-bg)' }}>
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
       <Topbar leftOffset={sidebarWidth} />
       <main

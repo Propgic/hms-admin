@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
+import ThemeSettings from '../../components/ThemeSettings';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -38,9 +39,11 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your profile and platform configuration</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Settings</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage your profile and platform configuration</p>
       </div>
+
+      <ThemeSettings />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ProfileCard user={user} updateUser={updateUser} />
@@ -74,10 +77,10 @@ function ProfileCard({ user, updateUser }) {
   return (
     <Card className="p-5">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-          <User className="w-4 h-4 text-blue-600" />
+        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
+          <User className="w-4 h-4 text-blue-600 dark:text-blue-300" />
         </div>
-        <h2 className="text-base font-semibold text-gray-900">Profile</h2>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Profile</h2>
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input label="Full Name" error={errors.name?.message} {...register('name')} />
@@ -117,10 +120,10 @@ function PasswordCard() {
   return (
     <Card className="p-5">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-          <Lock className="w-4 h-4 text-yellow-600" />
+        <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-500/20 rounded-lg flex items-center justify-center">
+          <Lock className="w-4 h-4 text-yellow-600 dark:text-yellow-300" />
         </div>
-        <h2 className="text-base font-semibold text-gray-900">Change Password</h2>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Change Password</h2>
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input label="Current Password" type="password" error={errors.currentPassword?.message} {...register('currentPassword')} />
@@ -159,10 +162,10 @@ function PlatformCard() {
   return (
     <Card className="p-5 lg:col-span-2">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-          <Settings className="w-4 h-4 text-purple-600" />
+        <div className="w-8 h-8 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center">
+          <Settings className="w-4 h-4 text-purple-600 dark:text-purple-300" />
         </div>
-        <h2 className="text-base font-semibold text-gray-900">Platform Settings</h2>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Platform Settings</h2>
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -170,9 +173,9 @@ function PlatformCard() {
           <Input label="Support Email" type="email" error={errors.supportEmail?.message} {...register('supportEmail')} />
           <Input label="Default Trial Days" type="number" error={errors.defaultTrialDays?.message} {...register('defaultTrialDays')} />
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Maintenance Mode</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Maintenance Mode</label>
             <select
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               {...register('maintenanceMode')}
             >
               <option value="false">Off</option>
