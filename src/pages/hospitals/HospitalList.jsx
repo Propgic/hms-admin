@@ -30,11 +30,31 @@ export default function HospitalList() {
   const fetchHospitals = useCallback(async () => {
     setLoading(true);
     try {
+      // Backend stores only `isActive` (boolean), so translate UI status options to isActive.
+      // active/trial → isActive=true, suspended/inactive → isActive=false, '' → no filter.
+      let isActive;
+      if (statusFilter === 'active' || statusFilter === 'trial') isActive = true;
+      else if (statusFilter === 'suspended' || statusFilter === 'inactive') isActive = false;
+      // Backend sort key for the Status column is isActive, not `status` (which is derived).
+      const backendSortField = sortField === 'status' ? 'isActive' : sortField;
       const res = await api.get(endpoints.hospitals.list, {
-        params: { page, limit: 10, search, status: statusFilter || undefined, sortBy: sortField, sortOrder },
+        params: {
+          page,
+          limit: 10,
+          search,
+          isActive,
+          sortBy: backendSortField,
+          sortOrder,
+        },
       });
       const d = res.data.data || res.data;
-      setHospitals(d.hospitals || d.rows || d.items || (Array.isArray(d) ? d : []));
+      const list = d.hospitals || d.rows || d.items || (Array.isArray(d) ? d : []);
+      // Normalize: derive `status` from `isActive` if the backend hasn't sent it yet
+      setHospitals(list.map((h) => ({
+        ...h,
+        status: h.status || (h.isActive === false ? 'suspended' : 'active'),
+        planName: h.planName || h.plan?.name || null,
+      })));
       setTotalPages(d.totalPages || d.pagination?.totalPages || 1);
     } catch {
       setHospitals([]);
@@ -62,8 +82,9 @@ export default function HospitalList() {
 
   const handleToggleStatus = async (hospital) => {
     try {
-      await api.patch(endpoints.hospitals.toggleStatus(hospital.id || hospital._id));
-      toast.success(`Hospital ${hospital.status === 'active' ? 'suspended' : 'activated'}`);
+      const nextActive = !(hospital.isActive ?? hospital.status === 'active');
+      await api.patch(endpoints.hospitals.toggleStatus(hospital.id || hospital._id), { isActive: nextActive });
+      toast.success(`Hospital ${nextActive ? 'activated' : 'suspended'}`);
       fetchHospitals();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update status');
@@ -153,21 +174,6 @@ export default function HospitalList() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-3">
-        <Select
-          options={[
-            { value: '', label: 'All Status' },
-            { value: 'active', label: 'Active' },
-            { value: 'trial', label: 'Trial' },
-            { value: 'suspended', label: 'Suspended' },
-            { value: 'inactive', label: 'Inactive' },
-          ]}
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="w-40"
-        />
-      </div>
-
       <DataTable
         columns={columns}
         data={hospitals}
@@ -184,6 +190,20 @@ export default function HospitalList() {
         onSort={(f, o) => { setSortField(f); setSortOrder(o); }}
         emptyTitle="No hospitals found"
         emptyMessage="Get started by adding your first hospital."
+        headerActions={(
+          <Select
+            options={[
+              { value: '', label: 'All Status' },
+              { value: 'active', label: 'Active' },
+              { value: 'trial', label: 'Trial' },
+              { value: 'suspended', label: 'Suspended' },
+              { value: 'inactive', label: 'Inactive' },
+            ]}
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            className="w-40"
+          />
+        )}
       />
 
       <HospitalForm

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import Pagination from './ui/Pagination';
 import EmptyState from './ui/EmptyState';
+
+const SEARCH_DEBOUNCE_MS = 400;
 
 function SkeletonRow({ colCount }) {
   return (
@@ -33,16 +35,29 @@ export default function DataTable({
   emptyMessage,
   headerActions,
 }) {
-  const [localSearch, setLocalSearch] = useState('');
-  const search = onSearch ? searchValue : localSearch;
+  // Input text shown in the box — updated immediately for responsive typing.
+  const [inputValue, setInputValue] = useState(searchValue);
+
+  // Sync local input when parent resets searchValue externally (e.g. filter change).
+  useEffect(() => {
+    setInputValue(searchValue);
+  }, [searchValue]);
+
+  // Debounce: only fire onSearch after the user pauses typing.
+  useEffect(() => {
+    if (!onSearch) return undefined;
+    if (inputValue === searchValue) return undefined;
+    const t = setTimeout(() => onSearch(inputValue), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [inputValue, onSearch, searchValue]);
 
   const filteredData = onSearch
     ? data
     : data.filter((row) => {
-        if (!localSearch) return true;
+        if (!inputValue) return true;
         return columns.some((col) => {
           const val = col.accessor ? row[col.accessor] : '';
-          return String(val).toLowerCase().includes(localSearch.toLowerCase());
+          return String(val).toLowerCase().includes(inputValue.toLowerCase());
         });
       });
 
@@ -73,10 +88,8 @@ export default function DataTable({
               <input
                 type="text"
                 placeholder={searchPlaceholder}
-                value={search}
-                onChange={(e) =>
-                  onSearch ? onSearch(e.target.value) : setLocalSearch(e.target.value)
-                }
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -85,7 +98,7 @@ export default function DataTable({
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50">
@@ -106,8 +119,12 @@ export default function DataTable({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {loading ? (
+          <tbody
+            className={`divide-y divide-gray-100 transition-opacity duration-200 ${
+              loading && filteredData.length > 0 ? 'opacity-60' : ''
+            }`}
+          >
+            {loading && filteredData.length === 0 ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <SkeletonRow key={i} colCount={columns.length} />
               ))
@@ -130,6 +147,11 @@ export default function DataTable({
             )}
           </tbody>
         </table>
+        {loading && filteredData.length > 0 && (
+          <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-14">
+            <div className="h-6 w-6 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+          </div>
+        )}
       </div>
 
       {totalPages > 1 && (

@@ -11,8 +11,9 @@ import Card from '../../components/ui/Card';
 import Spinner from '../../components/ui/Spinner';
 import { AreaGradient, BarGradient, CustomTooltip } from '../../components/charts/ChartPrimitives';
 import { CHART_COLORS, PIE_PALETTE, ANIM, AXIS_TICK, GRID_STROKE } from '../../components/charts/chartConfig';
+import { formatCurrency, formatCompactCurrency } from '../../utils/formatters';
 
-const currencyFmt = (v) => `$${Number(v).toLocaleString()}`;
+const currencyFmt = (v) => formatCurrency(v);
 
 function renderActivePieSlice(props) {
   const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
@@ -29,31 +30,6 @@ function renderActivePieSlice(props) {
     </g>
   );
 }
-
-const fallbackRevenue = [
-  { month: 'Jan', revenue: 12000 },
-  { month: 'Feb', revenue: 15000 },
-  { month: 'Mar', revenue: 18500 },
-  { month: 'Apr', revenue: 22000 },
-  { month: 'May', revenue: 19800 },
-  { month: 'Jun', revenue: 24500 },
-];
-
-const fallbackPlanDist = [
-  { name: 'Basic', value: 35 },
-  { name: 'Professional', value: 45 },
-  { name: 'Enterprise', value: 15 },
-  { name: 'Free', value: 5 },
-];
-
-const fallbackHospitalGrowth = [
-  { month: 'Jan', newHospitals: 8, churned: 2 },
-  { month: 'Feb', newHospitals: 12, churned: 1 },
-  { month: 'Mar', newHospitals: 15, churned: 3 },
-  { month: 'Apr', newHospitals: 10, churned: 2 },
-  { month: 'May', newHospitals: 18, churned: 1 },
-  { month: 'Jun', newHospitals: 22, churned: 4 },
-];
 
 export default function ReportsDashboard() {
   const [data, setData] = useState(null);
@@ -87,15 +63,15 @@ export default function ReportsDashboard() {
   if (loading) return <Spinner fullPage size="lg" />;
 
   const overview = data?.overview;
-  const revenueData = data?.revenue || fallbackRevenue;
-  const planData = data?.plans || fallbackPlanDist;
-  const hospitalData = data?.hospitals || fallbackHospitalGrowth;
+  const revenueData = data?.revenue || [];
+  const planData = data?.plans || [];
+  const hospitalData = data?.hospitals || [];
 
   const statCards = [
-    { icon: DollarSign, label: 'Total Revenue', value: overview?.totalRevenue ?? '$145,200', change: overview?.revenueGrowth ?? '+18.2% YoY', changeType: 'positive', iconBg: 'bg-green-100', iconColor: 'text-green-600' },
-    { icon: Building2, label: 'Total Hospitals', value: overview?.totalHospitals ?? 142, change: overview?.hospitalGrowth ?? '+22 this quarter', changeType: 'positive', iconBg: 'bg-blue-100', iconColor: 'text-blue-600' },
-    { icon: CreditCard, label: 'Avg Revenue / Hospital', value: overview?.avgRevenue ?? '$1,023', change: overview?.avgGrowth ?? '+5.4%', changeType: 'positive', iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
-    { icon: TrendingUp, label: 'Churn Rate', value: overview?.churnRate ?? '2.3%', change: overview?.churnChange ?? '-0.5% from last quarter', changeType: 'positive', iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600' },
+    { icon: DollarSign, label: 'Total Revenue', value: overview?.totalRevenue ?? '₹0', change: overview?.revenueGrowth ?? '', changeType: 'positive', iconBg: 'bg-green-100', iconColor: 'text-green-600' },
+    { icon: Building2, label: 'Total Hospitals', value: overview?.totalHospitals ?? 0, change: overview?.hospitalGrowth ?? '', changeType: 'positive', iconBg: 'bg-blue-100', iconColor: 'text-blue-600' },
+    { icon: CreditCard, label: 'Avg Revenue / Hospital', value: overview?.avgRevenue ?? '₹0', change: overview?.avgGrowth ?? '', changeType: 'positive', iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
+    { icon: TrendingUp, label: 'Churn Rate', value: overview?.churnRate ?? '0%', change: overview?.churnChange ?? '', changeType: 'positive', iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600' },
   ];
 
   return (
@@ -120,7 +96,7 @@ export default function ReportsDashboard() {
                 </defs>
                 <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
                 <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
-                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
+                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(v) => formatCompactCurrency(v)} />
                 <Tooltip content={<CustomTooltip valueFormatter={currencyFmt} />} cursor={{ stroke: CHART_COLORS.emerald, strokeWidth: 1, strokeDasharray: '4 4' }} />
                 <Area
                   type="natural"

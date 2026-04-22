@@ -6,6 +6,7 @@ import endpoints from '../../api/endpoints';
 import DataTable from '../../components/DataTable';
 import Badge from '../../components/ui/Badge';
 import Select from '../../components/ui/Select';
+import { formatCurrency } from '../../utils/formatters';
 
 export default function BillingList() {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -61,7 +62,7 @@ export default function BillingList() {
       header: 'Amount',
       accessor: 'amount',
       sortable: true,
-      cell: (row) => `$${row.amount || 0}`,
+      cell: (row) => formatCurrency(row.amount || 0),
     },
     {
       header: 'Start Date',
@@ -95,21 +96,6 @@ export default function BillingList() {
     <div className="space-y-6">
       <p className="text-sm text-gray-500">Track all hospital subscriptions and payments</p>
 
-      <div className="flex items-center gap-3">
-        <Select
-          options={[
-            { value: '', label: 'All Status' },
-            { value: 'active', label: 'Active' },
-            { value: 'trial', label: 'Trial' },
-            { value: 'expired', label: 'Expired' },
-            { value: 'cancelled', label: 'Cancelled' },
-          ]}
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="w-40"
-        />
-      </div>
-
       <DataTable
         columns={columns}
         data={subscriptions}
@@ -126,6 +112,20 @@ export default function BillingList() {
         onSort={(f, o) => { setSortField(f); setSortOrder(o); }}
         emptyTitle="No billing records"
         emptyMessage="Billing records will appear here when hospitals subscribe to plans."
+        headerActions={(
+          <Select
+            options={[
+              { value: '', label: 'All Status' },
+              { value: 'active', label: 'Active' },
+              { value: 'trial', label: 'Trial' },
+              { value: 'expired', label: 'Expired' },
+              { value: 'cancelled', label: 'Cancelled' },
+            ]}
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            className="w-40"
+          />
+        )}
       />
     </div>
   );

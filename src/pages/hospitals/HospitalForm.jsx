@@ -19,28 +19,39 @@ const schema = z.object({
   state: z.string().min(2, 'State is required'),
   pincode: z.string().min(5, 'Pincode is required'),
   planId: z.string().optional(),
+  isActive: z.boolean().optional(),
   adminName: z.string().optional(),
   adminEmail: z.string().email('Invalid admin email').optional().or(z.literal('')),
   adminPassword: z.string().min(6, 'Min 6 characters').optional().or(z.literal('')),
 });
 
+const STATUS_OPTIONS = [
+  { value: 'active', label: 'Active' },
+  { value: 'suspended', label: 'Suspended' },
+];
+
 export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [plans, setPlans] = useState([]);
+  const [fullHospital, setFullHospital] = useState(null);
   const isEditing = !!hospital;
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       name: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
-      planId: '', adminName: '', adminEmail: '', adminPassword: '',
+      planId: '', isActive: true, adminName: '', adminEmail: '', adminPassword: '',
     },
   });
+
+  const statusValue = watch('isActive') ? 'active' : 'suspended';
 
   useEffect(() => {
     if (isOpen) {
@@ -55,32 +66,50 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
   }, [isOpen]);
 
   useEffect(() => {
-    if (hospital) {
-      reset({
-        name: hospital.name || '',
-        email: hospital.email || '',
-        phone: hospital.phone || '',
-        address: hospital.address || '',
-        city: hospital.city || '',
-        state: hospital.state || '',
-        pincode: hospital.pincode || '',
-        planId: hospital.planId || hospital.plan?.id || hospital.plan?._id || '',
-        adminName: '', adminEmail: '', adminPassword: '',
-      });
+    if (isOpen && hospital) {
+      api.get(endpoints.hospitals.get(hospital.id || hospital._id))
+        .then((res) => setFullHospital(res.data.data || res.data))
+        .catch(() => setFullHospital(hospital));
     } else {
+      setFullHospital(null);
+    }
+  }, [isOpen, hospital]);
+
+  useEffect(() => {
+    const source = fullHospital || hospital;
+    if (source && isEditing) {
+      reset({
+        name: source.name || '',
+        email: source.email || '',
+        phone: source.phone || '',
+        address: source.address || '',
+        city: source.city || '',
+        state: source.state || '',
+        pincode: source.pincode || '',
+        planId: source.planId || source.plan?.id || source.plan?._id || '',
+        isActive: source.isActive !== undefined ? !!source.isActive : (source.status !== 'suspended'),
+        adminName: source.admin?.name || '',
+        adminEmail: source.admin?.email || '',
+        adminPassword: '',
+      });
+    } else if (!isEditing) {
       reset({
         name: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
-        planId: '', adminName: '', adminEmail: '', adminPassword: '',
+        planId: '', isActive: true, adminName: '', adminEmail: '', adminPassword: '',
       });
     }
-  }, [hospital, reset]);
+  }, [fullHospital, hospital, isEditing, reset]);
 
   const onSubmit = async (data) => {
     setLoading(true);
     try {
       if (isEditing) {
-        const { adminName, adminEmail, adminPassword, ...updateData } = data;
-        await api.put(endpoints.hospitals.update(hospital.id || hospital._id), updateData);
+        const payload = { ...data };
+        // Only send admin password if provided
+        if (!payload.adminPassword) delete payload.adminPassword;
+        if (!payload.adminName) delete payload.adminName;
+        if (!payload.adminEmail) delete payload.adminEmail;
+        await api.put(endpoints.hospitals.update(hospital.id || hospital._id), payload);
         toast.success('Hospital updated');
       } else {
         await api.post(endpoints.hospitals.create, data);
@@ -109,21 +138,34 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
           <Input label="City" error={errors.city?.message} {...register('city')} />
           <Input label="State" error={errors.state?.message} {...register('state')} />
           <Input label="Pincode" error={errors.pincode?.message} {...register('pincode')} />
+          {isEditing && (
+            <Select
+              label="Status"
+              options={STATUS_OPTIONS}
+              value={statusValue}
+              onChange={(e) => setValue('isActive', e.target.value === 'active', { shouldDirty: true })}
+            />
+          )}
         </div>
 
-        {!isEditing && (
-          <>
-            <hr className="border-gray-200" />
-            <p className="text-sm font-medium text-gray-700">Admin Account</p>
-            <div className="grid grid-cols-2 gap-4">
-              <Input label="Admin Name" error={errors.adminName?.message} {...register('adminName')} />
-              <Input label="Admin Email" type="email" error={errors.adminEmail?.message} {...register('adminEmail')} />
-              <Input label="Admin Password" type="password" error={errors.adminPassword?.message} {...register('adminPassword')} />
-            </div>
-          </>
-        )}
+        <hr className="border-gray-200 dark:border-slate-700" />
+        <p className="text-sm font-medium text-gray-700 dark:text-slate-200">
+          {isEditing ? 'Admin Account' : 'Admin Account'}
+          {isEditing && <span className="ml-2 text-xs font-normal text-gray-500 dark:text-slate-400">(leave password empty to keep unchanged)</span>}
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="Admin Name" error={errors.adminName?.message} {...register('adminName')} />
+          <Input label="Admin Email" type="email" error={errors.adminEmail?.message} {...register('adminEmail')} />
+          <Input
+            label={isEditing ? 'New Admin Password' : 'Admin Password'}
+            type="password"
+            placeholder={isEditing ? 'Leave blank to keep current' : ''}
+            error={errors.adminPassword?.message}
+            {...register('adminPassword')}
+          />
+        </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit" loading={loading}>{isEditing ? 'Update' : 'Create'} Hospital</Button>
         </div>

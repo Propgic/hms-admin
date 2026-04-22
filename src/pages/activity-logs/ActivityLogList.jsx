@@ -95,22 +95,6 @@ export default function ActivityLogList() {
     <div className="space-y-6">
       <p className="text-sm text-gray-500">Track all platform activities and actions</p>
 
-      <div className="flex items-center gap-3">
-        <Select
-          options={[
-            { value: '', label: 'All Actions' },
-            { value: 'create', label: 'Create' },
-            { value: 'update', label: 'Update' },
-            { value: 'delete', label: 'Delete' },
-            { value: 'login', label: 'Login' },
-            { value: 'logout', label: 'Logout' },
-          ]}
-          value={actionFilter}
-          onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
-          className="w-40"
-        />
-      </div>
-
       <DataTable
         columns={columns}
         data={logs}
@@ -127,6 +111,21 @@ export default function ActivityLogList() {
         onSort={(f, o) => { setSortField(f); setSortOrder(o); }}
         emptyTitle="No activity logs"
         emptyMessage="Activity logs will appear here as users interact with the platform."
+        headerActions={(
+          <Select
+            options={[
+              { value: '', label: 'All Actions' },
+              { value: 'create', label: 'Create' },
+              { value: 'update', label: 'Update' },
+              { value: 'delete', label: 'Delete' },
+              { value: 'login', label: 'Login' },
+              { value: 'logout', label: 'Logout' },
+            ]}
+            value={actionFilter}
+            onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
+            className="w-40"
+          />
+        )}
       />
     </div>
   );

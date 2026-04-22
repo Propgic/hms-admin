@@ -104,7 +104,7 @@ export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <Input label="Plan Name" error={errors.name?.message} {...register('name')} />
-          <Input label="Price ($/month)" type="number" error={errors.price?.message} {...register('price')} />
+          <Input label="Price (₹/month)" type="number" error={errors.price?.message} {...register('price')} />
           <Input label="Duration (days)" type="number" error={errors.durationInDays?.message} {...register('durationInDays')} />
           <Input label="Trial Days" type="number" error={errors.trialDays?.message} {...register('trialDays')} />
           <Input label="Max Users" type="number" error={errors.maxUsers?.message} {...register('maxUsers')} />

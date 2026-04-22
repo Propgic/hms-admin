@@ -8,6 +8,7 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import PlanForm from './PlanForm';
+import { formatCurrency } from '../../utils/formatters';
 
 export default function PlanList() {
   const [plans, setPlans] = useState([]);
@@ -60,7 +61,7 @@ export default function PlanList() {
     {
       header: 'Price',
       accessor: 'price',
-      cell: (row) => `$${row.price || 0}/mo`,
+      cell: (row) => `${formatCurrency(row.price || 0)}/mo`,
     },
     {
       header: 'Duration',
