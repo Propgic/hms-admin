@@ -8,6 +8,8 @@ import StatCard from '../../components/StatCard';
 import Card from '../../components/ui/Card';
 import Spinner from '../../components/ui/Spinner';
 import Badge from '../../components/ui/Badge';
+import { AreaGradient, CustomTooltip } from '../../components/charts/ChartPrimitives';
+import { CHART_COLORS, ANIM, AXIS_TICK, GRID_STROKE } from '../../components/charts/chartConfig';
 
 const fallbackGrowth = [
   { month: 'Jan', hospitals: 12 },
@@ -50,7 +52,7 @@ export default function Dashboard() {
     load();
   }, []);
 
-  if (loading) return <Spinner className="mt-32" size="lg" />;
+  if (loading) return <Spinner fullPage size="lg" />;
 
   const statCards = [
     {
@@ -111,41 +113,39 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <Card className="p-5">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Hospital Growth</h2>
+      <Card className="p-5 chart-fade-in">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Hospital Growth</h2>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Monthly hospital count</p>
+        </div>
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={growthData}>
+            <AreaChart data={growthData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
-                <linearGradient id="growthGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#2563EB" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
-                </linearGradient>
+                <AreaGradient id="growthGrad" color={CHART_COLORS.primary} from={0.32} />
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6B7280' }} />
-              <YAxis tick={{ fontSize: 12, fill: '#6B7280' }} />
-              <Tooltip
-                contentStyle={{
-                  borderRadius: '8px',
-                  border: '1px solid #e5e7eb',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                }}
-              />
+              <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
+              <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
+              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: CHART_COLORS.primary, strokeWidth: 1, strokeDasharray: '4 4' }} />
               <Area
-                type="monotone"
+                type="natural"
+                name="Hospitals"
                 dataKey="hospitals"
-                stroke="#2563EB"
-                strokeWidth={2}
+                stroke={CHART_COLORS.primary}
+                strokeWidth={2.5}
                 fill="url(#growthGrad)"
+                activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff', fill: CHART_COLORS.primary }}
+                animationDuration={ANIM.duration}
+                animationEasing={ANIM.easing}
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </Card>
 
-      <Card className="p-5">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Recent Hospitals</h2>
+      <Card className="p-5 chart-fade-in">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100 mb-4">Recent Hospitals</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -158,8 +158,12 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {recentData.map((h) => (
-                <tr key={h.id || h._id} className="hover:bg-gray-50 text-sm">
+              {recentData.map((h, i) => (
+                <tr
+                  key={h.id || h._id}
+                  className="hover:bg-gray-50 text-sm row-stagger"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
                   <td className="px-4 py-3 font-medium text-gray-900">{h.name}</td>
                   <td className="px-4 py-3 text-gray-600">{h.email}</td>
                   <td className="px-4 py-3 text-gray-600">{h.plan || h.planName || '-'}</td>

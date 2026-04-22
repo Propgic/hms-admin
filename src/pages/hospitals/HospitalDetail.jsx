@@ -41,7 +41,7 @@ export default function HospitalDetail() {
     load();
   }, [id]);
 
-  if (loading) return <Spinner className="mt-32" size="lg" />;
+  if (loading) return <Spinner fullPage size="lg" />;
   if (!hospital) {
     return (
       <div className="text-center mt-20">

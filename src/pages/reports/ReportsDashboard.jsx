@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Sector,
 } from 'recharts';
 import { TrendingUp, DollarSign, Building2, CreditCard } from 'lucide-react';
 import api from '../../api/axios';
@@ -9,8 +9,26 @@ import endpoints from '../../api/endpoints';
 import StatCard from '../../components/StatCard';
 import Card from '../../components/ui/Card';
 import Spinner from '../../components/ui/Spinner';
+import { AreaGradient, BarGradient, CustomTooltip } from '../../components/charts/ChartPrimitives';
+import { CHART_COLORS, PIE_PALETTE, ANIM, AXIS_TICK, GRID_STROKE } from '../../components/charts/chartConfig';
 
-const COLORS = ['#2563EB', '#16A34A', '#F59E0B', '#DC2626', '#8B5CF6', '#EC4899'];
+const currencyFmt = (v) => `$${Number(v).toLocaleString()}`;
+
+function renderActivePieSlice(props) {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
+  return (
+    <g>
+      <text x={cx} y={cy - 8} textAnchor="middle" fill="var(--text)" className="text-sm font-semibold">
+        {payload.name}
+      </text>
+      <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--text-muted)" className="text-xs">
+        {(percent * 100).toFixed(1)}%
+      </text>
+      <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 6} startAngle={startAngle} endAngle={endAngle} fill={fill} />
+      <Sector cx={cx} cy={cy} innerRadius={outerRadius + 8} outerRadius={outerRadius + 11} startAngle={startAngle} endAngle={endAngle} fill={fill} opacity={0.35} />
+    </g>
+  );
+}
 
 const fallbackRevenue = [
   { month: 'Jan', revenue: 12000 },
@@ -40,6 +58,7 @@ const fallbackHospitalGrowth = [
 export default function ReportsDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activePieIdx, setActivePieIdx] = useState(0);
 
   useEffect(() => {
     async function load() {
@@ -65,7 +84,7 @@ export default function ReportsDashboard() {
     load();
   }, []);
 
-  if (loading) return <Spinner className="mt-32" size="lg" />;
+  if (loading) return <Spinner fullPage size="lg" />;
 
   const overview = data?.overview;
   const revenueData = data?.revenue || fallbackRevenue;
@@ -88,54 +107,96 @@ export default function ReportsDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-5">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Revenue Trend</h2>
+        <Card className="p-5 chart-fade-in">
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Revenue Trend</h2>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Monthly revenue</p>
+          </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData}>
+              <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#16A34A" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#16A34A" stopOpacity={0} />
-                  </linearGradient>
+                  <AreaGradient id="revGrad" color={CHART_COLORS.emerald} from={0.32} />
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6B7280' }} />
-                <YAxis tick={{ fontSize: 12, fill: '#6B7280' }} />
-                <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }} />
-                <Area type="monotone" dataKey="revenue" stroke="#16A34A" strokeWidth={2} fill="url(#revGrad)" />
+                <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
+                <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
+                <Tooltip content={<CustomTooltip valueFormatter={currencyFmt} />} cursor={{ stroke: CHART_COLORS.emerald, strokeWidth: 1, strokeDasharray: '4 4' }} />
+                <Area
+                  type="natural"
+                  name="Revenue"
+                  dataKey="revenue"
+                  stroke={CHART_COLORS.emerald}
+                  strokeWidth={2.5}
+                  fill="url(#revGrad)"
+                  activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff', fill: CHART_COLORS.emerald }}
+                  animationDuration={ANIM.duration}
+                  animationEasing={ANIM.easing}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="p-5">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Plan Distribution</h2>
+        <Card className="p-5 chart-fade-in" style={{ animationDelay: '80ms' }}>
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Plan Distribution</h2>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Active plan breakdown</p>
+          </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={planData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {planData.map((_, idx) => <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
+                <Pie
+                  data={planData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={58}
+                  outerRadius={84}
+                  dataKey="value"
+                  nameKey="name"
+                  paddingAngle={3}
+                  stroke="var(--surface)"
+                  strokeWidth={2}
+                  activeIndex={activePieIdx}
+                  activeShape={renderActivePieSlice}
+                  onMouseEnter={(_, i) => setActivePieIdx(i)}
+                  animationDuration={ANIM.pieDuration}
+                  animationEasing={ANIM.easing}
+                >
+                  {planData.map((_, idx) => (
+                    <Cell key={idx} fill={PIE_PALETTE[idx % PIE_PALETTE.length]} />
+                  ))}
                 </Pie>
-                <Tooltip />
-                <Legend />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  verticalAlign="bottom"
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: 12, color: 'var(--text-muted)' }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="p-5 lg:col-span-2">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Hospital Growth vs Churn</h2>
+        <Card className="p-5 lg:col-span-2 chart-fade-in" style={{ animationDelay: '160ms' }}>
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Hospital Growth vs Churn</h2>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Net growth by month</p>
+          </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={hospitalData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6B7280' }} />
-                <YAxis tick={{ fontSize: 12, fill: '#6B7280' }} />
-                <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }} />
-                <Legend />
-                <Bar dataKey="newHospitals" name="New Hospitals" fill="#2563EB" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="churned" name="Churned" fill="#DC2626" radius={[4, 4, 0, 0]} />
+              <BarChart data={hospitalData} barGap={6} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <defs>
+                  <BarGradient id="barGrowth" color={CHART_COLORS.primary} />
+                  <BarGradient id="barChurn" color={CHART_COLORS.rose} />
+                </defs>
+                <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
+                <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--surface-hover)', opacity: 0.5 }} />
+                <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: 12, color: 'var(--text-muted)', paddingBottom: 8 }} />
+                <Bar dataKey="newHospitals" name="New Hospitals" fill="url(#barGrowth)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} />
+                <Bar dataKey="churned" name="Churned" fill="url(#barChurn)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} animationBegin={120} />
               </BarChart>
             </ResponsiveContainer>
           </div>

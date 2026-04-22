@@ -126,3 +126,26 @@ body {
 /* Hide menu labels in collapsed react-pro-sidebar */
 .ps-collapsed .ps-menu-label,
 .ps-collapsed .ps-submenu-expand-icon { display: none !important; }
+
+/* Chart + list entry animations */
+@keyframes chartFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes rowStagger {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.chart-fade-in {
+  animation: chartFadeIn 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.row-stagger {
+  animation: rowStagger 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-fade-in, .row-stagger { animation: none !important; }
+}
+
+/* Recharts: remove default focus outline on hover cursor lines */
+.recharts-wrapper:focus,
+.recharts-surface:focus { outline: none; }
