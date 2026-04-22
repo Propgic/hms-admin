@@ -103,13 +103,25 @@ body {
 :where(.dark) .hover\:bg-slate-100:hover { background-color: #1f2937; }
 :where(.dark) .hover\:bg-white:hover { background-color: #1e293b; }
 
+:where(.dark) .border-gray-50,
+:where(.dark) .border-slate-50,
+:where(.dark) .border-gray-100,
+:where(.dark) .border-slate-100,
 :where(.dark) .border-gray-200,
 :where(.dark) .border-slate-200 { border-color: #1f2937; }
 :where(.dark) .border-gray-300,
 :where(.dark) .border-slate-300 { border-color: #334155; }
-:where(.dark) .border-gray-100,
-:where(.dark) .border-slate-100 { border-color: #1f2937; }
+/* Tailwind v4 divide selector uses :not(:last-child); keep v3 selector for safety */
+:where(.dark) .divide-gray-50 > :not(:last-child),
+:where(.dark) .divide-slate-50 > :not(:last-child),
+:where(.dark) .divide-gray-100 > :not(:last-child),
+:where(.dark) .divide-slate-100 > :not(:last-child),
+:where(.dark) .divide-gray-200 > :not(:last-child),
+:where(.dark) .divide-slate-200 > :not(:last-child),
+:where(.dark) .divide-gray-50 > :not([hidden]) ~ :not([hidden]),
+:where(.dark) .divide-slate-50 > :not([hidden]) ~ :not([hidden]),
 :where(.dark) .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+:where(.dark) .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
 :where(.dark) .divide-gray-200 > :not([hidden]) ~ :not([hidden]),
 :where(.dark) .divide-slate-200 > :not([hidden]) ~ :not([hidden]) { border-color: #1f2937; }
 
