@@ -8,6 +8,7 @@ import endpoints from '../../api/endpoints';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
+import { nameField, blockDigits } from '../../utils/validators';
 
 const featuresList = [
   'Patient Management',
@@ -25,7 +26,7 @@ const featuresList = [
 ];
 
 const schema = z.object({
-  name: z.string().min(2, 'Name is required'),
+  name: nameField('Plan name'),
   description: z.string().optional(),
   price: z.coerce.number().min(0, 'Price must be 0 or more'),
   durationInDays: z.coerce.number().min(1, 'Duration must be at least 1'),
@@ -103,7 +104,7 @@ export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
     <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Edit Plan' : 'Create Plan'} size="lg">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Plan Name" error={errors.name?.message} {...register('name')} />
+          <Input label="Plan Name" error={errors.name?.message} {...register('name')} onKeyDown={blockDigits} />
           <Input label="Price (₹/month)" type="number" error={errors.price?.message} {...register('price')} />
           <Input label="Duration (days)" type="number" error={errors.durationInDays?.message} {...register('durationInDays')} />
           <Input label="Trial Days" type="number" error={errors.trialDays?.message} {...register('trialDays')} />

@@ -12,7 +12,9 @@ export default function ActivityLogList() {
   const [search, setSearch] = useState('');
   const [actionFilter, setActionFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [sortField, setSortField] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
 
@@ -20,17 +22,20 @@ export default function ActivityLogList() {
     setLoading(true);
     try {
       const res = await api.get(endpoints.activityLogs.list, {
-        params: { page, limit: 15, search, action: actionFilter || undefined, sortBy: sortField, sortOrder },
+        params: { page, limit: pageSize, search, action: actionFilter || undefined, sortBy: sortField, sortOrder },
       });
       const d = res.data.data || res.data;
-      setLogs(d.logs || d.rows || d.items || (Array.isArray(d) ? d : []));
+      const list = d.logs || d.rows || d.items || (Array.isArray(d) ? d : []);
+      setLogs(list);
       setTotalPages(d.totalPages || d.pagination?.totalPages || 1);
+      setTotalItems(d.total ?? d.pagination?.total ?? list.length);
     } catch {
       setLogs([]);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
-  }, [page, search, actionFilter, sortField, sortOrder]);
+  }, [page, pageSize, search, actionFilter, sortField, sortOrder]);
 
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
@@ -106,6 +111,9 @@ export default function ActivityLogList() {
         currentPage={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+        totalItems={totalItems}
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={(f, o) => { setSortField(f); setSortOrder(o); }}

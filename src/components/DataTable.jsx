@@ -28,6 +28,9 @@ export default function DataTable({
   totalPages = 1,
   currentPage = 1,
   onPageChange,
+  pageSize,
+  onPageSizeChange,
+  totalItems,
   sortField,
   sortOrder,
   onSort,
@@ -79,7 +82,7 @@ export default function DataTable({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col min-h-[calc(100vh-14rem)]">
       {(searchable || headerActions) && (
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
           {searchable && (
@@ -98,7 +101,7 @@ export default function DataTable({
         </div>
       )}
 
-      <div className="relative overflow-x-auto">
+      <div className="relative overflow-x-auto flex-1">
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50">
@@ -154,15 +157,16 @@ export default function DataTable({
         )}
       </div>
 
-      {totalPages > 1 && (
-        <div className="border-t border-gray-200">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={onPageChange}
-          />
-        </div>
-      )}
+      <div className="border-t border-gray-200">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          pageSize={pageSize}
+          onPageSizeChange={onPageSizeChange}
+          totalItems={totalItems}
+        />
+      </div>
     </div>
   );
 }

@@ -9,18 +9,19 @@ import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
+import { nameField, optionalNameField, phoneField, pincodeField, blockDigits, allowDigitsOnly, allowPhoneChars } from '../../utils/validators';
 
 const schema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
+  name: nameField('Hospital name'),
   email: z.string().email('Invalid email'),
-  phone: z.string().min(10, 'Phone must be at least 10 digits'),
+  phone: phoneField(),
   address: z.string().min(5, 'Address is required'),
-  city: z.string().min(2, 'City is required'),
-  state: z.string().min(2, 'State is required'),
-  pincode: z.string().min(5, 'Pincode is required'),
-  planId: z.string().optional(),
+  city: nameField('City'),
+  state: nameField('State'),
+  pincode: pincodeField(),
+  planId: z.string().min(1, 'Please select a plan'),
   isActive: z.boolean().optional(),
-  adminName: z.string().optional(),
+  adminName: optionalNameField('Admin name'),
   adminEmail: z.string().email('Invalid admin email').optional().or(z.literal('')),
   adminPassword: z.string().min(6, 'Min 6 characters').optional().or(z.literal('')),
 });
@@ -128,16 +129,45 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
     <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Edit Hospital' : 'Add Hospital'} size="lg">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Hospital Name" error={errors.name?.message} {...register('name')} />
+          <Input
+            label="Hospital Name"
+            error={errors.name?.message}
+            {...register('name')}
+            onKeyDown={blockDigits}
+          />
           <Input label="Email" type="email" error={errors.email?.message} {...register('email')} />
-          <Input label="Phone" error={errors.phone?.message} {...register('phone')} />
+          <Input
+            label="Phone"
+            inputMode="numeric"
+            maxLength={15}
+            error={errors.phone?.message}
+            {...register('phone')}
+            onKeyDown={allowPhoneChars}
+          />
           <Select label="Plan" options={plans} placeholder="Select a plan" error={errors.planId?.message} {...register('planId')} />
           <div className="col-span-2">
             <Input label="Address" error={errors.address?.message} {...register('address')} />
           </div>
-          <Input label="City" error={errors.city?.message} {...register('city')} />
-          <Input label="State" error={errors.state?.message} {...register('state')} />
-          <Input label="Pincode" error={errors.pincode?.message} {...register('pincode')} />
+          <Input
+            label="City"
+            error={errors.city?.message}
+            {...register('city')}
+            onKeyDown={blockDigits}
+          />
+          <Input
+            label="State"
+            error={errors.state?.message}
+            {...register('state')}
+            onKeyDown={blockDigits}
+          />
+          <Input
+            label="Pincode"
+            inputMode="numeric"
+            maxLength={6}
+            error={errors.pincode?.message}
+            {...register('pincode')}
+            onKeyDown={allowDigitsOnly}
+          />
           {isEditing && (
             <Select
               label="Status"
@@ -154,7 +184,12 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
           {isEditing && <span className="ml-2 text-xs font-normal text-gray-500 dark:text-slate-400">(leave password empty to keep unchanged)</span>}
         </p>
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Admin Name" error={errors.adminName?.message} {...register('adminName')} />
+          <Input
+            label="Admin Name"
+            error={errors.adminName?.message}
+            {...register('adminName')}
+            onKeyDown={blockDigits}
+          />
           <Input label="Admin Email" type="email" error={errors.adminEmail?.message} {...register('adminEmail')} />
           <Input
             label={isEditing ? 'New Admin Password' : 'Admin Password'}

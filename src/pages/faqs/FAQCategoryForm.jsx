@@ -9,9 +9,10 @@ import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
+import { nameField, blockDigits } from '../../utils/validators';
 
 const schema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
+  name: nameField('Category name'),
   slug: z.string().optional(),
   description: z.string().optional(),
   sortOrder: z.coerce.number().min(0).optional(),
@@ -69,7 +70,7 @@ export default function FAQCategoryForm({ isOpen, onClose, category, onSuccess }
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Edit Category' : 'Add Category'} size="md">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input label="Category Name" error={errors.name?.message} {...register('name')} />
+        <Input label="Category Name" error={errors.name?.message} {...register('name')} onKeyDown={blockDigits} />
         <Input label="Slug" placeholder="auto-generated if empty" {...register('slug')} />
         <Input label="Description" {...register('description')} />
         <div className="grid grid-cols-2 gap-4">

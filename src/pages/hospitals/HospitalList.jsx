@@ -19,7 +19,9 @@ export default function HospitalList() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [sortField, setSortField] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [formOpen, setFormOpen] = useState(false);
@@ -40,7 +42,7 @@ export default function HospitalList() {
       const res = await api.get(endpoints.hospitals.list, {
         params: {
           page,
-          limit: 10,
+          limit: pageSize,
           search,
           isActive,
           sortBy: backendSortField,
@@ -56,12 +58,14 @@ export default function HospitalList() {
         planName: h.planName || h.plan?.name || null,
       })));
       setTotalPages(d.totalPages || d.pagination?.totalPages || 1);
+      setTotalItems(d.total ?? d.pagination?.total ?? list.length);
     } catch {
       setHospitals([]);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusFilter, sortField, sortOrder]);
+  }, [page, pageSize, search, statusFilter, sortField, sortOrder]);
 
   useEffect(() => { fetchHospitals(); }, [fetchHospitals]);
 
@@ -185,6 +189,9 @@ export default function HospitalList() {
         currentPage={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+        totalItems={totalItems}
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={(f, o) => { setSortField(f); setSortOrder(o); }}

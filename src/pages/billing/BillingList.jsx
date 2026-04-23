@@ -14,7 +14,9 @@ export default function BillingList() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [sortField, setSortField] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
 
@@ -22,17 +24,20 @@ export default function BillingList() {
     setLoading(true);
     try {
       const res = await api.get(endpoints.billing.list, {
-        params: { page, limit: 10, search, status: statusFilter || undefined, sortBy: sortField, sortOrder },
+        params: { page, limit: pageSize, search, status: statusFilter || undefined, sortBy: sortField, sortOrder },
       });
       const d = res.data.data || res.data;
-      setSubscriptions(d.subscriptions || d.rows || d.items || (Array.isArray(d) ? d : []));
+      const list = d.subscriptions || d.rows || d.items || (Array.isArray(d) ? d : []);
+      setSubscriptions(list);
       setTotalPages(d.totalPages || d.pagination?.totalPages || 1);
+      setTotalItems(d.total ?? d.pagination?.total ?? list.length);
     } catch {
       setSubscriptions([]);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusFilter, sortField, sortOrder]);
+  }, [page, pageSize, search, statusFilter, sortField, sortOrder]);
 
   useEffect(() => { fetchBilling(); }, [fetchBilling]);
 
@@ -107,6 +112,9 @@ export default function BillingList() {
         currentPage={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+        totalItems={totalItems}
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={(f, o) => { setSortField(f); setSortOrder(o); }}

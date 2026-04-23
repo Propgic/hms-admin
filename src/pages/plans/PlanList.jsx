@@ -15,7 +15,9 @@ export default function PlanList() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [formOpen, setFormOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -24,16 +26,19 @@ export default function PlanList() {
   const fetchPlans = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(endpoints.plans.list, { params: { page, limit: 10, search } });
+      const res = await api.get(endpoints.plans.list, { params: { page, limit: pageSize, search } });
       const d = res.data.data || res.data;
-      setPlans(d.plans || d.rows || d.items || (Array.isArray(d) ? d : []));
-      setTotalPages(d.totalPages || d.pagination?.totalPages || 1);
+      const list = d.plans || d.rows || d.items || (Array.isArray(d) ? d : []);
+      setPlans(list);
+      setTotalPages(d.totalPages || d.pagination?.totalPages || Math.max(1, Math.ceil((d.total ?? list.length) / pageSize)));
+      setTotalItems(d.total ?? d.pagination?.total ?? list.length);
     } catch {
       setPlans([]);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [page, pageSize, search]);
 
   useEffect(() => { fetchPlans(); }, [fetchPlans]);
 
@@ -130,6 +135,9 @@ export default function PlanList() {
         currentPage={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+        totalItems={totalItems}
         emptyTitle="No plans found"
         emptyMessage="Create your first subscription plan."
       />

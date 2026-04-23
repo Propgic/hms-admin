@@ -17,7 +17,9 @@ export default function FAQList() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [faqFormOpen, setFaqFormOpen] = useState(false);
   const [catFormOpen, setCatFormOpen] = useState(false);
   const [editingFaq, setEditingFaq] = useState(null);
@@ -28,30 +30,36 @@ export default function FAQList() {
   const fetchFaqs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(endpoints.faqs.list, { params: { page, limit: 10, search } });
+      const res = await api.get(endpoints.faqs.list, { params: { page, limit: pageSize, search } });
       const d = res.data.data || res.data;
-      setFaqs(d.faqs || d.rows || d.items || (Array.isArray(d) ? d : []));
+      const list = d.faqs || d.rows || d.items || (Array.isArray(d) ? d : []);
+      setFaqs(list);
       setTotalPages(d.totalPages || d.pagination?.totalPages || 1);
+      setTotalItems(d.total ?? d.pagination?.total ?? list.length);
     } catch {
       setFaqs([]);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [page, pageSize, search]);
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(endpoints.faqCategories.list, { params: { page, limit: 10, search } });
+      const res = await api.get(endpoints.faqCategories.list, { params: { page, limit: pageSize, search } });
       const d = res.data.data || res.data;
-      setCategories(d.categories || d.rows || d.items || (Array.isArray(d) ? d : []));
+      const list = d.categories || d.rows || d.items || (Array.isArray(d) ? d : []);
+      setCategories(list);
       setTotalPages(d.totalPages || d.pagination?.totalPages || 1);
+      setTotalItems(d.total ?? d.pagination?.total ?? list.length);
     } catch {
       setCategories([]);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [page, pageSize, search]);
 
   useEffect(() => {
     setPage(1);
@@ -213,6 +221,9 @@ export default function FAQList() {
         currentPage={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+        totalItems={totalItems}
         emptyTitle={activeTab === 'faqs' ? 'No FAQs found' : 'No categories found'}
         emptyMessage={activeTab === 'faqs' ? 'Create your first FAQ.' : 'Create your first category.'}
       />
