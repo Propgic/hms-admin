@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
@@ -9,13 +9,24 @@ import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
+import { allowDigitsOnly } from '../../utils/validators';
 
 const schema = z.object({
-  question: z.string().min(5, 'Question must be at least 5 characters'),
-  answer: z.string().min(10, 'Answer must be at least 10 characters'),
-  categoryId: z.string().optional(),
-  sortOrder: z.coerce.number().min(0).optional(),
-  isPublished: z.string().optional(),
+  question: z.string()
+    .trim()
+    .min(10, 'Question must be at least 10 characters')
+    .max(300, 'Question cannot exceed 300 characters'),
+  answer: z.string()
+    .trim()
+    .min(10, 'Answer must be at least 10 characters')
+    .max(5000, 'Answer cannot exceed 5000 characters'),
+  categoryId: z.string().min(1, 'Please select a category'),
+  sortOrder: z.coerce
+    .number({ invalid_type_error: 'Sort order must be a number' })
+    .int('Sort order must be a whole number')
+    .min(0, 'Sort order cannot be negative')
+    .max(9999, 'Sort order is too large'),
+  isActive: z.enum(['true', 'false'], { required_error: 'Please select a status' }),
 });
 
 export default function FAQForm({ isOpen, onClose, faq, onSuccess }) {
@@ -25,17 +36,18 @@ export default function FAQForm({ isOpen, onClose, faq, onSuccess }) {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { question: '', answer: '', categoryId: '', sortOrder: 0, isPublished: 'true' },
+    defaultValues: { question: '', answer: '', categoryId: '', sortOrder: 0, isActive: 'true' },
   });
 
   useEffect(() => {
     if (isOpen) {
-      api.get(endpoints.faqCategories.list, { params: { limit: 100 } })
+      api.get(endpoints.faqCategories.list, { params: { limit: 100, isActive: true } })
         .then((res) => {
           const d = res.data.data || res.data;
           const list = d.categories || d.rows || d.items || (Array.isArray(d) ? d : []);
@@ -46,22 +58,23 @@ export default function FAQForm({ isOpen, onClose, faq, onSuccess }) {
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
     if (faq) {
       reset({
         question: faq.question || '',
         answer: faq.answer || '',
         categoryId: faq.categoryId || faq.category?.id || faq.category?._id || '',
         sortOrder: faq.sortOrder || 0,
-        isPublished: faq.isPublished !== false ? 'true' : 'false',
+        isActive: faq.isActive !== false ? 'true' : 'false',
       });
     } else {
-      reset({ question: '', answer: '', categoryId: '', sortOrder: 0, isPublished: 'true' });
+      reset({ question: '', answer: '', categoryId: '', sortOrder: 0, isActive: 'true' });
     }
-  }, [faq, reset]);
+  }, [isOpen, faq, reset]);
 
   const onSubmit = async (data) => {
     setLoading(true);
-    const payload = { ...data, isPublished: data.isPublished === 'true' };
+    const payload = { ...data, isActive: data.isActive === 'true' };
     try {
       if (isEditing) {
         await api.put(endpoints.faqs.update(faq.id || faq._id), payload);
@@ -81,28 +94,63 @@ export default function FAQForm({ isOpen, onClose, faq, onSuccess }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Edit FAQ' : 'Add FAQ'} size="lg">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input label="Question" error={errors.question?.message} {...register('question')} />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <Input label="Question" placeholder="e.g. How do I add a new doctor?" maxLength={300} error={errors.question?.message} {...register('question')} />
         <div className="space-y-1">
           <label className="block text-sm font-medium text-gray-700">Answer</label>
           <textarea
             rows={4}
+            maxLength={5000}
+            placeholder="Provide a clear, complete answer..."
             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             {...register('answer')}
           />
           {errors.answer && <p className="text-xs text-red-600">{errors.answer.message}</p>}
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Select label="Category" options={categories} placeholder="Select category" {...register('categoryId')} />
-          <Input label="Sort Order" type="number" {...register('sortOrder')} />
+          <div>
+            <Controller
+              name="categoryId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Category"
+                  options={categories}
+                  placeholder="Select category"
+                  error={errors.categoryId?.message}
+                  {...field}
+                />
+              )}
+            />
+            {categories.length === 0 && (
+              <p className="text-xs text-gray-500 mt-1">No categories yet — add one in the Categories tab.</p>
+            )}
+          </div>
+          <Input
+            label="Sort Order"
+            type="number"
+            min={0}
+            max={9999}
+            inputMode="numeric"
+            onKeyDown={allowDigitsOnly}
+            error={errors.sortOrder?.message}
+            {...register('sortOrder')}
+          />
         </div>
-        <Select
-          label="Status"
-          options={[
-            { value: 'true', label: 'Published' },
-            { value: 'false', label: 'Draft' },
-          ]}
-          {...register('isPublished')}
+        <Controller
+          name="isActive"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Status"
+              options={[
+                { value: 'true', label: 'Published' },
+                { value: 'false', label: 'Draft' },
+              ]}
+              error={errors.isActive?.message}
+              {...field}
+            />
+          )}
         />
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <Button variant="secondary" onClick={onClose}>Cancel</Button>

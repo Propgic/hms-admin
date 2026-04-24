@@ -1,21 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
-import toast from 'react-hot-toast';
-import api from '../../api/axios';
-import endpoints from '../../api/endpoints';
-import DataTable from '../../components/DataTable';
-import Button from '../../components/ui/Button';
-import Badge from '../../components/ui/Badge';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import FAQForm from './FAQForm';
-import FAQCategoryForm from './FAQCategoryForm';
+import { useState, useEffect, useCallback } from "react";
+import { Plus, Edit2, Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
+import api from "../../api/axios";
+import endpoints from "../../api/endpoints";
+import DataTable from "../../components/DataTable";
+import Button from "../../components/ui/Button";
+import Badge from "../../components/ui/Badge";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import FAQForm from "./FAQForm";
+import FAQCategoryForm from "./FAQCategoryForm";
 
 export default function FAQList() {
-  const [activeTab, setActiveTab] = useState('faqs');
+  const [activeTab, setActiveTab] = useState("faqs");
   const [faqs, setFaqs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -30,7 +30,9 @@ export default function FAQList() {
   const fetchFaqs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(endpoints.faqs.list, { params: { page, limit: pageSize, search } });
+      const res = await api.get(endpoints.faqs.list, {
+        params: { page, limit: pageSize, search },
+      });
       const d = res.data.data || res.data;
       const list = d.faqs || d.rows || d.items || (Array.isArray(d) ? d : []);
       setFaqs(list);
@@ -47,9 +49,12 @@ export default function FAQList() {
   const fetchCategories = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(endpoints.faqCategories.list, { params: { page, limit: pageSize, search } });
+      const res = await api.get(endpoints.faqCategories.list, {
+        params: { page, limit: pageSize, search },
+      });
       const d = res.data.data || res.data;
-      const list = d.categories || d.rows || d.items || (Array.isArray(d) ? d : []);
+      const list =
+        d.categories || d.rows || d.items || (Array.isArray(d) ? d : []);
       setCategories(list);
       setTotalPages(d.totalPages || d.pagination?.totalPages || 1);
       setTotalItems(d.total ?? d.pagination?.total ?? list.length);
@@ -63,11 +68,11 @@ export default function FAQList() {
 
   useEffect(() => {
     setPage(1);
-    setSearch('');
+    setSearch("");
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === 'faqs') fetchFaqs();
+    if (activeTab === "faqs") fetchFaqs();
     else fetchCategories();
   }, [activeTab, fetchFaqs, fetchCategories]);
 
@@ -76,18 +81,18 @@ export default function FAQList() {
     setDeleting(true);
     try {
       const id = deleteConfirm.id || deleteConfirm._id;
-      if (deleteConfirm._type === 'category') {
+      if (deleteConfirm._type === "category") {
         await api.delete(endpoints.faqCategories.delete(id));
-        toast.success('Category deleted');
+        toast.success("Category deleted");
         fetchCategories();
       } else {
         await api.delete(endpoints.faqs.delete(id));
-        toast.success('FAQ deleted');
+        toast.success("FAQ deleted");
         fetchFaqs();
       }
       setDeleteConfirm(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Delete failed');
+      toast.error(err.response?.data?.message || "Delete failed");
     } finally {
       setDeleting(false);
     }
@@ -95,39 +100,53 @@ export default function FAQList() {
 
   const faqColumns = [
     {
-      header: 'Question',
-      accessor: 'question',
-      cell: (row) => <span className="font-medium text-gray-900 line-clamp-1">{row.question}</span>,
+      header: "Order",
+      accessor: "sortOrder",
+      align: "center",
+      cell: (row) => row.sortOrder ?? 0,
     },
     {
-      header: 'Category',
-      accessor: 'category',
-      cell: (row) => row.categoryName || row.category?.name || '-',
-    },
-    {
-      header: 'Status',
-      accessor: 'isPublished',
+      header: "Question",
+      accessor: "question",
       cell: (row) => (
-        <Badge color={row.isPublished !== false ? 'success' : 'gray'}>
-          {row.isPublished !== false ? 'Published' : 'Draft'}
+        <span className="font-medium text-gray-900 line-clamp-1">
+          {row.question}
+        </span>
+      ),
+    },
+    {
+      header: "Category",
+      accessor: "category",
+      cell: (row) => row.categoryName || row.category?.name || "-",
+    },
+    {
+      header: "Status",
+      accessor: "isActive",
+      cell: (row) => (
+        <Badge color={row.isActive !== false ? "success" : "gray"}>
+          {row.isActive !== false ? "Published" : "Draft"}
         </Badge>
       ),
     },
     {
-      header: 'Order',
-      accessor: 'sortOrder',
-      cell: (row) => row.sortOrder ?? 0,
-    },
-    {
-      header: 'Actions',
-      id: 'actions',
-      width: '100px',
+      header: "Actions",
+      id: "actions",
+      width: "100px",
       cell: (row) => (
         <div className="flex items-center gap-1">
-          <button onClick={() => { setEditingFaq(row); setFaqFormOpen(true); }} className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg">
+          <button
+            onClick={() => {
+              setEditingFaq(row);
+              setFaqFormOpen(true);
+            }}
+            className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg"
+          >
             <Edit2 className="w-4 h-4" />
           </button>
-          <button onClick={() => setDeleteConfirm(row)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+          <button
+            onClick={() => setDeleteConfirm(row)}
+            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+          >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -137,38 +156,56 @@ export default function FAQList() {
 
   const catColumns = [
     {
-      header: 'Name',
-      accessor: 'name',
-      cell: (row) => <span className="font-medium text-gray-900">{row.name}</span>,
+      header: "Sort Order",
+      accessor: "sortOrder",
+      align: "center",
+      cell: (row) => row.sortOrder ?? 0,
     },
     {
-      header: 'Slug',
-      accessor: 'slug',
+      header: "Name",
+      accessor: "name",
+      cell: (row) => (
+        <span className="font-medium text-gray-900">{row.name}</span>
+      ),
     },
     {
-      header: 'FAQ Count',
-      accessor: 'faqCount',
+      header: "Slug",
+      accessor: "slug",
+    },
+    {
+      header: "FAQ Count",
+      accessor: "faqCount",
+      align: "center",
       cell: (row) => row.faqCount ?? 0,
     },
     {
-      header: 'Status',
-      accessor: 'isActive',
+      header: "Status",
+      accessor: "isActive",
       cell: (row) => (
-        <Badge color={row.isActive !== false ? 'success' : 'gray'}>
-          {row.isActive !== false ? 'Active' : 'Inactive'}
+        <Badge color={row.isActive !== false ? "success" : "gray"}>
+          {row.isActive !== false ? "Active" : "Inactive"}
         </Badge>
       ),
     },
     {
-      header: 'Actions',
-      id: 'actions',
-      width: '100px',
+      header: "Actions",
+      id: "actions",
+      width: "100px",
       cell: (row) => (
         <div className="flex items-center gap-1">
-          <button onClick={() => { setEditingCat(row); setCatFormOpen(true); }} className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg">
+          <button
+            onClick={() => {
+              setEditingCat(row);
+              setCatFormOpen(true);
+            }}
+            className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg"
+          >
             <Edit2 className="w-4 h-4" />
           </button>
-          <button onClick={() => setDeleteConfirm({ ...row, _type: 'category' })} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+          <button
+            onClick={() => setDeleteConfirm({ ...row, _type: "category" })}
+            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+          >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -177,22 +214,29 @@ export default function FAQList() {
   ];
 
   const tabs = [
-    { key: 'faqs', label: 'FAQs' },
-    { key: 'categories', label: 'Categories' },
+    { key: "faqs", label: "FAQs" },
+    { key: "categories", label: "Categories" },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">Manage frequently asked questions and categories</p>
+        <p className="text-sm text-gray-500">
+          Manage frequently asked questions and categories
+        </p>
         <Button
           icon={Plus}
           onClick={() => {
-            if (activeTab === 'faqs') { setEditingFaq(null); setFaqFormOpen(true); }
-            else { setEditingCat(null); setCatFormOpen(true); }
+            if (activeTab === "faqs") {
+              setEditingFaq(null);
+              setFaqFormOpen(true);
+            } else {
+              setEditingCat(null);
+              setCatFormOpen(true);
+            }
           }}
         >
-          Add {activeTab === 'faqs' ? 'FAQ' : 'Category'}
+          Add {activeTab === "faqs" ? "FAQ" : "Category"}
         </Button>
       </div>
 
@@ -202,7 +246,9 @@ export default function FAQList() {
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              activeTab === tab.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              activeTab === tab.key
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             {tab.label}
@@ -211,33 +257,53 @@ export default function FAQList() {
       </div>
 
       <DataTable
-        columns={activeTab === 'faqs' ? faqColumns : catColumns}
-        data={activeTab === 'faqs' ? faqs : categories}
+        columns={activeTab === "faqs" ? faqColumns : catColumns}
+        data={activeTab === "faqs" ? faqs : categories}
         loading={loading}
         searchable
         searchValue={search}
-        onSearch={(v) => { setSearch(v); setPage(1); }}
-        searchPlaceholder={activeTab === 'faqs' ? 'Search FAQs...' : 'Search categories...'}
+        onSearch={(v) => {
+          setSearch(v);
+          setPage(1);
+        }}
+        searchPlaceholder={
+          activeTab === "faqs" ? "Search FAQs..." : "Search categories..."
+        }
         currentPage={page}
         totalPages={totalPages}
         onPageChange={setPage}
         pageSize={pageSize}
-        onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+        onPageSizeChange={(s) => {
+          setPageSize(s);
+          setPage(1);
+        }}
         totalItems={totalItems}
-        emptyTitle={activeTab === 'faqs' ? 'No FAQs found' : 'No categories found'}
-        emptyMessage={activeTab === 'faqs' ? 'Create your first FAQ.' : 'Create your first category.'}
+        emptyTitle={
+          activeTab === "faqs" ? "No FAQs found" : "No categories found"
+        }
+        emptyMessage={
+          activeTab === "faqs"
+            ? "Create your first FAQ."
+            : "Create your first category."
+        }
       />
 
       <FAQForm
         isOpen={faqFormOpen}
-        onClose={() => { setFaqFormOpen(false); setEditingFaq(null); }}
+        onClose={() => {
+          setFaqFormOpen(false);
+          setEditingFaq(null);
+        }}
         faq={editingFaq}
         onSuccess={fetchFaqs}
       />
 
       <FAQCategoryForm
         isOpen={catFormOpen}
-        onClose={() => { setCatFormOpen(false); setEditingCat(null); }}
+        onClose={() => {
+          setCatFormOpen(false);
+          setEditingCat(null);
+        }}
         category={editingCat}
         onSuccess={fetchCategories}
       />
@@ -246,8 +312,10 @@ export default function FAQList() {
         isOpen={!!deleteConfirm}
         onClose={() => setDeleteConfirm(null)}
         onConfirm={handleDelete}
-        title={deleteConfirm?._type === 'category' ? 'Delete Category' : 'Delete FAQ'}
-        message={`Are you sure you want to delete this ${deleteConfirm?._type === 'category' ? 'category' : 'FAQ'}?`}
+        title={
+          deleteConfirm?._type === "category" ? "Delete Category" : "Delete FAQ"
+        }
+        message={`Are you sure you want to delete this ${deleteConfirm?._type === "category" ? "category" : "FAQ"}?`}
         confirmText="Delete"
         loading={deleting}
       />

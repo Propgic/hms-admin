@@ -21,17 +21,16 @@ export default function HospitalDetail() {
   useEffect(() => {
     async function load() {
       try {
-        const [hRes, sRes, subRes] = await Promise.allSettled([
+        const [hRes, sRes] = await Promise.allSettled([
           api.get(endpoints.hospitals.get(id)),
           api.get(endpoints.hospitals.stats(id)),
-          api.get(endpoints.hospitals.subscriptions(id)),
         ]);
-        if (hRes.status === 'fulfilled') setHospital(hRes.value.data.data || hRes.value.data);
-        if (sRes.status === 'fulfilled') setStats(sRes.value.data.data || sRes.value.data);
-        if (subRes.status === 'fulfilled') {
-          const d = subRes.value.data.data || subRes.value.data;
-          setSubscriptions(Array.isArray(d) ? d : d.subscriptions || []);
+        if (hRes.status === 'fulfilled') {
+          const h = hRes.value.data.data || hRes.value.data;
+          setHospital(h);
+          setSubscriptions(Array.isArray(h?.subscriptions) ? h.subscriptions : []);
         }
+        if (sRes.status === 'fulfilled') setStats(sRes.value.data.data || sRes.value.data);
       } catch {
         // handled below with null checks
       } finally {
@@ -103,7 +102,7 @@ export default function HospitalDetail() {
               {subscriptions.map((sub, idx) => (
                 <div key={sub.id || sub._id || idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{sub.planName || sub.plan?.name || 'Plan'}</p>
+                    <p className="text-sm font-medium text-gray-900">{sub.planName || sub.plan?.name || hospital.plan?.name || 'Plan'}</p>
                     <p className="text-xs text-gray-500">
                       {dayjs(sub.startDate).format('MMM D, YYYY')} - {dayjs(sub.endDate).format('MMM D, YYYY')}
                     </p>

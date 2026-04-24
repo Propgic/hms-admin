@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
@@ -9,14 +9,32 @@ import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
-import { nameField, blockDigits } from '../../utils/validators';
+import { blockDigits, allowDigitsOnly } from '../../utils/validators';
+
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const CATEGORY_NAME_PATTERN = /^[A-Za-z][A-Za-z\s&/,.'()\-]*$/;
 
 const schema = z.object({
-  name: nameField('Category name'),
-  slug: z.string().optional(),
-  description: z.string().optional(),
-  sortOrder: z.coerce.number().min(0).optional(),
-  isActive: z.string().optional(),
+  name: z.string()
+    .trim()
+    .min(2, 'Category name must be at least 2 characters')
+    .max(60, 'Category name cannot exceed 60 characters')
+    .regex(CATEGORY_NAME_PATTERN, 'Category name can only contain letters, spaces, and & / , . \' ( ) -'),
+  slug: z.string()
+    .trim()
+    .max(80, 'Slug cannot exceed 80 characters')
+    .refine((v) => !v || SLUG_PATTERN.test(v), 'Slug must be lowercase letters, numbers, and hyphens only')
+    .optional(),
+  description: z.string()
+    .trim()
+    .min(10, 'Description must be at least 10 characters')
+    .max(500, 'Description cannot exceed 500 characters'),
+  sortOrder: z.coerce
+    .number({ invalid_type_error: 'Sort order must be a number' })
+    .int('Sort order must be a whole number')
+    .min(0, 'Sort order cannot be negative')
+    .max(9999, 'Sort order is too large'),
+  isActive: z.enum(['true', 'false'], { required_error: 'Please select a status' }),
 });
 
 export default function FAQCategoryForm({ isOpen, onClose, category, onSuccess }) {
@@ -25,6 +43,7 @@ export default function FAQCategoryForm({ isOpen, onClose, category, onSuccess }
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -34,6 +53,7 @@ export default function FAQCategoryForm({ isOpen, onClose, category, onSuccess }
   });
 
   useEffect(() => {
+    if (!isOpen) return;
     if (category) {
       reset({
         name: category.name || '',
@@ -45,7 +65,7 @@ export default function FAQCategoryForm({ isOpen, onClose, category, onSuccess }
     } else {
       reset({ name: '', slug: '', description: '', sortOrder: 0, isActive: 'true' });
     }
-  }, [category, reset]);
+  }, [isOpen, category, reset]);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -69,19 +89,54 @@ export default function FAQCategoryForm({ isOpen, onClose, category, onSuccess }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Edit Category' : 'Add Category'} size="md">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input label="Category Name" error={errors.name?.message} {...register('name')} onKeyDown={blockDigits} />
-        <Input label="Slug" placeholder="auto-generated if empty" {...register('slug')} />
-        <Input label="Description" {...register('description')} />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <Input
+          label="Category Name"
+          placeholder="e.g. General"
+          maxLength={60}
+          error={errors.name?.message}
+          onKeyDown={blockDigits}
+          {...register('name')}
+        />
+        <Input
+          label="Slug"
+          placeholder="auto-generated if empty"
+          maxLength={80}
+          error={errors.slug?.message}
+          {...register('slug')}
+        />
+        <Input
+          label="Description"
+          placeholder="Short summary of what this category covers"
+          maxLength={500}
+          error={errors.description?.message}
+          {...register('description')}
+        />
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Sort Order" type="number" {...register('sortOrder')} />
-          <Select
-            label="Status"
-            options={[
-              { value: 'true', label: 'Active' },
-              { value: 'false', label: 'Inactive' },
-            ]}
-            {...register('isActive')}
+          <Input
+            label="Sort Order"
+            type="number"
+            min={0}
+            max={9999}
+            inputMode="numeric"
+            onKeyDown={allowDigitsOnly}
+            error={errors.sortOrder?.message}
+            {...register('sortOrder')}
+          />
+          <Controller
+            name="isActive"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Status"
+                options={[
+                  { value: 'true', label: 'Active' },
+                  { value: 'false', label: 'Inactive' },
+                ]}
+                error={errors.isActive?.message}
+                {...field}
+              />
+            )}
           />
         </div>
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

@@ -105,21 +105,26 @@ export default function DataTable({
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50">
-              {columns.map((col) => (
-                <th
-                  key={col.accessor || col.id}
-                  className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    col.sortable ? 'cursor-pointer select-none hover:bg-gray-100' : ''
-                  }`}
-                  style={col.width ? { width: col.width } : undefined}
-                  onClick={() => handleSort(col)}
-                >
-                  <div className="flex items-center gap-1">
-                    {col.header}
-                    {renderSortIcon(col)}
-                  </div>
-                </th>
-              ))}
+              {columns.map((col) => {
+                const align = col.align || 'left';
+                const alignText = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
+                const alignFlex = align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start';
+                return (
+                  <th
+                    key={col.accessor || col.id}
+                    className={`px-4 py-3 ${alignText} text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
+                      col.sortable ? 'cursor-pointer select-none hover:bg-gray-100' : ''
+                    }`}
+                    style={col.width ? { width: col.width } : undefined}
+                    onClick={() => handleSort(col)}
+                  >
+                    <div className={`flex items-center gap-1 ${alignFlex}`}>
+                      {col.header}
+                      {renderSortIcon(col)}
+                    </div>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody
@@ -140,11 +145,15 @@ export default function DataTable({
             ) : (
               filteredData.map((row, rowIdx) => (
                 <tr key={row.id || row._id || rowIdx} className="hover:bg-gray-50 text-sm">
-                  {columns.map((col) => (
-                    <td key={col.accessor || col.id} className="px-4 py-3 text-gray-700">
-                      {col.cell ? col.cell(row, rowIdx) : row[col.accessor] ?? '-'}
-                    </td>
-                  ))}
+                  {columns.map((col) => {
+                    const align = col.align || 'left';
+                    const alignText = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
+                    return (
+                      <td key={col.accessor || col.id} className={`px-4 py-3 text-gray-700 ${alignText}`}>
+                        {col.cell ? col.cell(row, rowIdx) : row[col.accessor] ?? '-'}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))
             )}

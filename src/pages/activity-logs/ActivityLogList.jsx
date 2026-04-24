@@ -130,7 +130,7 @@ export default function ActivityLogList() {
               { value: 'logout', label: 'Logout' },
             ]}
             value={actionFilter}
-            onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
+            onChange={(v) => { setActionFilter(v); setPage(1); }}
             className="w-40"
           />
         )}

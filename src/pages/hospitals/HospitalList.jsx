@@ -207,7 +207,7 @@ export default function HospitalList() {
               { value: 'inactive', label: 'Inactive' },
             ]}
             value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            onChange={(v) => { setStatusFilter(v); setPage(1); }}
             className="w-40"
           />
         )}

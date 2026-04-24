@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
@@ -39,6 +39,7 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     watch,
@@ -144,7 +145,13 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
             {...register('phone')}
             onKeyDown={allowPhoneChars}
           />
-          <Select label="Plan" options={plans} placeholder="Select a plan" error={errors.planId?.message} {...register('planId')} />
+          <Controller
+            name="planId"
+            control={control}
+            render={({ field }) => (
+              <Select label="Plan" options={plans} placeholder="Select a plan" error={errors.planId?.message} {...field} />
+            )}
+          />
           <div className="col-span-2">
             <Input label="Address" error={errors.address?.message} {...register('address')} />
           </div>
@@ -173,7 +180,7 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
               label="Status"
               options={STATUS_OPTIONS}
               value={statusValue}
-              onChange={(e) => setValue('isActive', e.target.value === 'active', { shouldDirty: true })}
+              onChange={(v) => setValue('isActive', v === 'active', { shouldDirty: true })}
             />
           )}
         </div>
