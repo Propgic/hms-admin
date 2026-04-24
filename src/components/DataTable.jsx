@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import Pagination from './ui/Pagination';
 import EmptyState from './ui/EmptyState';
+import HeartRateLoader from './ui/HeartRateLoader';
 
 const SEARCH_DEBOUNCE_MS = 400;
 
@@ -160,8 +161,8 @@ export default function DataTable({
           </tbody>
         </table>
         {loading && filteredData.length > 0 && (
-          <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-14">
-            <div className="h-6 w-6 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+          <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-10">
+            <HeartRateLoader inline size="sm" />
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Loader2 } from 'lucide-react';
+import HeartRateLoader from './HeartRateLoader';
 
 const variants = {
   primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
@@ -38,7 +38,7 @@ export default function Button({
       {...props}
     >
       {loading ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
+        <HeartRateLoader inline size="sm" />
       ) : Icon ? (
         <Icon className="w-4 h-4" />
       ) : null}
