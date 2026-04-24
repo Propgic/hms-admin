@@ -68,9 +68,9 @@ export default function ReportsDashboard() {
   const hospitalData = data?.hospitals || [];
 
   const statCards = [
-    { icon: DollarSign, label: 'Total Revenue', value: overview?.totalRevenue ?? '₹0', change: overview?.revenueGrowth ?? '', changeType: 'positive', iconBg: 'bg-green-100', iconColor: 'text-green-600' },
+    { icon: DollarSign, label: 'Total Revenue', value: overview?.totalRevenue ?? formatCurrency(0), change: overview?.revenueGrowth ?? '', changeType: 'positive', iconBg: 'bg-green-100', iconColor: 'text-green-600' },
     { icon: Building2, label: 'Total Hospitals', value: overview?.totalHospitals ?? 0, change: overview?.hospitalGrowth ?? '', changeType: 'positive', iconBg: 'bg-blue-100', iconColor: 'text-blue-600' },
-    { icon: CreditCard, label: 'Avg Revenue / Hospital', value: overview?.avgRevenue ?? '₹0', change: overview?.avgGrowth ?? '', changeType: 'positive', iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
+    { icon: CreditCard, label: 'Avg Revenue / Hospital', value: overview?.avgRevenue ?? formatCurrency(0), change: overview?.avgGrowth ?? '', changeType: 'positive', iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
     { icon: TrendingUp, label: 'Churn Rate', value: overview?.churnRate ?? '0%', change: overview?.churnChange ?? '', changeType: 'positive', iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600' },
   ];
 

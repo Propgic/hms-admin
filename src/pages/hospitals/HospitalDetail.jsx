@@ -9,6 +9,7 @@ import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import StatCard from '../../components/StatCard';
+import { formatCurrency } from '../../utils/formatters';
 
 export default function HospitalDetail() {
   const { id } = useParams();
@@ -77,7 +78,7 @@ export default function HospitalDetail() {
           <StatCard icon={Building2} label="Doctors" value={stats.totalDoctors ?? 0} iconBg="bg-blue-100" iconColor="text-blue-600" />
           <StatCard icon={Building2} label="Patients" value={stats.totalPatients ?? 0} iconBg="bg-green-100" iconColor="text-green-600" />
           <StatCard icon={Building2} label="Appointments" value={stats.totalAppointments ?? 0} iconBg="bg-purple-100" iconColor="text-purple-600" />
-          <StatCard icon={CreditCard} label="Revenue" value={stats.totalRevenue ?? '₹0'} iconBg="bg-yellow-100" iconColor="text-yellow-600" />
+          <StatCard icon={CreditCard} label="Revenue" value={stats.totalRevenue ?? formatCurrency(0)} iconBg="bg-yellow-100" iconColor="text-yellow-600" />
         </div>
       )}
 

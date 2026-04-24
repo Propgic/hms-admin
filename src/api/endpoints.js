@@ -79,6 +79,9 @@ const endpoints = {
     plans: `${PLATFORM}/reports/plans`,
   },
 
+  // Public platform settings (no auth)
+  publicSettings: `${PLATFORM}/public-settings`,
+
   // Settings
   settings: {
     profile: `${PLATFORM}/settings/profile`,

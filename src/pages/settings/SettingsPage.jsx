@@ -7,6 +7,7 @@ import { User, Lock, Settings } from 'lucide-react';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import { useAuth } from '../../hooks/useAuth';
+import { usePlatformSettings } from '../../hooks/usePlatformSettings';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
@@ -62,6 +63,7 @@ const CURRENCY_OPTIONS = [
   { value: 'USD', label: 'USD — US Dollar' },
   { value: 'EUR', label: 'EUR — Euro' },
   { value: 'GBP', label: 'GBP — British Pound' },
+  { value: 'AED', label: 'AED — UAE Dirham' },
 ];
 
 const MAINTENANCE_OPTIONS = [
@@ -245,6 +247,7 @@ function PasswordCard() {
 function PlatformCard() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const { refresh: refreshPlatform } = usePlatformSettings();
   const {
     register,
     handleSubmit,
@@ -308,6 +311,9 @@ function PlatformCard() {
         allowNewSignups: Boolean(updated.allowNewSignups),
       });
       toast.success('Platform settings updated');
+      await refreshPlatform();
+      // Reload so all already-rendered components re-fetch and reformat with the new currency
+      setTimeout(() => window.location.reload(), 600);
     } catch (err) {
       const msg = extractServerError(err, 'Failed to update settings');
       const fieldErrors = err?.response?.data?.errors;

@@ -9,6 +9,8 @@ import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import { nameField, blockDigits } from '../../utils/validators';
+import { getCurrencySymbol } from '../../utils/formatters';
+import { usePlatformSettings } from '../../hooks/usePlatformSettings';
 
 const featuresList = [
   'Patient Management',
@@ -40,6 +42,8 @@ export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [features, setFeatures] = useState([]);
   const isEditing = !!plan;
+  const { currency } = usePlatformSettings();
+  const currencySymbol = getCurrencySymbol(currency);
 
   const {
     register,
@@ -105,7 +109,7 @@ export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <Input label="Plan Name" error={errors.name?.message} {...register('name')} onKeyDown={blockDigits} />
-          <Input label="Price (₹/month)" type="number" error={errors.price?.message} {...register('price')} />
+          <Input label={`Price (${currencySymbol}/month)`} type="number" error={errors.price?.message} {...register('price')} />
           <Input label="Duration (days)" type="number" error={errors.durationInDays?.message} {...register('durationInDays')} />
           <Input label="Trial Days" type="number" error={errors.trialDays?.message} {...register('trialDays')} />
           <Input label="Max Users" type="number" error={errors.maxUsers?.message} {...register('maxUsers')} />

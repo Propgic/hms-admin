@@ -11,6 +11,7 @@ import Spinner from '../../components/ui/Spinner';
 import Badge from '../../components/ui/Badge';
 import { AreaGradient, CustomTooltip } from '../../components/charts/ChartPrimitives';
 import { CHART_COLORS, ANIM, AXIS_TICK, GRID_STROKE } from '../../components/charts/chartConfig';
+import { formatCurrency } from '../../utils/formatters';
 
 function unwrap(res) {
   const body = res?.value?.data;
@@ -19,7 +20,7 @@ function unwrap(res) {
 }
 
 function inr(n) {
-  return `₹${Number(n || 0).toLocaleString('en-IN')}`;
+  return formatCurrency(n);
 }
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -179,7 +180,7 @@ export default function Dashboard() {
     {
       icon: DollarSign,
       label: 'Monthly Revenue',
-      value: stats?.monthlyRevenue ?? '₹0',
+      value: stats?.monthlyRevenue ?? formatCurrency(0),
       change: stats?.revenueGrowth ?? '',
       changeType: 'positive',
       iconBg: 'bg-yellow-100',
