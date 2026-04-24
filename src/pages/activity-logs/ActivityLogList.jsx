@@ -98,7 +98,7 @@ export default function ActivityLogList() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-gray-500">Track all platform activities and actions</p>
+      <p className="text-base text-gray-600 dark:text-slate-400">Track all platform activities and actions</p>
 
       <DataTable
         columns={columns}

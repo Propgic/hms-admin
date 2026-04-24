@@ -99,7 +99,7 @@ export default function BillingList() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-gray-500">Track all hospital subscriptions and payments</p>
+      <p className="text-base text-gray-600 dark:text-slate-400">Track all hospital subscriptions and payments</p>
 
       <DataTable
         columns={columns}

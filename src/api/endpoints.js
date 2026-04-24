@@ -82,6 +82,11 @@ const endpoints = {
   // Public platform settings (no auth)
   publicSettings: `${PLATFORM}/public-settings`,
 
+  // Notifications
+  notifications: {
+    list: `${PLATFORM}/notifications`,
+  },
+
   // Settings
   settings: {
     profile: `${PLATFORM}/settings/profile`,

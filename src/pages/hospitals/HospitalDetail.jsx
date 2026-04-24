@@ -66,7 +66,7 @@ export default function HospitalDetail() {
         </button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{hospital.name}</h1>
-          <p className="text-sm text-gray-500">Hospital details and subscription history</p>
+          <p className="text-base text-gray-600 dark:text-slate-400">Hospital details and subscription history</p>
         </div>
         <Badge color={statusColor(hospital.status)} className="ml-auto text-sm">
           {hospital.status}

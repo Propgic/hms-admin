@@ -206,7 +206,7 @@ export default function Dashboard() {
         </div>
       )}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">Platform overview and key metrics</p>
+        <p className="text-base text-gray-600 dark:text-slate-400">Platform overview and key metrics</p>
         <button
           onClick={() => load(true)}
           disabled={refreshing}

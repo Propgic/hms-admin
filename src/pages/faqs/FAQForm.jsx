@@ -97,12 +97,12 @@ export default function FAQForm({ isOpen, onClose, faq, onSuccess }) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <Input label="Question" placeholder="e.g. How do I add a new doctor?" maxLength={300} error={errors.question?.message} {...register('question')} />
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">Answer</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Answer</label>
           <textarea
             rows={4}
             maxLength={5000}
             placeholder="Provide a clear, complete answer..."
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border-gray-300 dark:border-slate-700"
             {...register('answer')}
           />
           {errors.answer && <p className="text-xs text-red-600">{errors.answer.message}</p>}
@@ -123,7 +123,7 @@ export default function FAQForm({ isOpen, onClose, faq, onSuccess }) {
               )}
             />
             {categories.length === 0 && (
-              <p className="text-xs text-gray-500 mt-1">No categories yet — add one in the Categories tab.</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">No categories yet — add one in the Categories tab.</p>
             )}
           </div>
           <Input
@@ -152,7 +152,7 @@ export default function FAQForm({ isOpen, onClose, faq, onSuccess }) {
             />
           )}
         />
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit" loading={loading}>{isEditing ? 'Update' : 'Create'} FAQ</Button>
         </div>

@@ -172,7 +172,7 @@ export default function HospitalList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">Manage all registered hospitals</p>
+        <p className="text-base text-gray-600 dark:text-slate-400">Manage all registered hospitals</p>
         <Button icon={Plus} onClick={() => { setEditingHospital(null); setFormOpen(true); }}>
           Add Hospital
         </Button>

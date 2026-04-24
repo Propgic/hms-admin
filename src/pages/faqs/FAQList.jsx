@@ -221,7 +221,7 @@ export default function FAQList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">
+        <p className="text-base text-gray-600 dark:text-slate-400">
           Manage frequently asked questions and categories
         </p>
         <Button
