@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Eye, Edit2, Trash2, Power } from 'lucide-react';
+import { Plus, Eye, Edit2, Trash2, Power, Hourglass, ShieldAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 import api from '../../api/axios';
@@ -11,6 +11,46 @@ import Badge from '../../components/ui/Badge';
 import Select from '../../components/ui/Select';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import HospitalForm from './HospitalForm';
+
+const BAND_STYLES = {
+  green: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  yellow: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  red: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+};
+
+function HealthBadge({ health }) {
+  if (!health) return <span className="text-xs text-gray-400">—</span>;
+  const cls = BAND_STYLES[health.band] || BAND_STYLES.yellow;
+  const tooltip = (health.reasons || []).join(' · ') || `Health ${health.score}/100`;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${cls}`}
+      title={tooltip}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+      {health.score}
+    </span>
+  );
+}
+
+function TrialCell({ trial }) {
+  if (!trial) return <span className="text-xs text-gray-400">—</span>;
+  if (trial.expired) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-600 dark:text-rose-400">
+        <ShieldAlert className="w-3.5 h-3.5" />
+        Expired
+      </span>
+    );
+  }
+  const urgent = trial.daysLeft <= 3;
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium ${urgent ? 'text-amber-600 dark:text-amber-400' : 'text-gray-700 dark:text-slate-300'}`}>
+      <Hourglass className="w-3.5 h-3.5" />
+      {trial.daysLeft}d left
+    </span>
+  );
+}
 
 export default function HospitalList() {
   const navigate = useNavigate();
@@ -96,8 +136,19 @@ export default function HospitalList() {
   };
 
   const statusColor = (s) => {
-    const map = { active: 'success', trial: 'warning', suspended: 'danger', inactive: 'gray' };
+    const map = { active: 'success', trial: 'warning', trial_expired: 'danger', suspended: 'danger', inactive: 'gray' };
     return map[s] || 'gray';
+  };
+
+  const sweepTrials = async () => {
+    try {
+      const res = await api.post(endpoints.hospitals.sweepExpiredTrials);
+      const d = res.data?.data || {};
+      toast.success(`Swept ${d.suspended || 0} expired trial(s)`);
+      fetchHospitals();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Sweep failed');
+    }
   };
 
   const columns = [
@@ -119,10 +170,20 @@ export default function HospitalList() {
       cell: (row) => row.planName || row.plan?.name || row.plan || '-',
     },
     {
+      header: 'Health',
+      accessor: 'health',
+      cell: (row) => <HealthBadge health={row.health} />,
+    },
+    {
+      header: 'Trial',
+      accessor: 'trial',
+      cell: (row) => <TrialCell trial={row.trial} />,
+    },
+    {
       header: 'Status',
       accessor: 'status',
       sortable: true,
-      cell: (row) => <Badge color={statusColor(row.status)}>{row.status}</Badge>,
+      cell: (row) => <Badge color={statusColor(row.status)}>{String(row.status).replace('_', ' ')}</Badge>,
     },
     {
       header: 'Joined',
@@ -171,11 +232,16 @@ export default function HospitalList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-base text-gray-600 dark:text-slate-400">Manage all registered hospitals</p>
-        <Button icon={Plus} onClick={() => { setEditingHospital(null); setFormOpen(true); }}>
-          Add Hospital
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={sweepTrials} title="Suspend hospitals whose trial has expired and who have no active paid subscription">
+            Sweep Expired Trials
+          </Button>
+          <Button icon={Plus} onClick={() => { setEditingHospital(null); setFormOpen(true); }}>
+            Add Hospital
+          </Button>
+        </div>
       </div>
 
       <DataTable

@@ -24,6 +24,13 @@ import PlanList from '../pages/plans/PlanList';
 // Billing
 import BillingList from '../pages/billing/BillingList';
 
+// Invoices
+import InvoiceList from '../pages/invoices/InvoiceList';
+import InvoiceDetail from '../pages/invoices/InvoiceDetail';
+
+// Coupons
+import CouponList from '../pages/coupons/CouponList';
+
 // FAQs
 import FAQList from '../pages/faqs/FAQList';
 
@@ -101,6 +108,9 @@ export default function AppRoutes() {
         <Route path="/hospitals/:id" element={<HospitalDetail />} />
         <Route path="/plans" element={<PlanList />} />
         <Route path="/billing" element={<BillingList />} />
+        <Route path="/invoices" element={<InvoiceList />} />
+        <Route path="/invoices/:id" element={<InvoiceDetail />} />
+        <Route path="/coupons" element={<CouponList />} />
         <Route path="/faqs" element={<FAQList />} />
         <Route path="/activity-logs" element={<ActivityLogList />} />
         <Route path="/reports" element={<ReportsDashboard />} />

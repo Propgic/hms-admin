@@ -20,7 +20,10 @@ const schema = z.object({
   state: nameField('State'),
   pincode: pincodeField(),
   planId: z.string().min(1, 'Please select a plan'),
+  gstin: z.string().optional().or(z.literal('')),
   isActive: z.boolean().optional(),
+  isTrial: z.boolean().optional(),
+  trialEndsAt: z.string().optional().or(z.literal('')),
   adminName: optionalNameField('Admin name'),
   adminEmail: z.string().email('Invalid admin email').optional().or(z.literal('')),
   adminPassword: z.string().min(6, 'Min 6 characters').optional().or(z.literal('')),
@@ -49,7 +52,8 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
     resolver: zodResolver(schema),
     defaultValues: {
       name: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
-      planId: '', isActive: true, adminName: '', adminEmail: '', adminPassword: '',
+      planId: '', gstin: '', isActive: true, isTrial: false, trialEndsAt: '',
+      adminName: '', adminEmail: '', adminPassword: '',
     },
   });
 
@@ -89,7 +93,10 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
         state: source.state || '',
         pincode: source.pincode || '',
         planId: source.planId || source.plan?.id || source.plan?._id || '',
+        gstin: source.gstin || '',
         isActive: source.isActive !== undefined ? !!source.isActive : (source.status !== 'suspended'),
+        isTrial: !!source.isTrial,
+        trialEndsAt: source.trialEndsAt ? new Date(source.trialEndsAt).toISOString().slice(0, 10) : '',
         adminName: source.admin?.name || '',
         adminEmail: source.admin?.email || '',
         adminPassword: '',
@@ -97,7 +104,8 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
     } else if (!isEditing) {
       reset({
         name: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
-        planId: '', isActive: true, adminName: '', adminEmail: '', adminPassword: '',
+        planId: '', gstin: '', isActive: true, isTrial: false, trialEndsAt: '',
+        adminName: '', adminEmail: '', adminPassword: '',
       });
     }
   }, [fullHospital, hospital, isEditing, reset]);
@@ -181,6 +189,29 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
               options={STATUS_OPTIONS}
               value={statusValue}
               onChange={(v) => setValue('isActive', v === 'active', { shouldDirty: true })}
+            />
+          )}
+          <Input
+            label="GSTIN (for tax invoices)"
+            placeholder="22AAAAA0000A1Z5"
+            error={errors.gstin?.message}
+            {...register('gstin')}
+          />
+          <div className="flex items-center gap-2 mt-6">
+            <input
+              id="isTrial"
+              type="checkbox"
+              {...register('isTrial')}
+              className="w-4 h-4"
+            />
+            <label htmlFor="isTrial" className="text-sm text-gray-700 dark:text-slate-300">On Trial</label>
+          </div>
+          {watch('isTrial') && (
+            <Input
+              label="Trial Ends On"
+              type="date"
+              error={errors.trialEndsAt?.message}
+              {...register('trialEndsAt')}
             />
           )}
         </div>

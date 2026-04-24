@@ -28,6 +28,27 @@ const endpoints = {
     toggleStatus: (id) => `${PLATFORM}/hospitals/${id}/toggle-status`,
     stats: (id) => `${PLATFORM}/hospitals/${id}/stats`,
     subscriptions: (id) => `${PLATFORM}/hospitals/${id}/subscriptions`,
+    sweepExpiredTrials: `${PLATFORM}/hospitals/sweep-expired-trials`,
+  },
+
+  // Coupons
+  coupons: {
+    list: `${PLATFORM}/coupons`,
+    create: `${PLATFORM}/coupons`,
+    get: (id) => `${PLATFORM}/coupons/${id}`,
+    update: (id) => `${PLATFORM}/coupons/${id}`,
+    delete: (id) => `${PLATFORM}/coupons/${id}`,
+    validate: `${PLATFORM}/coupons/validate`,
+  },
+
+  // Invoices
+  invoices: {
+    list: `${PLATFORM}/invoices`,
+    create: `${PLATFORM}/invoices`,
+    get: (id) => `${PLATFORM}/invoices/${id}`,
+    print: (id) => `${PLATFORM}/invoices/${id}/print`,
+    markPaid: (id) => `${PLATFORM}/invoices/${id}/mark-paid`,
+    voidInvoice: (id) => `${PLATFORM}/invoices/${id}/void`,
   },
 
   // Plans
@@ -77,6 +98,7 @@ const endpoints = {
     revenue: `${PLATFORM}/reports/revenue`,
     hospitals: `${PLATFORM}/reports/hospitals`,
     plans: `${PLATFORM}/reports/plans`,
+    mrr: `${PLATFORM}/reports/mrr`,
   },
 
   // Public platform settings (no auth)

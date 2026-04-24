@@ -3,7 +3,8 @@ import HeartRateLoader from './HeartRateLoader';
 
 const variants = {
   primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-  secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-500',
+  secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-500 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800',
+  success: 'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500',
   danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
   ghost: 'bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-gray-500',
 };

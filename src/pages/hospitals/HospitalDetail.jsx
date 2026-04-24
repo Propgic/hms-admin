@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, CreditCard } from 'lucide-react';
+import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, CreditCard, Activity, Hourglass } from 'lucide-react';
 import dayjs from 'dayjs';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
@@ -54,8 +54,14 @@ export default function HospitalDetail() {
   }
 
   const statusColor = (s) => {
-    const map = { active: 'success', trial: 'warning', suspended: 'danger', inactive: 'gray' };
+    const map = { active: 'success', trial: 'warning', trial_expired: 'danger', suspended: 'danger', inactive: 'gray' };
     return map[s] || 'gray';
+  };
+
+  const healthBandClass = {
+    green: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    yellow: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    red: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
   };
 
   return (
@@ -69,9 +75,62 @@ export default function HospitalDetail() {
           <p className="text-base text-gray-600 dark:text-slate-400">Hospital details and subscription history</p>
         </div>
         <Badge color={statusColor(hospital.status)} className="ml-auto text-sm">
-          {hospital.status}
+          {String(hospital.status).replace('_', ' ')}
         </Badge>
       </div>
+
+      {(hospital.health || hospital.trial) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {hospital.health && (
+            <Card className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5" /> Account Health
+                  </div>
+                  <div className="mt-2 flex items-center gap-3">
+                    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${healthBandClass[hospital.health.band] || healthBandClass.yellow}`}>
+                      <span className="w-2 h-2 rounded-full bg-current" />
+                      {hospital.health.score} / 100
+                    </span>
+                    <span className="text-sm text-gray-500 dark:text-slate-400 uppercase">{hospital.health.band}</span>
+                  </div>
+                </div>
+              </div>
+              {hospital.health.reasons?.length > 0 && (
+                <ul className="mt-3 text-xs text-gray-600 dark:text-slate-400 list-disc list-inside space-y-0.5">
+                  {hospital.health.reasons.map((r, i) => <li key={i}>{r}</li>)}
+                </ul>
+              )}
+            </Card>
+          )}
+
+          {hospital.trial && (
+            <Card className="p-5">
+              <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Hourglass className="w-3.5 h-3.5" /> Trial Status
+              </div>
+              {hospital.trial.expired ? (
+                <div className="mt-2 text-sm">
+                  <div className="font-semibold text-rose-600 dark:text-rose-400">Trial expired</div>
+                  <div className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+                    Ended {dayjs(hospital.trial.trialEndsAt).format('MMM D, YYYY')}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-2 text-sm">
+                  <div className="font-semibold text-gray-900 dark:text-slate-100">
+                    {hospital.trial.daysLeft} day(s) remaining
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+                    Ends {dayjs(hospital.trial.trialEndsAt).format('MMM D, YYYY')}
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
+        </div>
+      )}
 
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

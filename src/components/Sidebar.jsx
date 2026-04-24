@@ -2,7 +2,7 @@ import { Sidebar as ProSidebar, Menu, MenuItem } from 'react-pro-sidebar';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, CreditCard, Receipt, HelpCircle, ScrollText,
-  BarChart3, Settings, ChevronsLeft, ChevronsRight,
+  BarChart3, Settings, ChevronsLeft, ChevronsRight, Ticket, FileText,
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 
@@ -11,6 +11,8 @@ const navItems = [
   { label: 'Hospitals', path: '/hospitals', icon: Building2 },
   { label: 'Plans', path: '/plans', icon: CreditCard },
   { label: 'Billing', path: '/billing', icon: Receipt },
+  { label: 'Invoices', path: '/invoices', icon: FileText },
+  { label: 'Coupons', path: '/coupons', icon: Ticket },
   { label: 'FAQs', path: '/faqs', icon: HelpCircle },
   { label: 'Activity Logs', path: '/activity-logs', icon: ScrollText },
   { label: 'Reports', path: '/reports', icon: BarChart3 },

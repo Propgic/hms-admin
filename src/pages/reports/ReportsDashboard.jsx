@@ -3,7 +3,7 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Sector,
 } from 'recharts';
-import { TrendingUp, DollarSign, Building2, CreditCard } from 'lucide-react';
+import { TrendingUp, DollarSign, Building2, CreditCard, Repeat, Activity, Users, PiggyBank } from 'lucide-react';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import StatCard from '../../components/StatCard';
@@ -39,17 +39,19 @@ export default function ReportsDashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const [overviewRes, revenueRes, hospitalsRes, plansRes] = await Promise.allSettled([
+        const [overviewRes, revenueRes, hospitalsRes, plansRes, mrrRes] = await Promise.allSettled([
           api.get(endpoints.reports.overview),
           api.get(endpoints.reports.revenue),
           api.get(endpoints.reports.hospitals),
           api.get(endpoints.reports.plans),
+          api.get(endpoints.reports.mrr),
         ]);
         setData({
           overview: overviewRes.status === 'fulfilled' ? (overviewRes.value.data.data || overviewRes.value.data) : null,
           revenue: revenueRes.status === 'fulfilled' ? (revenueRes.value.data.data || revenueRes.value.data) : null,
           hospitals: hospitalsRes.status === 'fulfilled' ? (hospitalsRes.value.data.data || hospitalsRes.value.data) : null,
           plans: plansRes.status === 'fulfilled' ? (plansRes.value.data.data || plansRes.value.data) : null,
+          mrr: mrrRes.status === 'fulfilled' ? (mrrRes.value.data.data || mrrRes.value.data) : null,
         });
       } catch {
         setData({});
@@ -66,6 +68,8 @@ export default function ReportsDashboard() {
   const revenueData = data?.revenue || [];
   const planData = data?.plans || [];
   const hospitalData = data?.hospitals || [];
+  const mrr = data?.mrr;
+  const movement = mrr?.movement || [];
 
   const statCards = [
     { icon: DollarSign, label: 'Total Revenue', value: overview?.totalRevenue ?? formatCurrency(0), change: overview?.revenueGrowth ?? '', changeType: 'positive', iconBg: 'bg-green-100', iconColor: 'text-green-600' },
@@ -81,6 +85,95 @@ export default function ReportsDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card) => <StatCard key={card.label} {...card} />)}
       </div>
+
+      {mrr && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              icon={Repeat}
+              label="MRR"
+              value={mrr.mrr}
+              change={mrr.mrrDeltaPct ? `${mrr.mrrDeltaPct >= 0 ? '+' : ''}${mrr.mrrDeltaPct}% vs last month` : ''}
+              changeType={mrr.mrrDeltaPct >= 0 ? 'positive' : 'negative'}
+              iconBg="bg-emerald-100"
+              iconColor="text-emerald-600"
+            />
+            <StatCard
+              icon={PiggyBank}
+              label="ARR"
+              value={mrr.arr}
+              change="Annualized"
+              changeType="neutral"
+              iconBg="bg-blue-100"
+              iconColor="text-blue-600"
+            />
+            <StatCard
+              icon={Users}
+              label="ARPU"
+              value={mrr.arpu}
+              change={`${mrr.activeSubs} active subs`}
+              changeType="neutral"
+              iconBg="bg-purple-100"
+              iconColor="text-purple-600"
+            />
+            <StatCard
+              icon={Activity}
+              label="LTV"
+              value={mrr.ltv}
+              change={`Rev. churn ${mrr.revenueChurnRate}%`}
+              changeType={mrr.revenueChurnRate <= 5 ? 'positive' : 'negative'}
+              iconBg="bg-yellow-100"
+              iconColor="text-yellow-600"
+            />
+          </div>
+
+          <Card className="p-5 chart-fade-in">
+            <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">MRR Movement</h2>
+                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">New vs churned recurring revenue, last 12 months</p>
+              </div>
+              <div className="flex items-center gap-4 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-500 dark:text-slate-400">New this month</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{mrr.newMRRThisMonth}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-500 dark:text-slate-400">Churned</span>
+                  <span className="font-semibold text-rose-600 dark:text-rose-400">{mrr.churnedMRRThisMonth}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-500 dark:text-slate-400">Net</span>
+                  <span className={`font-semibold ${mrr.netNewMRRRaw >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                    {mrr.netNewMRR}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-500 dark:text-slate-400">Logo churn</span>
+                  <span className="font-semibold text-gray-900 dark:text-slate-100">{mrr.logoChurnRate}%</span>
+                </div>
+              </div>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={movement} barGap={6} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <defs>
+                    <BarGradient id="barNewMRR" color={CHART_COLORS.emerald} />
+                    <BarGradient id="barChurnMRR" color={CHART_COLORS.rose} />
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
+                  <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                  <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(v) => formatCompactCurrency(v)} />
+                  <Tooltip content={<CustomTooltip valueFormatter={currencyFmt} />} cursor={{ fill: 'var(--surface-hover)', opacity: 0.5 }} />
+                  <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: 12, color: 'var(--text-muted)', paddingBottom: 8 }} />
+                  <Bar dataKey="newMRR" name="New MRR" fill="url(#barNewMRR)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} />
+                  <Bar dataKey="churnedMRR" name="Churned MRR" fill="url(#barChurnMRR)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} animationBegin={120} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-5 chart-fade-in">

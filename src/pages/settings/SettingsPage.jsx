@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { User, Lock, Settings } from 'lucide-react';
+import { User, Lock, Settings, Receipt } from 'lucide-react';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import { useAuth } from '../../hooks/useAuth';
@@ -58,6 +58,19 @@ const platformSchema = z.object({
   allowNewSignups: z.coerce.boolean(),
 });
 
+const billingSchema = z.object({
+  companyName: z.string().trim().max(120).optional().or(z.literal('')),
+  companyGstin: z.string().trim().max(32).optional().or(z.literal('')),
+  companyPan: z.string().trim().max(20).optional().or(z.literal('')),
+  companyAddress: z.string().trim().max(300).optional().or(z.literal('')),
+  companyState: z.string().trim().max(64).optional().or(z.literal('')),
+  companyPincode: z.string().trim().max(10).optional().or(z.literal('')),
+  companyCountry: z.string().trim().max(64).optional().or(z.literal('')),
+  defaultGstRate: z.coerce.number().min(0).max(100),
+  defaultHsnCode: z.string().trim().min(1).max(16),
+  invoicePrefix: z.string().trim().min(1).max(12),
+});
+
 const CURRENCY_OPTIONS = [
   { value: 'INR', label: 'INR — Indian Rupee' },
   { value: 'USD', label: 'USD — US Dollar' },
@@ -104,8 +117,105 @@ export default function SettingsPage() {
         <ProfileCard user={user} updateUser={updateUser} />
         <PasswordCard />
         <PlatformCard />
+        <BillingCard />
       </div>
     </div>
+  );
+}
+
+function BillingCard() {
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm({
+    resolver: zodResolver(billingSchema),
+    defaultValues: {
+      companyName: '', companyGstin: '', companyPan: '', companyAddress: '',
+      companyState: '', companyPincode: '', companyCountry: 'India',
+      defaultGstRate: 18, defaultHsnCode: '998314', invoicePrefix: 'INV-',
+    },
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get(endpoints.settings.platform);
+        const data = res.data?.data || res.data || {};
+        if (cancelled) return;
+        reset({
+          companyName: data.companyName ?? '',
+          companyGstin: data.companyGstin ?? '',
+          companyPan: data.companyPan ?? '',
+          companyAddress: data.companyAddress ?? '',
+          companyState: data.companyState ?? '',
+          companyPincode: data.companyPincode ?? '',
+          companyCountry: data.companyCountry ?? 'India',
+          defaultGstRate: Number(data.defaultGstRate ?? 18),
+          defaultHsnCode: data.defaultHsnCode ?? '998314',
+          invoicePrefix: data.invoicePrefix ?? 'INV-',
+        });
+      } catch (err) {
+        if (!cancelled) toast.error(extractServerError(err, 'Failed to load billing settings'));
+      } finally {
+        if (!cancelled) setFetching(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [reset]);
+
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      await api.put(endpoints.settings.updatePlatform, data);
+      toast.success('Billing identity updated');
+      reset(data);
+    } catch (err) {
+      toast.error(extractServerError(err, 'Failed to update billing settings'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className="p-5 lg:col-span-2">
+      <div className="flex items-center gap-3 mb-1">
+        <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg flex items-center justify-center">
+          <Receipt className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
+        </div>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Invoice / GST Identity</h2>
+      </div>
+      <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
+        Printed on every tax invoice. CGST/SGST vs IGST is decided by comparing your company state to the customer's state.
+      </p>
+      {fetching ? (
+        <div className="py-10 flex justify-center"><Spinner size="md" /></div>
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input label="Company Name" error={errors.companyName?.message} {...register('companyName')} />
+            <Input label="GSTIN" placeholder="22AAAAA0000A1Z5" error={errors.companyGstin?.message} {...register('companyGstin')} />
+            <Input label="PAN" placeholder="ABCDE1234F" error={errors.companyPan?.message} {...register('companyPan')} />
+            <Input label="Country" error={errors.companyCountry?.message} {...register('companyCountry')} />
+            <div className="sm:col-span-2">
+              <Input label="Registered Address" error={errors.companyAddress?.message} {...register('companyAddress')} />
+            </div>
+            <Input label="State" placeholder="Karnataka" error={errors.companyState?.message} {...register('companyState')} />
+            <Input label="Pincode" error={errors.companyPincode?.message} {...register('companyPincode')} />
+            <Input label="Default GST Rate (%)" type="number" step="0.01" error={errors.defaultGstRate?.message} {...register('defaultGstRate')} />
+            <Input label="Default HSN/SAC Code" error={errors.defaultHsnCode?.message} {...register('defaultHsnCode')} />
+            <Input label="Invoice Prefix" error={errors.invoicePrefix?.message} {...register('invoicePrefix')} />
+          </div>
+          <div className="flex justify-end">
+            <Button type="submit" loading={loading} disabled={!isDirty || loading}>Save Billing Settings</Button>
+          </div>
+        </form>
+      )}
+    </Card>
   );
 }
 
