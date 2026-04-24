@@ -96,10 +96,10 @@ export default function ReportsDashboard() {
                 </defs>
                 <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
                 <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
-                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(v) => formatCompactCurrency(v)} />
+                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(v) => formatCompactCurrency(v)} domain={[0, 'auto']} allowDataOverflow />
                 <Tooltip content={<CustomTooltip valueFormatter={currencyFmt} />} cursor={{ stroke: CHART_COLORS.emerald, strokeWidth: 1, strokeDasharray: '4 4' }} />
                 <Area
-                  type="natural"
+                  type="monotone"
                   name="Revenue"
                   dataKey="revenue"
                   stroke={CHART_COLORS.emerald}

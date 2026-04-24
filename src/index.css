@@ -158,9 +158,17 @@ body {
   .chart-fade-in, .row-stagger { animation: none !important; }
 }
 
-/* Recharts: remove default focus outline on hover cursor lines */
+/* Recharts: remove default focus outline on hover cursor lines and slice clicks */
+.recharts-wrapper,
+.recharts-surface,
+.recharts-wrapper *,
+.recharts-surface * { outline: none !important; }
 .recharts-wrapper:focus,
-.recharts-surface:focus { outline: none; }
+.recharts-surface:focus,
+.recharts-sector:focus,
+.recharts-pie-sector:focus,
+.recharts-pie-sector path:focus,
+.recharts-active-shape:focus { outline: none !important; }
 
 /* Hide native number-input spin buttons across the app */
 input[type="number"]::-webkit-outer-spin-button,

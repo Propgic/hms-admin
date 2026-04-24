@@ -83,6 +83,7 @@ const endpoints = {
   settings: {
     profile: `${PLATFORM}/settings/profile`,
     updateProfile: `${PLATFORM}/settings/profile`,
+    changePassword: `${PLATFORM}/settings/profile/password`,
     platform: `${PLATFORM}/settings/platform`,
     updatePlatform: `${PLATFORM}/settings/platform`,
   },
