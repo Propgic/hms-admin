@@ -103,6 +103,27 @@ const endpoints = {
     mrr: `${PLATFORM}/reports/mrr`,
   },
 
+  // Impersonation
+  impersonate: (hospitalId) => `${PLATFORM}/impersonate/${hospitalId}`,
+
+  // Announcements
+  announcements: {
+    list: `${PLATFORM}/announcements`,
+    create: `${PLATFORM}/announcements`,
+    get: (id) => `${PLATFORM}/announcements/${id}`,
+    update: (id) => `${PLATFORM}/announcements/${id}`,
+    delete: (id) => `${PLATFORM}/announcements/${id}`,
+  },
+
+  // Support tickets (admin inbox)
+  support: {
+    list: `${PLATFORM}/support-tickets`,
+    get: (id) => `${PLATFORM}/support-tickets/${id}`,
+    update: (id) => `${PLATFORM}/support-tickets/${id}`,
+    reply: (id) => `${PLATFORM}/support-tickets/${id}/messages`,
+    stats: `${PLATFORM}/support-tickets/stats`,
+  },
+
   // Public platform settings (no auth)
   publicSettings: `${PLATFORM}/public-settings`,
 

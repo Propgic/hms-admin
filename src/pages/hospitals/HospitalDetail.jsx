@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, CreditCard, Activity, Hourglass } from 'lucide-react';
+import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, CreditCard, Activity, Hourglass, LogIn } from 'lucide-react';
 import dayjs from 'dayjs';
+import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import StatCard from '../../components/StatCard';
 import { formatCurrency } from '../../utils/formatters';
+
+const HMS_TENANT_URL = import.meta.env.VITE_HMS_URL || 'http://localhost:3004';
 
 export default function HospitalDetail() {
   const { id } = useParams();
@@ -18,6 +22,31 @@ export default function HospitalDetail() {
   const [stats, setStats] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [impersonateOpen, setImpersonateOpen] = useState(false);
+  const [impersonating, setImpersonating] = useState(false);
+
+  const startImpersonation = async () => {
+    setImpersonating(true);
+    try {
+      const res = await api.post(endpoints.impersonate(id));
+      const data = res.data?.data || res.data;
+      if (!data?.token || !data?.hospital?.slug) {
+        throw new Error('Invalid impersonation response');
+      }
+      const url = `${HMS_TENANT_URL}/impersonate?token=${encodeURIComponent(data.token)}&slug=${encodeURIComponent(data.hospital.slug)}`;
+      const win = window.open(url, '_blank', 'noopener');
+      if (!win) {
+        toast.error('Popup blocked — allow popups to impersonate');
+      } else {
+        toast.success(`Impersonating ${data.targetUser?.email || 'hospital admin'}`);
+      }
+      setImpersonateOpen(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to start impersonation');
+    } finally {
+      setImpersonating(false);
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -74,9 +103,20 @@ export default function HospitalDetail() {
           <h1 className="text-2xl font-bold text-gray-900">{hospital.name}</h1>
           <p className="text-base text-gray-600 dark:text-slate-400">Hospital details and subscription history</p>
         </div>
-        <Badge color={statusColor(hospital.status)} className="ml-auto text-sm">
-          {String(hospital.status).replace('_', ' ')}
-        </Badge>
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="secondary"
+            icon={LogIn}
+            onClick={() => setImpersonateOpen(true)}
+            disabled={!hospital.isActive}
+            title={hospital.isActive ? 'Sign in as this hospital' : 'Hospital is suspended'}
+          >
+            Login as Hospital
+          </Button>
+          <Badge color={statusColor(hospital.status)} className="text-sm">
+            {String(hospital.status).replace('_', ' ')}
+          </Badge>
+        </div>
       </div>
 
       {(hospital.health || hospital.trial) && (
@@ -174,6 +214,17 @@ export default function HospitalDetail() {
           )}
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={impersonateOpen}
+        onClose={() => !impersonating && setImpersonateOpen(false)}
+        onConfirm={startImpersonation}
+        title="Login as hospital"
+        message={`A short-lived (10-minute) token will be issued to sign in as ${hospital.name}'s primary admin. The session will be logged in Activity Logs. Continue?`}
+        confirmText="Open hospital app"
+        variant="primary"
+        loading={impersonating}
+      />
     </div>
   );
 }

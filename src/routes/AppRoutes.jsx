@@ -31,6 +31,13 @@ import InvoiceDetail from '../pages/invoices/InvoiceDetail';
 // Coupons
 import CouponList from '../pages/coupons/CouponList';
 
+// Announcements
+import AnnouncementList from '../pages/announcements/AnnouncementList';
+
+// Support
+import TicketList from '../pages/support/TicketList';
+import TicketDetail from '../pages/support/TicketDetail';
+
 // FAQs
 import FAQList from '../pages/faqs/FAQList';
 
@@ -111,6 +118,9 @@ export default function AppRoutes() {
         <Route path="/invoices" element={<InvoiceList />} />
         <Route path="/invoices/:id" element={<InvoiceDetail />} />
         <Route path="/coupons" element={<CouponList />} />
+        <Route path="/announcements" element={<AnnouncementList />} />
+        <Route path="/support" element={<TicketList />} />
+        <Route path="/support/:id" element={<TicketDetail />} />
         <Route path="/faqs" element={<FAQList />} />
         <Route path="/activity-logs" element={<ActivityLogList />} />
         <Route path="/reports" element={<ReportsDashboard />} />

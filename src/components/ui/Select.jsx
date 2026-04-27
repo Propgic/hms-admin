@@ -79,6 +79,7 @@ const Select = forwardRef(function Select(
     name,
     isClearable = false,
     isDisabled = false,
+    isMulti = false,
     className = '',
     ...props
   },
@@ -86,7 +87,11 @@ const Select = forwardRef(function Select(
 ) {
   const { isDark } = useTheme();
   const palette = isDark ? DARK : LIGHT;
-  const selected = options.find((o) => String(o.value) === String(value ?? '')) || null;
+  // For isMulti, value is an array of values; we map it to an array of options.
+  // For single, value is one value mapped to its option.
+  const selected = isMulti
+    ? options.filter((o) => Array.isArray(value) && value.some((v) => String(v) === String(o.value)))
+    : (options.find((o) => String(o.value) === String(value ?? '')) || null);
 
   return (
     <div className="space-y-1">
@@ -97,12 +102,21 @@ const Select = forwardRef(function Select(
         ref={ref}
         name={name}
         value={selected}
-        onChange={(opt) => onChange?.(opt ? opt.value : '')}
+        onChange={(opt) => {
+          if (isMulti) {
+            // react-select passes [] / null when empty, array of options otherwise.
+            const arr = Array.isArray(opt) ? opt.map((o) => o.value) : [];
+            onChange?.(arr);
+          } else {
+            onChange?.(opt ? opt.value : '');
+          }
+        }}
         onBlur={onBlur}
         options={options}
         placeholder={placeholder}
         isClearable={isClearable}
         isDisabled={isDisabled}
+        isMulti={isMulti}
         styles={buildStyles(!!error, palette)}
         className={clsx('react-select-container', className)}
         classNamePrefix="react-select"
