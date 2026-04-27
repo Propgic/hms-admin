@@ -12,8 +12,17 @@ import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
 import { nameField, optionalNameField, phoneField, pincodeField, blockDigits, allowDigitsOnly, allowPhoneChars } from '../../utils/validators';
 
+const SLUG_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
 const schema = z.object({
   name: nameField('Hospital name'),
+  slug: z
+    .string()
+    .min(2, 'Min 2 characters')
+    .max(50, 'Max 50 characters')
+    .regex(SLUG_REGEX, 'Lowercase letters, digits and hyphens only (e.g. huda-hospitals)')
+    .optional()
+    .or(z.literal('')),
   email: z.string().email('Invalid email'),
   phone: phoneField(),
   address: z.string().min(5, 'Address is required'),
@@ -29,6 +38,13 @@ const schema = z.object({
   adminEmail: z.string().email('Invalid admin email').optional().or(z.literal('')),
   adminPassword: z.string().min(6, 'Min 6 characters').optional().or(z.literal('')),
 });
+
+function deriveSlug(name) {
+  return String(name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -52,13 +68,21 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
+      name: '', slug: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
       planId: '', gstin: '', isActive: true, isTrial: false, trialEndsAt: '',
       adminName: '', adminEmail: '', adminPassword: '',
     },
   });
 
   const statusValue = watch('isActive') ? 'active' : 'suspended';
+  const nameValue = watch('name');
+  const [slugTouched, setSlugTouched] = useState(false);
+
+  // Auto-fill slug from name on create until the user types in the slug field.
+  useEffect(() => {
+    if (isEditing || slugTouched) return;
+    setValue('slug', deriveSlug(nameValue), { shouldValidate: false });
+  }, [nameValue, isEditing, slugTouched, setValue]);
 
   useEffect(() => {
     if (isOpen) {
@@ -87,6 +111,7 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
     if (source && isEditing) {
       reset({
         name: source.name || '',
+        slug: source.slug || '',
         email: source.email || '',
         phone: source.phone || '',
         address: source.address || '',
@@ -104,10 +129,11 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
       });
     } else if (!isEditing) {
       reset({
-        name: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
+        name: '', slug: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
         planId: '', gstin: '', isActive: true, isTrial: false, trialEndsAt: '',
         adminName: '', adminEmail: '', adminPassword: '',
       });
+      setSlugTouched(false);
     }
   }, [fullHospital, hospital, isEditing, reset]);
 
@@ -120,10 +146,14 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
         if (!payload.adminPassword) delete payload.adminPassword;
         if (!payload.adminName) delete payload.adminName;
         if (!payload.adminEmail) delete payload.adminEmail;
+        // Slug is the tenant identifier and cannot change after creation
+        delete payload.slug;
         await api.put(endpoints.hospitals.update(hospital.id || hospital._id), payload);
         toast.success('Hospital updated');
       } else {
-        await api.post(endpoints.hospitals.create, data);
+        const payload = { ...data };
+        if (!payload.slug) delete payload.slug;
+        await api.post(endpoints.hospitals.create, payload);
         toast.success('Hospital created');
       }
       onSuccess();
@@ -145,6 +175,23 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
             {...register('name')}
             onKeyDown={blockDigits}
           />
+          {isEditing ? (
+            <Input
+              label="Hospital ID (tenant)"
+              value={watch('slug') || ''}
+              readOnly
+              disabled
+            />
+          ) : (
+            <Input
+              label="Hospital ID (tenant)"
+              placeholder="auto-generated from name (e.g. huda-hospitals)"
+              error={errors.slug?.message}
+              {...register('slug', {
+                onChange: () => setSlugTouched(true),
+              })}
+            />
+          )}
           <Input label="Email" type="email" error={errors.email?.message} {...register('email')} />
           <Input
             label="Phone"
