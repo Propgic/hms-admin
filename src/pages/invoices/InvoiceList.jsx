@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Printer, CheckCircle2, XCircle, Eye } from 'lucide-react';
+import { Plus, Printer, CheckCircle2, XCircle, Eye, Pencil, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
@@ -8,10 +8,13 @@ import endpoints from '../../api/endpoints';
 import DataTable from '../../components/DataTable';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import Select from '../../components/ui/Select';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import InvoiceForm from './InvoiceForm';
 import { formatCurrency } from '../../utils/formatters';
 
 const STATUS_COLOR = {
+  draft: 'warning',
   paid: 'success',
   issued: 'info',
   overdue: 'danger',
@@ -19,28 +22,50 @@ const STATUS_COLOR = {
   void: 'gray',
 };
 
-// Resolves the backend base URL used by the axios instance so we can open the
-// printable invoice in a new tab with the same cookie-based session.
-function openPrintable(id) {
-  const base = api.defaults.baseURL || '';
-  window.open(`${base}${endpoints.invoices.print(id)}`, '_blank', 'noopener');
+async function openPrintable(id) {
+  try {
+    const res = await api.get(endpoints.invoices.print(id), {
+      responseType: 'blob',
+      headers: { Accept: 'text/html' },
+    });
+    const url = URL.createObjectURL(new Blob([res.data], { type: 'text/html' }));
+    const w = window.open(url, '_blank', 'noopener');
+    if (!w) {
+      toast.error('Popup blocked — allow popups to print invoices');
+      URL.revokeObjectURL(url);
+      return;
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Failed to open invoice');
+  }
 }
 
 export default function InvoiceList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [formOpen, setFormOpen] = useState(false);
+  const [voidTarget, setVoidTarget] = useState(null);
+  const [voiding, setVoiding] = useState(false);
+  const [paidTarget, setPaidTarget] = useState(null);
+  const [paying, setPaying] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [issueTarget, setIssueTarget] = useState(null);
+  const [issuing, setIssuing] = useState(false);
   const navigate = useNavigate();
 
   const fetchList = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(endpoints.invoices.list, { params: { page, limit: pageSize, search } });
+      const params = { page, limit: pageSize, search };
+      if (statusFilter) params.status = statusFilter;
+      const res = await api.get(endpoints.invoices.list, { params });
       const d = res.data.data || res.data;
       const list = Array.isArray(d) ? d : (d.items || d.rows || []);
       const pg = res.data.pagination || {};
@@ -53,28 +78,53 @@ export default function InvoiceList() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, search]);
+  }, [page, pageSize, search, statusFilter]);
 
   useEffect(() => { fetchList(); }, [fetchList]);
 
-  const markPaid = async (inv) => {
+  const markPaid = async () => {
+    if (!paidTarget) return;
+    setPaying(true);
     try {
-      await api.post(endpoints.invoices.markPaid(inv.id));
-      toast.success(`Invoice ${inv.number} marked paid`);
+      await api.post(endpoints.invoices.markPaid(paidTarget.id));
+      toast.success(`Invoice ${paidTarget.number} marked paid`);
+      setPaidTarget(null);
       fetchList();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Action failed');
+    } finally {
+      setPaying(false);
     }
   };
 
-  const voidInvoice = async (inv) => {
-    if (!window.confirm(`Void invoice ${inv.number}? This cannot be undone.`)) return;
+  const voidInvoice = async () => {
+    if (!voidTarget) return;
+    setVoiding(true);
     try {
-      await api.post(endpoints.invoices.voidInvoice(inv.id));
-      toast.success('Invoice voided');
+      await api.post(endpoints.invoices.voidInvoice(voidTarget.id));
+      toast.success(voidTarget.status === 'draft' ? 'Draft voided' : 'Invoice voided');
+      setVoidTarget(null);
       fetchList();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Action failed');
+    } finally {
+      setVoiding(false);
+    }
+  };
+
+  const issueInvoice = async () => {
+    if (!issueTarget) return;
+    setIssuing(true);
+    try {
+      const res = await api.post(endpoints.invoices.issue(issueTarget.id));
+      const issued = res.data?.data || res.data;
+      toast.success(`Issued as ${issued?.number || 'invoice'}`);
+      setIssueTarget(null);
+      fetchList();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to issue invoice');
+    } finally {
+      setIssuing(false);
     }
   };
 
@@ -82,7 +132,9 @@ export default function InvoiceList() {
     {
       header: 'Number',
       accessor: 'number',
-      cell: (row) => <span className="font-mono font-semibold text-gray-900 dark:text-slate-100">{row.number}</span>,
+      cell: (row) => row.number
+        ? <span className="font-mono font-semibold text-gray-900 dark:text-slate-100">{row.number}</span>
+        : <span className="font-mono text-xs italic text-gray-400 dark:text-slate-500">— draft —</span>,
     },
     {
       header: 'Hospital',
@@ -97,7 +149,9 @@ export default function InvoiceList() {
     {
       header: 'Issued',
       accessor: 'issueDate',
-      cell: (row) => dayjs(row.issueDate).format('MMM D, YYYY'),
+      cell: (row) => row.status === 'draft'
+        ? <span className="text-gray-400 dark:text-slate-500">—</span>
+        : dayjs(row.issuedAt || row.issueDate).format('MMM D, YYYY'),
     },
     {
       header: 'Due',
@@ -128,43 +182,67 @@ export default function InvoiceList() {
     {
       header: 'Actions',
       id: 'actions',
-      width: '200px',
-      cell: (row) => (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => navigate(`/invoices/${row.id}`)}
-            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
-            title="View"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => openPrintable(row.id)}
-            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg"
-            title="Print / download PDF"
-          >
-            <Printer className="w-4 h-4" />
-          </button>
-          {row.status !== 'paid' && row.status !== 'void' && (
-            <>
+      width: '220px',
+      cell: (row) => {
+        const isDraft = row.status === 'draft';
+        const isFinal = row.status === 'paid' || row.status === 'void';
+        return (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => navigate(`/invoices/${row.id}`)}
+              className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
+              title="View"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            {!isDraft && (
               <button
-                onClick={() => markPaid(row)}
+                onClick={() => openPrintable(row.id)}
+                className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg"
+                title="Print / download PDF"
+              >
+                <Printer className="w-4 h-4" />
+              </button>
+            )}
+            {isDraft && (
+              <>
+                <button
+                  onClick={() => setEditTarget(row)}
+                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
+                  title="Edit draft"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setIssueTarget(row)}
+                  className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg"
+                  title="Issue invoice"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </>
+            )}
+            {(row.status === 'issued' || row.status === 'overdue') && (
+              <button
+                onClick={() => setPaidTarget(row)}
                 className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg"
                 title="Mark paid"
               >
                 <CheckCircle2 className="w-4 h-4" />
               </button>
+            )}
+            {!isFinal && (
               <button
-                onClick={() => voidInvoice(row)}
+                onClick={() => setVoidTarget(row)}
                 className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
-                title="Void"
+                title={isDraft ? 'Discard draft' : 'Void invoice'}
               >
                 <XCircle className="w-4 h-4" />
               </button>
-            </>
-          )}
-        </div>
-      ),
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -191,12 +269,73 @@ export default function InvoiceList() {
         totalItems={totalItems}
         emptyTitle="No invoices yet"
         emptyMessage="Generate your first tax invoice for a hospital subscription."
+        headerActions={
+          <Select
+            options={[
+              { value: '', label: 'All Status' },
+              { value: 'draft', label: 'Draft' },
+              { value: 'issued', label: 'Issued' },
+              { value: 'paid', label: 'Paid' },
+              { value: 'overdue', label: 'Overdue' },
+              { value: 'void', label: 'Void' },
+            ]}
+            value={statusFilter}
+            onChange={(v) => { setStatusFilter(v); setPage(1); }}
+            className="w-40"
+          />
+        }
       />
 
       <InvoiceForm
         isOpen={formOpen}
         onClose={() => setFormOpen(false)}
         onSuccess={fetchList}
+      />
+
+      <InvoiceForm
+        isOpen={!!editTarget}
+        invoice={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSuccess={fetchList}
+      />
+
+      <ConfirmDialog
+        isOpen={!!issueTarget}
+        onClose={() => !issuing && setIssueTarget(null)}
+        onConfirm={issueInvoice}
+        title="Issue invoice"
+        message={issueTarget ? `Finalize this draft and issue a tax invoice for ${issueTarget.hospital?.name || 'the hospital'}? An invoice number will be assigned and the document will be locked from further edits.` : ''}
+        confirmText="Issue invoice"
+        variant="primary"
+        loading={issuing}
+      />
+
+      <ConfirmDialog
+        isOpen={!!paidTarget}
+        onClose={() => !paying && setPaidTarget(null)}
+        onConfirm={markPaid}
+        title="Mark invoice as paid"
+        message={paidTarget ? `Mark invoice ${paidTarget.number} as paid? This will record payment of ${formatCurrency(Number(paidTarget.total), paidTarget.currency || 'INR')} and close the invoice.` : ''}
+        confirmText="Mark paid"
+        variant="success"
+        loading={paying}
+      />
+
+      <ConfirmDialog
+        isOpen={!!voidTarget}
+        onClose={() => !voiding && setVoidTarget(null)}
+        onConfirm={voidInvoice}
+        title={voidTarget?.status === 'draft' ? 'Discard draft' : 'Void invoice'}
+        message={
+          voidTarget
+            ? voidTarget.status === 'draft'
+              ? `Discard this draft for ${voidTarget.hospital?.name || 'the hospital'}? It has not been issued, so no number was assigned.`
+              : `Void invoice ${voidTarget.number}? This cannot be undone, but the record will remain for audit purposes.`
+            : ''
+        }
+        confirmText={voidTarget?.status === 'draft' ? 'Discard draft' : 'Void invoice'}
+        variant="danger"
+        loading={voiding}
       />
     </div>
   );

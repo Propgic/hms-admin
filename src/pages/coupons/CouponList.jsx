@@ -7,6 +7,7 @@ import endpoints from '../../api/endpoints';
 import DataTable from '../../components/DataTable';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import Select from '../../components/ui/Select';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import CouponForm from './CouponForm';
 
@@ -33,6 +34,7 @@ export default function CouponList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -45,7 +47,9 @@ export default function CouponList() {
   const fetchList = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(endpoints.coupons.list, { params: { page, limit: pageSize, search } });
+      const params = { page, limit: pageSize, search };
+      if (statusFilter) params.status = statusFilter;
+      const res = await api.get(endpoints.coupons.list, { params });
       const d = res.data.data || res.data;
       const list = Array.isArray(d) ? d : (d.items || d.rows || []);
       const pg = res.data.pagination || {};
@@ -58,7 +62,7 @@ export default function CouponList() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, search]);
+  }, [page, pageSize, search, statusFilter]);
 
   useEffect(() => { fetchList(); }, [fetchList]);
 
@@ -159,6 +163,18 @@ export default function CouponList() {
         totalItems={totalItems}
         emptyTitle="No coupons yet"
         emptyMessage="Create your first promotional discount code."
+        headerActions={
+          <Select
+            options={[
+              { value: '', label: 'All Status' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+            ]}
+            value={statusFilter}
+            onChange={(v) => { setStatusFilter(v); setPage(1); }}
+            className="w-40"
+          />
+        }
       />
 
       <CouponForm

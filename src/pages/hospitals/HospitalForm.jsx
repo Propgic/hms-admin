@@ -7,6 +7,7 @@ import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
+import DatePicker from '../../components/ui/DatePicker';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
 import { nameField, optionalNameField, phoneField, pincodeField, blockDigits, allowDigitsOnly, allowPhoneChars } from '../../utils/validators';
@@ -207,11 +208,18 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
             <label htmlFor="isTrial" className="text-sm text-gray-700 dark:text-slate-300">On Trial</label>
           </div>
           {watch('isTrial') && (
-            <Input
-              label="Trial Ends On"
-              type="date"
-              error={errors.trialEndsAt?.message}
-              {...register('trialEndsAt')}
+            <Controller
+              control={control}
+              name="trialEndsAt"
+              render={({ field }) => (
+                <DatePicker
+                  label="Trial Ends On"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.trialEndsAt?.message}
+                />
+              )}
             />
           )}
         </div>

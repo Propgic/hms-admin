@@ -46,6 +46,8 @@ const endpoints = {
     list: `${PLATFORM}/invoices`,
     create: `${PLATFORM}/invoices`,
     get: (id) => `${PLATFORM}/invoices/${id}`,
+    update: (id) => `${PLATFORM}/invoices/${id}`,
+    issue: (id) => `${PLATFORM}/invoices/${id}/issue`,
     print: (id) => `${PLATFORM}/invoices/${id}/print`,
     markPaid: (id) => `${PLATFORM}/invoices/${id}/mark-paid`,
     voidInvoice: (id) => `${PLATFORM}/invoices/${id}/void`,

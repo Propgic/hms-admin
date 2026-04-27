@@ -7,6 +7,7 @@ import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
+import DatePicker from '../../components/ui/DatePicker';
 import Button from '../../components/ui/Button';
 import Select from '../../components/ui/Select';
 
@@ -242,11 +243,18 @@ export default function CouponForm({ isOpen, onClose, coupon, onSuccess }) {
             error={errors.maxRedemptions?.message}
             {...register('maxRedemptions')}
           />
-          <Input
-            label="Expires On"
-            type="date"
-            error={errors.expiresAt?.message}
-            {...register('expiresAt')}
+          <Controller
+            control={control}
+            name="expiresAt"
+            render={({ field }) => (
+              <DatePicker
+                label="Expires On"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.expiresAt?.message}
+              />
+            )}
           />
         </div>
 

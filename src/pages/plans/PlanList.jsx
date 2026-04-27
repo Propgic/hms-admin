@@ -6,6 +6,7 @@ import endpoints from '../../api/endpoints';
 import DataTable from '../../components/DataTable';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import Select from '../../components/ui/Select';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import PlanForm from './PlanForm';
 import { formatCurrency } from '../../utils/formatters';
@@ -14,6 +15,7 @@ export default function PlanList() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,7 +28,10 @@ export default function PlanList() {
   const fetchPlans = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(endpoints.plans.list, { params: { page, limit: pageSize, search } });
+      const params = { page, limit: pageSize, search };
+      if (statusFilter === 'active') params.isActive = true;
+      else if (statusFilter === 'inactive') params.isActive = false;
+      const res = await api.get(endpoints.plans.list, { params });
       const d = res.data.data || res.data;
       const list = d.plans || d.rows || d.items || (Array.isArray(d) ? d : []);
       setPlans(list);
@@ -38,7 +43,7 @@ export default function PlanList() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, search]);
+  }, [page, pageSize, search, statusFilter]);
 
   useEffect(() => { fetchPlans(); }, [fetchPlans]);
 
@@ -140,6 +145,18 @@ export default function PlanList() {
         totalItems={totalItems}
         emptyTitle="No plans found"
         emptyMessage="Create your first subscription plan."
+        headerActions={
+          <Select
+            options={[
+              { value: '', label: 'All Status' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+            ]}
+            value={statusFilter}
+            onChange={(v) => { setStatusFilter(v); setPage(1); }}
+            className="w-40"
+          />
+        }
       />
 
       <PlanForm

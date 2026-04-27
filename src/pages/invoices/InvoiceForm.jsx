@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
@@ -10,6 +10,7 @@ import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Select from '../../components/ui/Select';
+import DatePicker from '../../components/ui/DatePicker';
 
 const CURRENCY_OPTIONS = [
   { value: 'INR', label: 'INR — Indian Rupee' },
@@ -62,17 +63,52 @@ function previewTotals(lines, gstRate) {
 
 const DEFAULTS = (overrides = {}) => ({
   hospitalId: overrides.hospitalId || '',
-  dueDate: '',
-  currency: 'INR',
-  gstRate: 18,
-  couponCode: '',
-  notes: '',
-  lineItems: overrides.lineItems || [{ description: '', hsnCode: '', quantity: 1, rate: 0 }],
+  dueDate: overrides.dueDate || '',
+  currency: overrides.currency || 'INR',
+  gstRate: overrides.gstRate ?? 18,
+  couponCode: overrides.couponCode || '',
+  notes: overrides.notes || '',
+  lineItems: overrides.lineItems?.length
+    ? overrides.lineItems
+    : [{ description: '', hsnCode: '', quantity: 1, rate: 0 }],
 });
 
-export default function InvoiceForm({ isOpen, onClose, onSuccess, defaultHospitalId, defaultSubscriptionId, defaultLines }) {
+// Reduce a server invoice record into the form's value shape.
+function invoiceToFormValues(inv) {
+  if (!inv) return {};
+  return {
+    hospitalId: inv.hospitalId,
+    dueDate: inv.dueDate ? String(inv.dueDate).slice(0, 10) : '',
+    currency: inv.currency || 'INR',
+    gstRate: Number(inv.gstRate ?? 18),
+    couponCode: inv.couponCode || '',
+    notes: inv.notes || '',
+    lineItems: Array.isArray(inv.lineItems) && inv.lineItems.length
+      ? inv.lineItems.map((li) => ({
+          description: li.description || '',
+          hsnCode: li.hsnCode || '',
+          quantity: Number(li.quantity || 1),
+          rate: Number(li.rate || 0),
+        }))
+      : [{ description: '', hsnCode: '', quantity: 1, rate: 0 }],
+  };
+}
+
+export default function InvoiceForm({
+  isOpen,
+  onClose,
+  onSuccess,
+  defaultHospitalId,
+  defaultSubscriptionId,
+  defaultLines,
+  invoice,
+}) {
   const [loading, setLoading] = useState(false);
+  const [issuing, setIssuing] = useState(false);
   const [hospitals, setHospitals] = useState([]);
+  const isEdit = !!invoice?.id;
+  // Tracks which CTA the user clicked so onSubmit knows whether to also issue.
+  const submitActionRef = useRef('draft');
 
   const {
     register,
@@ -83,7 +119,9 @@ export default function InvoiceForm({ isOpen, onClose, onSuccess, defaultHospita
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: DEFAULTS({ hospitalId: defaultHospitalId, lineItems: defaultLines }),
+    defaultValues: isEdit
+      ? invoiceToFormValues(invoice)
+      : DEFAULTS({ hospitalId: defaultHospitalId, lineItems: defaultLines }),
     mode: 'onBlur',
   });
 
@@ -101,21 +139,26 @@ export default function InvoiceForm({ isOpen, onClose, onSuccess, defaultHospita
   }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen) {
-      reset(DEFAULTS({ hospitalId: defaultHospitalId, lineItems: defaultLines }));
-    }
-  }, [isOpen, defaultHospitalId, defaultLines, reset]);
+    if (!isOpen) return;
+    reset(
+      isEdit
+        ? invoiceToFormValues(invoice)
+        : DEFAULTS({ hospitalId: defaultHospitalId, lineItems: defaultLines }),
+    );
+  }, [isOpen, isEdit, invoice, defaultHospitalId, defaultLines, reset]);
 
   const watchedLines = watch('lineItems');
   const watchedGst = watch('gstRate');
   const totals = previewTotals(watchedLines, watchedGst);
 
   const onSubmit = async (data) => {
-    setLoading(true);
+    const action = submitActionRef.current;
+    const isIssueAction = action === 'issue';
+    if (isIssueAction) setIssuing(true); else setLoading(true);
     try {
-      await api.post(endpoints.invoices.create, {
+      const body = {
         hospitalId: data.hospitalId,
-        subscriptionId: defaultSubscriptionId || null,
+        subscriptionId: isEdit ? invoice.subscriptionId : (defaultSubscriptionId || null),
         dueDate: data.dueDate || null,
         currency: data.currency,
         gstRate: Number(data.gstRate),
@@ -127,19 +170,35 @@ export default function InvoiceForm({ isOpen, onClose, onSuccess, defaultHospita
           quantity: Number(li.quantity || 1),
           rate: Number(li.rate || 0),
         })),
-      });
-      toast.success('Invoice created');
+      };
+      // Persist the draft first (create or update), then optionally issue.
+      const saveRes = isEdit
+        ? await api.put(endpoints.invoices.update(invoice.id), body)
+        : await api.post(endpoints.invoices.create, body);
+      const saved = saveRes.data?.data || saveRes.data;
+
+      if (isIssueAction) {
+        const issueRes = await api.post(endpoints.invoices.issue(saved.id));
+        const issued = issueRes.data?.data || issueRes.data;
+        toast.success(`Issued as ${issued?.number || 'invoice'}`);
+      } else {
+        toast.success(isEdit ? 'Draft updated' : 'Draft saved');
+      }
       onSuccess?.();
       onClose();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Create failed');
+      toast.error(
+        err.response?.data?.message ||
+          (isIssueAction ? 'Issue failed' : isEdit ? 'Update failed' : 'Create failed'),
+      );
     } finally {
+      setIssuing(false);
       setLoading(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="New Invoice" size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? `Edit Draft Invoice` : 'New Invoice'} size="xl">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Controller
@@ -161,11 +220,18 @@ export default function InvoiceForm({ isOpen, onClose, onSuccess, defaultHospita
               />
             )}
           />
-          <Input
-            label="Due Date"
-            type="date"
-            error={errors.dueDate?.message}
-            {...register('dueDate')}
+          <Controller
+            control={control}
+            name="dueDate"
+            render={({ field }) => (
+              <DatePicker
+                label="Due Date"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.dueDate?.message}
+              />
+            )}
           />
         </div>
 
@@ -318,8 +384,28 @@ export default function InvoiceForm({ isOpen, onClose, onSuccess, defaultHospita
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="secondary" onClick={onClose} type="button">Cancel</Button>
-          <Button type="submit" loading={loading}>Create Invoice</Button>
+          <Button variant="secondary" onClick={onClose} type="button" disabled={loading || issuing}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="secondary"
+            loading={loading}
+            disabled={issuing}
+            onClick={() => { submitActionRef.current = 'draft'; }}
+          >
+            {isEdit ? 'Save Changes' : 'Save as Draft'}
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            icon={Send}
+            loading={issuing}
+            disabled={loading}
+            onClick={() => { submitActionRef.current = 'issue'; }}
+          >
+            {isEdit ? 'Save & Issue' : 'Issue Invoice'}
+          </Button>
         </div>
       </form>
     </Modal>
