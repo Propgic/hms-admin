@@ -280,6 +280,7 @@ export default function HospitalList() {
       />
 
       <HospitalForm
+        key={formOpen ? (editingHospital?.id || editingHospital?._id || 'new') : 'closed'}
         isOpen={formOpen}
         onClose={() => { setFormOpen(false); setEditingHospital(null); }}
         hospital={editingHospital}

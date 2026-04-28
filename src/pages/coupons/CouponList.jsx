@@ -178,6 +178,7 @@ export default function CouponList() {
       />
 
       <CouponForm
+        key={formOpen ? (editing?.id || editing?._id || 'new') : 'closed'}
         isOpen={formOpen}
         onClose={() => { setFormOpen(false); setEditing(null); }}
         coupon={editing}

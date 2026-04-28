@@ -76,7 +76,7 @@ export default function PlanList() {
     {
       header: 'Duration',
       accessor: 'durationInDays',
-      cell: (row) => `${row.durationInDays || 30} days`,
+      cell: (row) => `${row.durationInDays ?? 30} days`,
     },
     {
       header: 'Max Users',
@@ -160,6 +160,7 @@ export default function PlanList() {
       />
 
       <PlanForm
+        key={formOpen ? (editingPlan?.id || editingPlan?._id || 'new') : 'closed'}
         isOpen={formOpen}
         onClose={() => { setFormOpen(false); setEditingPlan(null); }}
         plan={editingPlan}

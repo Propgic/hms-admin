@@ -287,12 +287,14 @@ export default function InvoiceList() {
       />
 
       <InvoiceForm
+        key={formOpen ? 'new' : 'closed-new'}
         isOpen={formOpen}
         onClose={() => setFormOpen(false)}
         onSuccess={fetchList}
       />
 
       <InvoiceForm
+        key={editTarget ? (editTarget.id || editTarget._id) : 'closed-edit'}
         isOpen={!!editTarget}
         invoice={editTarget}
         onClose={() => setEditTarget(null)}

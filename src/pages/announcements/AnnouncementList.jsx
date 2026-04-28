@@ -192,6 +192,7 @@ export default function AnnouncementList() {
       />
 
       <AnnouncementForm
+        key={formOpen ? (editing?.id || editing?._id || 'new') : 'closed'}
         isOpen={formOpen}
         announcement={editing}
         onClose={() => { setFormOpen(false); setEditing(null); }}
