@@ -75,14 +75,19 @@ async function buildFallbackStats() {
     .filter((h) => h.createdAt && new Date(h.createdAt) >= sevenDays)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 5)
-    .map((h) => ({
-      id: h.id,
-      name: h.name,
-      email: h.email,
-      plan: h.plan?.name || h.planName || '-',
-      status: h.isActive === false ? 'suspended' : 'active',
-      createdAt: h.createdAt,
-    }));
+    .map((h) => {
+      // The /hospitals endpoint already computes a trial-aware status
+      // (`trial`, `trial_expired`, `active`, `suspended`). Don't clobber it.
+      const status = h.status || (h.isActive === false ? 'suspended' : (h.isTrial ? 'trial' : 'active'));
+      return {
+        id: h.id,
+        name: h.name,
+        email: h.email,
+        plan: h.plan?.name || h.planName || '-',
+        status,
+        createdAt: h.createdAt,
+      };
+    });
 
   return {
     stats: {
@@ -194,6 +199,7 @@ export default function Dashboard() {
   const statusColor = (s) => {
     if (s === 'active') return 'success';
     if (s === 'trial') return 'warning';
+    if (s === 'trial_expired') return 'danger';
     if (s === 'suspended') return 'danger';
     return 'gray';
   };
