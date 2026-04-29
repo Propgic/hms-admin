@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, CreditCard, Activity, Hourglass, LogIn } from 'lucide-react';
+import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, CreditCard, Activity, Hourglass, LogIn, Hash, Receipt, Globe, BadgeCheck, User, Power } from 'lucide-react';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
@@ -93,34 +93,83 @@ export default function HospitalDetail() {
     red: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
   };
 
+  const initials = String(hospital.name || '?')
+    .trim()
+    .split(/\s+/)
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/hospitals')} className="p-2 hover:bg-gray-100 rounded-lg">
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
+        <button onClick={() => navigate('/hospitals')} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
+          <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-slate-300" />
         </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{hospital.name}</h1>
-          <p className="text-base text-gray-600 dark:text-slate-400">Hospital details and subscription history</p>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <Button
-            variant="secondary"
-            icon={LogIn}
-            onClick={() => setImpersonateOpen(true)}
-            disabled={!hospital.isActive}
-            title={hospital.isActive ? 'Sign in as this hospital' : 'Hospital is suspended'}
-          >
-            Login as Hospital
-          </Button>
-          <Badge color={statusColor(hospital.status)} className="text-sm">
-            {String(hospital.status).replace('_', ' ')}
-          </Badge>
+        <p className="text-base text-gray-600 dark:text-slate-400">Hospital details and subscription history</p>
+      </div>
+
+      {/* Hero card */}
+      <div className="rounded-lg overflow-hidden shadow-sm border border-transparent dark:border-slate-700">
+        <div className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 px-6 py-6 sm:px-8 sm:py-8">
+          <div className="absolute inset-0 opacity-15" style={{ backgroundImage: 'radial-gradient(circle at 20% 0%, white 0, transparent 50%), radial-gradient(circle at 80% 100%, white 0, transparent 50%)' }} />
+          <div className="relative flex items-start gap-4 sm:gap-6">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg shrink-0">
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <Badge color={statusColor(hospital.status)} className="text-xs">
+                  {String(hospital.status).replace('_', ' ').toUpperCase()}
+                </Badge>
+                {hospital.isTrial && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-xs font-medium">
+                    <Hourglass className="w-3 h-3" />On Trial
+                  </span>
+                )}
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold text-white truncate">{hospital.name}</h1>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-3 text-xs sm:text-sm text-white/90">
+                {hospital.slug && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/15 backdrop-blur-sm font-mono">
+                    <Hash className="w-3 h-3" />{hospital.slug}
+                  </span>
+                )}
+                {(hospital.plan?.name || hospital.planName) && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/15 backdrop-blur-sm font-medium">
+                    <CreditCard className="w-3 h-3" />{hospital.plan?.name || hospital.planName}
+                  </span>
+                )}
+                {hospital.email && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Mail className="w-3 h-3" />{hospital.email}
+                  </span>
+                )}
+                {hospital.phone && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Phone className="w-3 h-3" />{hospital.phone}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="shrink-0">
+              <Button
+                variant="secondary"
+                icon={LogIn}
+                onClick={() => setImpersonateOpen(true)}
+                disabled={!hospital.isActive}
+                title={hospital.isActive ? 'Sign in as this hospital' : 'Hospital is suspended'}
+              >
+                Login as Hospital
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
       {(hospital.health || hospital.trial) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 ${hospital.health && hospital.trial ? 'sm:grid-cols-2' : ''} gap-4`}>
           {hospital.health && (
             <Card className="p-5">
               <div className="flex items-center justify-between">
@@ -182,38 +231,118 @@ export default function HospitalDetail() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-5 space-y-4">
-          <h2 className="text-base font-semibold text-gray-900">Hospital Information</h2>
-          <div className="space-y-3">
-            <InfoRow icon={Building2} label="Name" value={hospital.name} />
-            <InfoRow icon={Mail} label="Email" value={hospital.email} />
-            <InfoRow icon={Phone} label="Phone" value={hospital.phone} />
-            <InfoRow icon={MapPin} label="Address" value={[hospital.address, hospital.city, hospital.state, hospital.pincode].filter(Boolean).join(', ')} />
-            <InfoRow icon={Calendar} label="Joined" value={dayjs(hospital.createdAt).format('MMM D, YYYY')} />
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Hospital Information</h2>
+            <Building2 className="w-4 h-4 text-gray-400" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+            <InfoRow icon={Building2} iconBg="bg-blue-50" iconColor="text-blue-600" label="Name" value={hospital.name} />
+            <InfoRow icon={Hash} iconBg="bg-slate-50" iconColor="text-slate-600" label="Hospital ID (tenant)" value={hospital.slug} mono />
+            <InfoRow icon={Mail} iconBg="bg-purple-50" iconColor="text-purple-600" label="Email" value={hospital.email} />
+            <InfoRow icon={Phone} iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Phone" value={hospital.phone} />
+            <InfoRow icon={CreditCard} iconBg="bg-indigo-50" iconColor="text-indigo-600" label="Plan" value={hospital.plan?.name || hospital.planName} />
+            <InfoRow icon={Calendar} iconBg="bg-amber-50" iconColor="text-amber-600" label="Joined" value={dayjs(hospital.createdAt).format('MMM D, YYYY')} />
+            <div className="sm:col-span-2">
+              <InfoRow icon={MapPin} iconBg="bg-rose-50" iconColor="text-rose-600" label="Address" value={[hospital.address, hospital.city, hospital.state, hospital.pincode, hospital.country].filter(Boolean).join(', ')} />
+            </div>
+            {hospital.gstin && (
+              <InfoRow icon={Receipt} iconBg="bg-yellow-50" iconColor="text-yellow-600" label="GSTIN" value={hospital.gstin} mono />
+            )}
+            {hospital.registrationNo && (
+              <InfoRow icon={BadgeCheck} iconBg="bg-cyan-50" iconColor="text-cyan-600" label="Registration No." value={hospital.registrationNo} mono />
+            )}
+            {hospital.website && (
+              <InfoRow icon={Globe} iconBg="bg-teal-50" iconColor="text-teal-600" label="Website" value={hospital.website} />
+            )}
+            <InfoRow icon={Power} iconBg={hospital.isActive ? 'bg-emerald-50' : 'bg-rose-50'} iconColor={hospital.isActive ? 'text-emerald-600' : 'text-rose-600'} label="Status" value={
+              <span className={`inline-flex items-center gap-1.5 font-medium ${hospital.isActive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${hospital.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                {hospital.isActive ? 'Active' : 'Inactive'}
+              </span>
+            } />
           </div>
         </Card>
 
-        <Card className="p-5 space-y-4">
-          <h2 className="text-base font-semibold text-gray-900">Subscription History</h2>
-          {subscriptions.length === 0 ? (
-            <p className="text-sm text-gray-500">No subscription history available.</p>
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Admin Account</h2>
+            <User className="w-4 h-4 text-gray-400" />
+          </div>
+          {hospital.admin ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+              <InfoRow icon={User} iconBg="bg-blue-50" iconColor="text-blue-600" label="Name" value={hospital.admin.name} />
+              <InfoRow icon={Mail} iconBg="bg-purple-50" iconColor="text-purple-600" label="Email" value={hospital.admin.email} />
+              {hospital.admin.phone && (
+                <InfoRow icon={Phone} iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Phone" value={hospital.admin.phone} />
+              )}
+              <InfoRow icon={Calendar} iconBg="bg-amber-50" iconColor="text-amber-600" label="Created" value={dayjs(hospital.admin.createdAt).format('MMM D, YYYY')} />
+              <InfoRow icon={Power} iconBg={hospital.admin.isActive ? 'bg-emerald-50' : 'bg-rose-50'} iconColor={hospital.admin.isActive ? 'text-emerald-600' : 'text-rose-600'} label="Status" value={
+                <span className={`inline-flex items-center gap-1.5 font-medium ${hospital.admin.isActive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${hospital.admin.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                  {hospital.admin.isActive ? 'Active' : 'Inactive'}
+                </span>
+              } />
+            </div>
           ) : (
-            <div className="space-y-3">
-              {subscriptions.map((sub, idx) => (
-                <div key={sub.id || sub._id || idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{sub.planName || sub.plan?.name || hospital.plan?.name || 'Plan'}</p>
-                    <p className="text-xs text-gray-500">
-                      {dayjs(sub.startDate).format('MMM D, YYYY')} - {dayjs(sub.endDate).format('MMM D, YYYY')}
-                    </p>
-                  </div>
-                  <Badge color={sub.status === 'active' ? 'success' : 'gray'}>{sub.status}</Badge>
-                </div>
-              ))}
+            <div className="text-center py-8">
+              <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-2">
+                <User className="w-5 h-5 text-gray-400" />
+              </div>
+              <p className="text-sm text-gray-500 dark:text-slate-400">No admin account on file.</p>
             </div>
           )}
         </Card>
       </div>
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Subscription History</h2>
+          <CreditCard className="w-4 h-4 text-gray-400" />
+        </div>
+        {subscriptions.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-2">
+              <CreditCard className="w-5 h-5 text-gray-400" />
+            </div>
+            <p className="text-sm text-gray-500 dark:text-slate-400">No subscription history available.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {subscriptions.map((sub, idx) => {
+              const isActive = sub.status === 'active';
+              const isLast = idx === subscriptions.length - 1;
+              return (
+                <div key={sub.id || sub._id || idx} className="flex gap-4">
+                  <div className="flex flex-col items-center pt-4 shrink-0">
+                    <span className={`w-3 h-3 rounded-full ring-4 ring-white dark:ring-slate-900 ${isActive ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-slate-600'}`} />
+                    {!isLast && <span className="flex-1 w-px mt-1 bg-gray-200 dark:bg-slate-700" />}
+                  </div>
+                  <div className="flex-1 flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-slate-800 bg-gradient-to-r from-gray-50/60 to-white dark:from-slate-800/40 dark:to-slate-900 hover:shadow-sm transition-shadow">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isActive ? 'bg-indigo-50 dark:bg-indigo-900/30' : 'bg-gray-100 dark:bg-slate-800'}`}>
+                        <CreditCard className={`w-5 h-5 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400'}`} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-slate-100 truncate">{sub.planName || sub.plan?.name || hospital.plan?.name || 'Plan'}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                          {dayjs(sub.startDate).format('MMM D, YYYY')} → {dayjs(sub.endDate).format('MMM D, YYYY')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {sub.amount != null && (
+                        <span className="text-sm font-semibold text-gray-700 dark:text-slate-300">{formatCurrency(sub.amount)}</span>
+                      )}
+                      <Badge color={isActive ? 'success' : 'gray'}>{sub.status}</Badge>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
 
       <ConfirmDialog
         isOpen={impersonateOpen}
@@ -229,13 +358,17 @@ export default function HospitalDetail() {
   );
 }
 
-function InfoRow({ icon: Icon, label, value }) {
+function InfoRow({ icon: Icon, label, value, iconBg = 'bg-gray-50', iconColor = 'text-gray-500', mono = false }) {
   return (
     <div className="flex items-start gap-3">
-      <Icon className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-      <div>
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className="text-sm text-gray-900">{value || '-'}</p>
+      <div className={`w-9 h-9 rounded-lg ${iconBg} dark:bg-slate-800 flex items-center justify-center flex-shrink-0`}>
+        <Icon className={`w-4 h-4 ${iconColor} dark:text-slate-300`} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide">{label}</p>
+        <div className={`text-sm text-gray-900 dark:text-slate-100 mt-0.5 break-words ${mono ? 'font-mono' : 'font-medium'}`}>
+          {value || <span className="text-gray-400 dark:text-slate-500">—</span>}
+        </div>
       </div>
     </div>
   );

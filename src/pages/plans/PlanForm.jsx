@@ -33,6 +33,7 @@ const schema = z.object({
   price: z.coerce.number().min(0, 'Price must be 0 or more'),
   durationInDays: z.coerce.number().min(1, 'Duration must be at least 1'),
   maxUsers: z.coerce.number().min(1, 'Must allow at least 1 user'),
+  maxAdmins: z.coerce.number().min(1, 'Must allow at least 1 admin'),
   maxDoctors: z.coerce.number().min(0).optional(),
   maxPatients: z.coerce.number().min(0).optional(),
   trialDays: z.coerce.number().min(0).optional(),
@@ -54,7 +55,7 @@ export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
     resolver: zodResolver(schema),
     defaultValues: {
       name: '', description: '', price: 0, durationInDays: 30,
-      maxUsers: 10, maxDoctors: 5, maxPatients: 500, trialDays: 14,
+      maxUsers: 10, maxAdmins: 1, maxDoctors: 5, maxPatients: 500, trialDays: 14,
     },
   });
 
@@ -66,6 +67,7 @@ export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
         price: plan.price || 0,
         durationInDays: plan.durationInDays || 30,
         maxUsers: plan.maxUsers || 10,
+        maxAdmins: plan.maxAdmins || 1,
         maxDoctors: plan.maxDoctors || 5,
         maxPatients: plan.maxPatients || 500,
         trialDays: plan.trialDays || 0,
@@ -113,6 +115,7 @@ export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
           <Input label="Duration (days)" type="number" error={errors.durationInDays?.message} {...register('durationInDays')} />
           <Input label="Trial Days" type="number" error={errors.trialDays?.message} {...register('trialDays')} />
           <Input label="Max Users" type="number" error={errors.maxUsers?.message} {...register('maxUsers')} />
+          <Input label="Max Admins" type="number" error={errors.maxAdmins?.message} {...register('maxAdmins')} />
           <Input label="Max Doctors" type="number" error={errors.maxDoctors?.message} {...register('maxDoctors')} />
           <Input label="Max Patients" type="number" error={errors.maxPatients?.message} {...register('maxPatients')} />
           <div className="col-span-2">

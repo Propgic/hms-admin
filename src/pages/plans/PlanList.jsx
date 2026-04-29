@@ -84,6 +84,11 @@ export default function PlanList() {
       cell: (row) => row.maxUsers || 'Unlimited',
     },
     {
+      header: 'Max Admins',
+      accessor: 'maxAdmins',
+      cell: (row) => row.maxAdmins ?? 1,
+    },
+    {
       header: 'Status',
       accessor: 'isActive',
       cell: (row) => (

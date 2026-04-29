@@ -30,6 +30,12 @@ const PRIORITY_COLOR = {
   low: 'gray', medium: 'info', high: 'warning', urgent: 'danger',
 };
 
+const getInitials = (name, fallback = '?') => {
+  if (!name) return fallback;
+  const parts = String(name).trim().split(/\s+/);
+  return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || fallback;
+};
+
 export default function TicketDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -88,8 +94,8 @@ export default function TicketDetail() {
   const isClosed = ticket.status === 'closed';
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col h-[calc(100vh-124px)]">
+      <div className="flex items-center gap-3 mb-4 shrink-0">
         <button onClick={() => navigate('/support')} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
           <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-slate-300" />
         </button>
@@ -103,14 +109,29 @@ export default function TicketDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
-          <div className="space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+        <div className="lg:col-span-2 flex flex-col min-h-0">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-2 pb-4">
             {(ticket.messages || []).map((m) => {
               const isAdmin = m.authorType === 'admin';
+              const displayName = m.authorName || (isAdmin ? 'Support' : ticket.hospital?.name || 'Hospital');
+              const avatarFallback = isAdmin ? 'S' : 'H';
+              const avatar = (
+                <div
+                  title={displayName}
+                  className={`w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center shrink-0 self-end ${
+                    isAdmin
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-300 text-gray-700 dark:bg-slate-600 dark:text-slate-100'
+                  }`}
+                >
+                  {getInitials(displayName, avatarFallback)}
+                </div>
+              );
               return (
-                <div key={m.id} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                <div key={m.id} className={`flex items-end gap-2 ${isAdmin ? 'justify-end' : 'justify-start'}`}>
+                  {!isAdmin && avatar}
+                  <div className={`max-w-[75%] rounded-2xl px-4 py-3 ${
                     m.internal
                       ? 'bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-700'
                       : isAdmin
@@ -126,18 +147,19 @@ export default function TicketDetail() {
                     <div className={`text-xs mt-2 ${
                       m.internal ? 'text-amber-700 dark:text-amber-400' : isAdmin ? 'text-blue-100' : 'text-gray-500 dark:text-slate-400'
                     }`}>
-                      {m.authorName || (isAdmin ? 'Support' : 'Hospital')} · {dayjs(m.createdAt).format('MMM D, h:mm A')}
+                      {displayName} · {dayjs(m.createdAt).format('MMM D, h:mm A')}
                     </div>
                   </div>
+                  {isAdmin && avatar}
                 </div>
               );
             })}
           </div>
 
           {!isClosed && (
-            <Card className="p-4">
+            <Card className="p-4 shrink-0">
               <textarea
-                rows={4}
+                rows={3}
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
                 placeholder={internal ? 'Internal note (admin-only)…' : 'Type a reply…'}
@@ -165,13 +187,13 @@ export default function TicketDetail() {
           )}
 
           {isClosed && (
-            <Card className="p-4 text-center text-sm text-gray-500 dark:text-slate-400">
+            <Card className="p-4 shrink-0 text-center text-sm text-gray-500 dark:text-slate-400">
               This ticket is closed. Re-open it from the side panel to reply.
             </Card>
           )}
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto pr-1">
           <Card className="p-5">
             <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-3">Hospital</div>
             <div className="font-semibold text-gray-900 dark:text-slate-100">{ticket.hospital?.name || '—'}</div>
