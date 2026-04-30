@@ -4,34 +4,37 @@ import { AuthProvider } from './store/authStore.jsx';
 import { ThemeProvider } from './store/themeStore.jsx';
 import { PlatformSettingsProvider } from './store/platformSettingsContext.jsx';
 import AppRoutes from './routes/AppRoutes';
+import OfflineGuard from './components/OfflineGuard.jsx';
 
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <PlatformSettingsProvider>
-            <AppRoutes />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 3000,
-                style: {
-                  fontSize: '14px',
-                  borderRadius: '8px',
-                  padding: '12px 16px',
-                },
-                success: {
-                  iconTheme: { primary: '#16A34A', secondary: '#fff' },
-                },
-                error: {
-                  iconTheme: { primary: '#DC2626', secondary: '#fff' },
-                },
-              }}
-            />
-          </PlatformSettingsProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <OfflineGuard>
+        <BrowserRouter>
+          <AuthProvider>
+            <PlatformSettingsProvider>
+              <AppRoutes />
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 3000,
+                  style: {
+                    fontSize: '14px',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                  },
+                  success: {
+                    iconTheme: { primary: '#16A34A', secondary: '#fff' },
+                  },
+                  error: {
+                    iconTheme: { primary: '#DC2626', secondary: '#fff' },
+                  },
+                }}
+              />
+            </PlatformSettingsProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </OfflineGuard>
     </ThemeProvider>
   );
 }
