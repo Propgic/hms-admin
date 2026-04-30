@@ -1,3 +1,24 @@
+import { LineChart as LineIcon } from 'lucide-react';
+
+export function ChartEmpty({ icon: Icon = LineIcon, message = 'No data to display', hint = 'Data will appear here once available.' }) {
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center text-center px-6 py-8">
+      <div
+        className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
+        style={{ background: 'var(--surface-muted)', color: 'var(--text-subtle)' }}
+      >
+        <Icon className="w-5 h-5" />
+      </div>
+      <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{message}</p>
+      {hint && <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{hint}</p>}
+    </div>
+  );
+}
+
+export function isEmpty(data) {
+  return !Array.isArray(data) || data.length === 0;
+}
+
 export function AreaGradient({ id, color, from = 0.28, to = 0 }) {
   return (
     <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">

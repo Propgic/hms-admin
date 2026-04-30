@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Building2, CreditCard, DollarSign, Users, RefreshCw } from 'lucide-react';
+import { Building2, CreditCard, DollarSign, Users, RefreshCw, TrendingUp } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dayjs from 'dayjs';
 import api from '../../api/axios';
@@ -9,7 +9,7 @@ import StatCard from '../../components/StatCard';
 import Card from '../../components/ui/Card';
 import Spinner from '../../components/ui/Spinner';
 import Badge from '../../components/ui/Badge';
-import { AreaGradient, CustomTooltip } from '../../components/charts/ChartPrimitives';
+import { AreaGradient, CustomTooltip, ChartEmpty, isEmpty } from '../../components/charts/ChartPrimitives';
 import { CHART_COLORS, ANIM, AXIS_TICK, GRID_STROKE } from '../../components/charts/chartConfig';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -236,33 +236,37 @@ export default function Dashboard() {
           <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Monthly hospital count</p>
         </div>
         <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={growthData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-              <defs>
-                <AreaGradient id="growthGrad" color={CHART_COLORS.primary} from={0.32} />
-              </defs>
-              <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
-              <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
-              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} />
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: CHART_COLORS.primary, strokeWidth: 1, strokeDasharray: '4 4' }} />
-              <Area
-                type="monotone"
-                name="Hospitals"
-                dataKey="hospitals"
-                stroke={CHART_COLORS.primary}
-                strokeWidth={2.5}
-                fill="url(#growthGrad)"
-                connectNulls={false}
-                activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff', fill: CHART_COLORS.primary }}
-                animationDuration={ANIM.duration}
-                animationEasing={ANIM.easing}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {isEmpty(growthData) || growthData.every((d) => d.hospitals == null) ? (
+            <ChartEmpty icon={TrendingUp} message="No growth data" hint="Hospital onboarding will populate this chart." />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={growthData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <defs>
+                  <AreaGradient id="growthGrad" color={CHART_COLORS.primary} from={0.32} />
+                </defs>
+                <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
+                <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: CHART_COLORS.primary, strokeWidth: 1, strokeDasharray: '4 4' }} />
+                <Area
+                  type="monotone"
+                  name="Hospitals"
+                  dataKey="hospitals"
+                  stroke={CHART_COLORS.primary}
+                  strokeWidth={2.5}
+                  fill="url(#growthGrad)"
+                  connectNulls={false}
+                  activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff', fill: CHART_COLORS.primary }}
+                  animationDuration={ANIM.duration}
+                  animationEasing={ANIM.easing}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </Card>
 
-      <Card className="p-5 chart-fade-in">
+      <Card className="p-5 chart-fade-in flex flex-col" style={{ minHeight: 280 }}>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Recent Hospitals</h2>
@@ -270,8 +274,8 @@ export default function Dashboard() {
           </div>
         </div>
         {recentData.length === 0 ? (
-          <div className="text-center py-10 text-sm text-gray-500 dark:text-slate-400">
-            No hospitals added in the last 7 days.
+          <div className="flex-1 flex items-center justify-center">
+            <ChartEmpty icon={Building2} message="No hospitals added recently" hint="New hospitals onboarded in the last 7 days will appear here." />
           </div>
         ) : (
           <div className="overflow-x-auto">

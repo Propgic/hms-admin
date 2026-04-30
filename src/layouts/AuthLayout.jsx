@@ -3,7 +3,7 @@ import { ShieldCheck, Activity, Users, Building2, TrendingUp } from 'lucide-reac
 
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
       {/* Left brand panel */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-700 to-slate-900">
         <div className="absolute inset-0 opacity-30" style={{

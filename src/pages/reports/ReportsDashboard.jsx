@@ -3,13 +3,13 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Sector,
 } from 'recharts';
-import { TrendingUp, DollarSign, Building2, CreditCard, Repeat, Activity, Users, PiggyBank } from 'lucide-react';
+import { TrendingUp, DollarSign, Building2, CreditCard, Repeat, Activity, Users, PiggyBank, PieChart as PieIcon, BarChart3 } from 'lucide-react';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import StatCard from '../../components/StatCard';
 import Card from '../../components/ui/Card';
 import Spinner from '../../components/ui/Spinner';
-import { AreaGradient, BarGradient, CustomTooltip } from '../../components/charts/ChartPrimitives';
+import { AreaGradient, BarGradient, CustomTooltip, ChartEmpty, isEmpty } from '../../components/charts/ChartPrimitives';
 import { CHART_COLORS, PIE_PALETTE, ANIM, AXIS_TICK, GRID_STROKE } from '../../components/charts/chartConfig';
 import { formatCurrency, formatCompactCurrency } from '../../utils/formatters';
 
@@ -155,21 +155,25 @@ export default function ReportsDashboard() {
               </div>
             </div>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={movement} barGap={6} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                  <defs>
-                    <BarGradient id="barNewMRR" color={CHART_COLORS.emerald} />
-                    <BarGradient id="barChurnMRR" color={CHART_COLORS.rose} />
-                  </defs>
-                  <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
-                  <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
-                  <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(v) => formatCompactCurrency(v)} />
-                  <Tooltip content={<CustomTooltip valueFormatter={currencyFmt} />} cursor={{ fill: 'var(--surface-hover)', opacity: 0.5 }} />
-                  <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: 12, color: 'var(--text-muted)', paddingBottom: 8 }} />
-                  <Bar dataKey="newMRR" name="New MRR" fill="url(#barNewMRR)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} />
-                  <Bar dataKey="churnedMRR" name="Churned MRR" fill="url(#barChurnMRR)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} animationBegin={120} />
-                </BarChart>
-              </ResponsiveContainer>
+              {isEmpty(movement) ? (
+                <ChartEmpty icon={Repeat} message="No MRR movement" hint="New and churned MRR will appear here as subscriptions change." />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={movement} barGap={6} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <defs>
+                      <BarGradient id="barNewMRR" color={CHART_COLORS.emerald} />
+                      <BarGradient id="barChurnMRR" color={CHART_COLORS.rose} />
+                    </defs>
+                    <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
+                    <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                    <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(v) => formatCompactCurrency(v)} />
+                    <Tooltip content={<CustomTooltip valueFormatter={currencyFmt} />} cursor={{ fill: 'var(--surface-hover)', opacity: 0.5 }} />
+                    <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: 12, color: 'var(--text-muted)', paddingBottom: 8 }} />
+                    <Bar dataKey="newMRR" name="New MRR" fill="url(#barNewMRR)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} />
+                    <Bar dataKey="churnedMRR" name="Churned MRR" fill="url(#barChurnMRR)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} animationBegin={120} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </Card>
         </>
@@ -182,28 +186,32 @@ export default function ReportsDashboard() {
             <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Monthly revenue</p>
           </div>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <defs>
-                  <AreaGradient id="revGrad" color={CHART_COLORS.emerald} from={0.32} />
-                </defs>
-                <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
-                <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
-                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(v) => formatCompactCurrency(v)} domain={[0, 'auto']} allowDataOverflow />
-                <Tooltip content={<CustomTooltip valueFormatter={currencyFmt} />} cursor={{ stroke: CHART_COLORS.emerald, strokeWidth: 1, strokeDasharray: '4 4' }} />
-                <Area
-                  type="monotone"
-                  name="Revenue"
-                  dataKey="revenue"
-                  stroke={CHART_COLORS.emerald}
-                  strokeWidth={2.5}
-                  fill="url(#revGrad)"
-                  activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff', fill: CHART_COLORS.emerald }}
-                  animationDuration={ANIM.duration}
-                  animationEasing={ANIM.easing}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {isEmpty(revenueData) ? (
+              <ChartEmpty icon={DollarSign} message="No revenue recorded" hint="Subscription revenue will populate this chart." />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <defs>
+                    <AreaGradient id="revGrad" color={CHART_COLORS.emerald} from={0.32} />
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
+                  <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                  <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(v) => formatCompactCurrency(v)} domain={[0, 'auto']} allowDataOverflow />
+                  <Tooltip content={<CustomTooltip valueFormatter={currencyFmt} />} cursor={{ stroke: CHART_COLORS.emerald, strokeWidth: 1, strokeDasharray: '4 4' }} />
+                  <Area
+                    type="monotone"
+                    name="Revenue"
+                    dataKey="revenue"
+                    stroke={CHART_COLORS.emerald}
+                    strokeWidth={2.5}
+                    fill="url(#revGrad)"
+                    activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff', fill: CHART_COLORS.emerald }}
+                    animationDuration={ANIM.duration}
+                    animationEasing={ANIM.easing}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
 
@@ -213,37 +221,41 @@ export default function ReportsDashboard() {
             <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Active plan breakdown</p>
           </div>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={planData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={58}
-                  outerRadius={84}
-                  dataKey="value"
-                  nameKey="name"
-                  paddingAngle={3}
-                  stroke="var(--surface)"
-                  strokeWidth={2}
-                  activeIndex={activePieIdx}
-                  activeShape={renderActivePieSlice}
-                  onMouseEnter={(_, i) => setActivePieIdx(i)}
-                  animationDuration={ANIM.pieDuration}
-                  animationEasing={ANIM.easing}
-                >
-                  {planData.map((_, idx) => (
-                    <Cell key={idx} fill={PIE_PALETTE[idx % PIE_PALETTE.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  verticalAlign="bottom"
-                  iconType="circle"
-                  wrapperStyle={{ fontSize: 12, color: 'var(--text-muted)' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {isEmpty(planData) ? (
+              <ChartEmpty icon={PieIcon} message="No plan data" hint="Distribution appears once subscriptions are active." />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={planData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={58}
+                    outerRadius={84}
+                    dataKey="value"
+                    nameKey="name"
+                    paddingAngle={3}
+                    stroke="var(--surface)"
+                    strokeWidth={2}
+                    activeIndex={activePieIdx}
+                    activeShape={renderActivePieSlice}
+                    onMouseEnter={(_, i) => setActivePieIdx(i)}
+                    animationDuration={ANIM.pieDuration}
+                    animationEasing={ANIM.easing}
+                  >
+                    {planData.map((_, idx) => (
+                      <Cell key={idx} fill={PIE_PALETTE[idx % PIE_PALETTE.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend
+                    verticalAlign="bottom"
+                    iconType="circle"
+                    wrapperStyle={{ fontSize: 12, color: 'var(--text-muted)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
 
@@ -253,21 +265,25 @@ export default function ReportsDashboard() {
             <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Net growth by month</p>
           </div>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={hospitalData} barGap={6} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <defs>
-                  <BarGradient id="barGrowth" color={CHART_COLORS.primary} />
-                  <BarGradient id="barChurn" color={CHART_COLORS.rose} />
-                </defs>
-                <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
-                <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
-                <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--surface-hover)', opacity: 0.5 }} />
-                <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: 12, color: 'var(--text-muted)', paddingBottom: 8 }} />
-                <Bar dataKey="newHospitals" name="New Hospitals" fill="url(#barGrowth)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} />
-                <Bar dataKey="churned" name="Churned" fill="url(#barChurn)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} animationBegin={120} />
-              </BarChart>
-            </ResponsiveContainer>
+            {isEmpty(hospitalData) ? (
+              <ChartEmpty icon={BarChart3} message="No movement data" hint="New and churned hospitals will appear here." />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={hospitalData} barGap={6} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <defs>
+                    <BarGradient id="barGrowth" color={CHART_COLORS.primary} />
+                    <BarGradient id="barChurn" color={CHART_COLORS.rose} />
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 6" stroke={GRID_STROKE} vertical={false} />
+                  <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                  <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--surface-hover)', opacity: 0.5 }} />
+                  <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: 12, color: 'var(--text-muted)', paddingBottom: 8 }} />
+                  <Bar dataKey="newHospitals" name="New Hospitals" fill="url(#barGrowth)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} />
+                  <Bar dataKey="churned" name="Churned" fill="url(#barChurn)" radius={[6, 6, 0, 0]} animationDuration={ANIM.barDuration} animationEasing={ANIM.easing} animationBegin={120} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
       </div>
