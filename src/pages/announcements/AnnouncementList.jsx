@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import RowActions from '../../components/RowActions';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 import api from '../../api/axios';
@@ -130,24 +131,12 @@ export default function AnnouncementList() {
     {
       header: 'Actions',
       id: 'actions',
-      width: '100px',
+      width: '110px',
       cell: (row) => (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => { setEditing(row); setFormOpen(true); }}
-            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
-            title="Edit"
-          >
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setDeleteTarget(row)}
-            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+        <RowActions
+          onEdit={() => { setEditing(row); setFormOpen(true); }}
+          onDelete={() => setDeleteTarget(row)}
+        />
       ),
     },
   ];

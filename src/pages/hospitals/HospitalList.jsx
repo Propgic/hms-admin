@@ -194,36 +194,44 @@ export default function HospitalList() {
     {
       header: 'Actions',
       id: 'actions',
-      width: '160px',
+      width: '180px',
       cell: (row) => (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-end gap-2">
           <button
+            type="button"
             onClick={() => navigate(`/hospitals/${row.id || row._id}`)}
-            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-blue-500/40 dark:hover:bg-blue-500/10 dark:hover:text-blue-300"
             title="View"
+            aria-label="View"
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="h-4 w-4" />
           </button>
           <button
+            type="button"
             onClick={() => { setEditingHospital(row); setFormOpen(true); }}
-            className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-primary-500/40 dark:hover:bg-primary-500/10 dark:hover:text-primary-300"
             title="Edit"
+            aria-label="Edit"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="h-4 w-4" />
           </button>
           <button
+            type="button"
             onClick={() => handleToggleStatus(row)}
-            className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-amber-200 hover:bg-amber-50 hover:text-amber-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-amber-500/40 dark:hover:bg-amber-500/10 dark:hover:text-amber-300"
             title="Toggle Status"
+            aria-label="Toggle Status"
           >
-            <Power className="w-4 h-4" />
+            <Power className="h-4 w-4" />
           </button>
           <button
+            type="button"
             onClick={() => setDeleteConfirm(row)}
-            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-100 text-red-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
             title="Delete"
+            aria-label="Delete"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       ),

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Edit2, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
+import RowActions from "../../components/RowActions";
 import toast from "react-hot-toast";
 import api from "../../api/axios";
 import endpoints from "../../api/endpoints";
@@ -131,25 +132,12 @@ export default function FAQList() {
     {
       header: "Actions",
       id: "actions",
-      width: "100px",
+      width: "110px",
       cell: (row) => (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => {
-              setEditingFaq(row);
-              setFaqFormOpen(true);
-            }}
-            className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg"
-          >
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setDeleteConfirm(row)}
-            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+        <RowActions
+          onEdit={() => { setEditingFaq(row); setFaqFormOpen(true); }}
+          onDelete={() => setDeleteConfirm(row)}
+        />
       ),
     },
   ];
@@ -190,25 +178,12 @@ export default function FAQList() {
     {
       header: "Actions",
       id: "actions",
-      width: "100px",
+      width: "110px",
       cell: (row) => (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => {
-              setEditingCat(row);
-              setCatFormOpen(true);
-            }}
-            className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg"
-          >
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setDeleteConfirm({ ...row, _type: "category" })}
-            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+        <RowActions
+          onEdit={() => { setEditingCat(row); setCatFormOpen(true); }}
+          onDelete={() => setDeleteConfirm({ ...row, _type: "category" })}
+        />
       ),
     },
   ];
