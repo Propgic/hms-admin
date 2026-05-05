@@ -2,7 +2,7 @@ import { Sidebar as ProSidebar, Menu, MenuItem } from 'react-pro-sidebar';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, CreditCard, Receipt, HelpCircle, ScrollText,
-  BarChart3, Settings, ChevronsLeft, ChevronsRight, Ticket, FileText, Megaphone, LifeBuoy,
+  BarChart3, Settings, ChevronsLeft, ChevronsRight, Ticket, FileText, Megaphone, LifeBuoy, KeyRound,
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 
@@ -18,6 +18,8 @@ const navItems = [
   { label: 'FAQs', path: '/faqs', icon: HelpCircle },
   { label: 'Activity Logs', path: '/activity-logs', icon: ScrollText },
   { label: 'Reports', path: '/reports', icon: BarChart3 },
+  // Per-hospital role permission editor — platform-admin-only.
+  { label: 'Access Management', path: '/access-management', icon: KeyRound },
   { label: 'Settings', path: '/settings', icon: Settings },
 ];
 

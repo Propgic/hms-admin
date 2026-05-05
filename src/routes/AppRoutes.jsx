@@ -50,6 +50,9 @@ import ReportsDashboard from '../pages/reports/ReportsDashboard';
 // Settings
 import SettingsPage from '../pages/settings/SettingsPage';
 
+// Access Management — per-hospital role permission editor
+import AccessManagement from '../pages/access/AccessManagement';
+
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
 
@@ -125,6 +128,7 @@ export default function AppRoutes() {
         <Route path="/activity-logs" element={<ActivityLogList />} />
         <Route path="/reports" element={<ReportsDashboard />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/access-management" element={<AccessManagement />} />
       </Route>
 
       {/* Catch all */}

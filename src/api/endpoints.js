@@ -29,6 +29,8 @@ const endpoints = {
     stats: (id) => `${PLATFORM}/hospitals/${id}/stats`,
     subscriptions: (id) => `${PLATFORM}/hospitals/${id}/subscriptions`,
     sweepExpiredTrials: `${PLATFORM}/hospitals/sweep-expired-trials`,
+    accessControl: (id) => `${PLATFORM}/hospitals/${id}/access-control`,
+    saveAccessRole: (id, role) => `${PLATFORM}/hospitals/${id}/access-control/${role}`,
   },
 
   // Coupons
