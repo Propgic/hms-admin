@@ -39,6 +39,7 @@ const PERMISSION_GROUPS = [
   ] },
   { label: 'Leads / CRM', perms: ['leads:view', 'leads:create', 'leads:edit', 'leads:delete', 'leads:convert'] },
   { label: 'Reports & AI', perms: ['reports:view', 'ai:view'] },
+  { label: 'ABDM', perms: ['abdm:view', 'abdm:manage'] },
   { label: 'System', perms: [
     'activity_logs:view', 'settings:view', 'settings:edit', 'support:view',
     'templates:view', 'templates:create', 'templates:edit', 'templates:delete',
@@ -57,6 +58,7 @@ const BASELINE = {
     'prescriptions:view', 'prescriptions:create', 'prescriptions:edit',
     'medicines:view', 'tests:view', 'feedback:view', 'settings:view', 'settings:edit',
     'ipd:view', 'ipd:admit',
+    'abdm:view',
   ],
   receptionist: [
     'dashboard:view', 'patients:view', 'patients:create', 'patients:edit',

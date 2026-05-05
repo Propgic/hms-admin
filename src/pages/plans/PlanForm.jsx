@@ -25,10 +25,25 @@ const featuresList = [
   'Leads / CRM',
   'Reports & Analytics',
   'AI Growth Engine',
+  'ABDM Integration',
   'Multi-clinic Support',
   'API Access',
   'Priority Support',
 ];
+
+const legacyFeatureLabels = {
+  abdm_integration: 'ABDM Integration',
+};
+
+function normalizeFeatures(value) {
+  if (Array.isArray(value)) return value;
+  if (!value || typeof value !== 'object') return [];
+  return Object.entries(value)
+    .filter(([, enabled]) => Boolean(enabled))
+    .map(([key]) => legacyFeatureLabels[key] || key
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (char) => char.toUpperCase()));
+}
 
 const schema = z.object({
   name: nameField('Plan name'),
@@ -44,7 +59,7 @@ const schema = z.object({
 
 export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
   const [loading, setLoading] = useState(false);
-  const [features, setFeatures] = useState([]);
+  const [features, setFeatures] = useState(() => normalizeFeatures(plan?.features));
   const isEditing = !!plan;
   const { currency } = usePlatformSettings();
   const currencySymbol = getCurrencySymbol(currency);
@@ -75,13 +90,11 @@ export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
         maxPatients: plan.maxPatients || 500,
         trialDays: plan.trialDays || 0,
       });
-      setFeatures(plan.features || []);
     } else {
       reset({
         name: '', description: '', price: 0, durationInDays: 30,
-        maxUsers: 10, maxDoctors: 5, maxPatients: 500, trialDays: 14,
+        maxUsers: 10, maxAdmins: 1, maxDoctors: 5, maxPatients: 500, trialDays: 14,
       });
-      setFeatures([]);
     }
   }, [plan, reset]);
 

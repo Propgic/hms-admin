@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { User, Lock, Settings, Receipt } from 'lucide-react';
+import { User, Lock, Settings, Receipt, ShieldCheck } from 'lucide-react';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import { useAuth } from '../../hooks/useAuth';
@@ -71,6 +71,21 @@ const billingSchema = z.object({
   invoicePrefix: z.string().trim().min(1).max(12),
 });
 
+const optionalUrl = z.string().trim().url('Invalid URL').optional().or(z.literal(''));
+
+const abdmSchema = z.object({
+  abdmEnabled: z.coerce.boolean(),
+  abdmClientId: z.string().trim().max(200).optional().or(z.literal('')),
+  abdmClientSecret: z.string().trim().max(500).optional().or(z.literal('')),
+  abdmGatewayBaseUrl: optionalUrl,
+  abdmAbhaBaseUrl: optionalUrl,
+  abdmHfrBaseUrl: optionalUrl,
+  abdmHprBaseUrl: optionalUrl,
+}).refine((data) => !data.abdmEnabled || (data.abdmClientId && data.abdmClientSecret), {
+  message: 'Client ID and secret are required when ABDM is enabled',
+  path: ['abdmClientId'],
+});
+
 const CURRENCY_OPTIONS = [
   { value: 'INR', label: 'INR — Indian Rupee' },
   { value: 'USD', label: 'USD — US Dollar' },
@@ -117,9 +132,132 @@ export default function SettingsPage() {
         <ProfileCard user={user} updateUser={updateUser} />
         <PasswordCard />
         <PlatformCard />
+        <AbdmCard />
         <BillingCard />
       </div>
     </div>
+  );
+}
+
+function AbdmCard() {
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    setError,
+    formState: { errors, isDirty },
+  } = useForm({
+    resolver: zodResolver(abdmSchema),
+    defaultValues: {
+      abdmEnabled: false,
+      abdmClientId: '',
+      abdmClientSecret: '',
+      abdmGatewayBaseUrl: 'https://dev.abdm.gov.in/gateway',
+      abdmAbhaBaseUrl: 'https://abhasbx.abdm.gov.in/abha/api/v3',
+      abdmHfrBaseUrl: 'https://facilitysbx.abdm.gov.in',
+      abdmHprBaseUrl: 'https://hprsbx.abdm.gov.in',
+    },
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get(endpoints.settings.platform);
+        const data = res.data?.data || res.data || {};
+        if (cancelled) return;
+        reset({
+          abdmEnabled: Boolean(data.abdmEnabled),
+          abdmClientId: data.abdmClientId ?? '',
+          abdmClientSecret: data.abdmClientSecret ?? '',
+          abdmGatewayBaseUrl: data.abdmGatewayBaseUrl ?? 'https://dev.abdm.gov.in/gateway',
+          abdmAbhaBaseUrl: data.abdmAbhaBaseUrl ?? 'https://abhasbx.abdm.gov.in/abha/api/v3',
+          abdmHfrBaseUrl: data.abdmHfrBaseUrl ?? 'https://facilitysbx.abdm.gov.in',
+          abdmHprBaseUrl: data.abdmHprBaseUrl ?? 'https://hprsbx.abdm.gov.in',
+        });
+      } catch (err) {
+        if (!cancelled) toast.error(extractServerError(err, 'Failed to load ABDM settings'));
+      } finally {
+        if (!cancelled) setFetching(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [reset]);
+
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      const res = await api.put(endpoints.settings.updatePlatform, data);
+      const updated = res.data?.data || res.data || data;
+      const next = {
+        abdmEnabled: Boolean(updated.abdmEnabled),
+        abdmClientId: updated.abdmClientId ?? '',
+        abdmClientSecret: updated.abdmClientSecret ?? '',
+        abdmGatewayBaseUrl: updated.abdmGatewayBaseUrl ?? 'https://dev.abdm.gov.in/gateway',
+        abdmAbhaBaseUrl: updated.abdmAbhaBaseUrl ?? 'https://abhasbx.abdm.gov.in/abha/api/v3',
+        abdmHfrBaseUrl: updated.abdmHfrBaseUrl ?? 'https://facilitysbx.abdm.gov.in',
+        abdmHprBaseUrl: updated.abdmHprBaseUrl ?? 'https://hprsbx.abdm.gov.in',
+      };
+      reset(next);
+      toast.success('ABDM platform settings updated');
+    } catch (err) {
+      const msg = extractServerError(err, 'Failed to update ABDM settings');
+      const fieldErrors = err?.response?.data?.errors;
+      if (Array.isArray(fieldErrors)) {
+        fieldErrors.forEach((e) => e.field && setError(e.field, { type: 'server', message: e.message }));
+      }
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className="p-5 lg:col-span-2">
+      <div className="flex items-center gap-3 mb-1">
+        <div className="w-8 h-8 bg-teal-100 dark:bg-teal-500/20 rounded-lg flex items-center justify-center">
+          <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-300" />
+        </div>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">ABDM Gateway</h2>
+      </div>
+      <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
+        Enables NHA gateway calls for HFR verification, ABHA, HPR, consent, and Health Locker pushes across hospitals.
+      </p>
+      {fetching ? (
+        <div className="py-10 flex justify-center"><Spinner size="md" /></div>
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Controller
+              control={control}
+              name="abdmEnabled"
+              render={({ field }) => (
+                <Select
+                  label="ABDM Status"
+                  options={NOTIFICATION_OPTIONS}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.abdmEnabled?.message}
+                />
+              )}
+            />
+            <Input label="Client ID" error={errors.abdmClientId?.message} {...register('abdmClientId')} />
+            <Input label="Client Secret" type="password" error={errors.abdmClientSecret?.message} {...register('abdmClientSecret')} />
+            <Input label="Gateway Base URL" error={errors.abdmGatewayBaseUrl?.message} {...register('abdmGatewayBaseUrl')} />
+            <Input label="ABHA Base URL" error={errors.abdmAbhaBaseUrl?.message} {...register('abdmAbhaBaseUrl')} />
+            <Input label="HFR Base URL" error={errors.abdmHfrBaseUrl?.message} {...register('abdmHfrBaseUrl')} />
+            <Input label="HPR Base URL" error={errors.abdmHprBaseUrl?.message} {...register('abdmHprBaseUrl')} />
+          </div>
+          <div className="flex justify-end">
+            <Button type="submit" loading={loading} disabled={!isDirty || loading}>Save ABDM Settings</Button>
+          </div>
+        </form>
+      )}
+    </Card>
   );
 }
 
