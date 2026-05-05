@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Save, Shield, RotateCcw, Check, Building2 } from 'lucide-react';
+import { Save, Shield, RotateCcw, Check, Building2, Lock, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import api from '../../api/axios';
@@ -45,10 +45,13 @@ const PERMISSION_GROUPS = [
   ] },
 ];
 
+const ALL_PERMISSIONS = PERMISSION_GROUPS.flatMap((group) => group.perms);
+
 // Hardcoded baseline per role — matches what the hms-care frontend ships
 // out of the box. When a hospital has no override saved, this is what runs.
 // Surfaced here so the admin can see what would apply if they reset.
 const BASELINE = {
+  hospital_admin: ALL_PERMISSIONS,
   doctor: [
     'dashboard:view', 'patients:view', 'appointments:view', 'appointments:edit',
     'prescriptions:view', 'prescriptions:create', 'prescriptions:edit',
@@ -101,6 +104,8 @@ export default function AccessManagement() {
   const [roles, setRoles] = useState([]);
   // selected[role] = string[] currently-active permissions for that role.
   const [selected, setSelected] = useState({});
+  const [allowedPermissions, setAllowedPermissions] = useState([]);
+  const [plan, setPlan] = useState(null);
   const [activeRole, setActiveRole] = useState('doctor');
   const [search, setSearch] = useState('');
 
@@ -125,14 +130,22 @@ export default function AccessManagement() {
     setLoadingAccess(true);
     try {
       const res = await api.get(endpoints.hospitals.accessControl(hospitalId));
-      const editableRoles = res.data?.data?.roles || [];
-      const overrides = res.data?.data?.overrides || {};
+      const payload = res.data?.data || {};
+      const editableRoles = payload.roles || [];
+      const overrides = payload.overrides || {};
+      const effective = payload.effective || {};
+      const allowed = payload.allowedPermissions || [];
       const next = {};
       for (const r of editableRoles) {
-        next[r] = overrides[r]?.length ? [...overrides[r]] : [...(BASELINE[r] || [])];
+        next[r] = Array.isArray(effective[r])
+          ? [...effective[r]]
+          : (overrides[r]?.length ? [...overrides[r]] : [...(BASELINE[r] || [])])
+            .filter((permission) => !allowed.length || allowed.includes(permission));
       }
       setRoles(editableRoles);
       setSelected(next);
+      setAllowedPermissions(allowed);
+      setPlan(payload.plan || null);
       if (editableRoles.length && !editableRoles.includes(activeRole)) {
         setActiveRole(editableRoles[0]);
       }
@@ -145,6 +158,7 @@ export default function AccessManagement() {
   useEffect(() => { fetchAccess(); }, [fetchAccess]);
 
   const togglePermission = (perm) => {
+    if (!isAllowedByPlan(perm)) return;
     setSelected((s) => {
       const cur = new Set(s[activeRole] || []);
       if (cur.has(perm)) cur.delete(perm); else cur.add(perm);
@@ -153,16 +167,18 @@ export default function AccessManagement() {
   };
 
   const toggleGroup = (perms, allOn) => {
+    const editablePerms = perms.filter(isAllowedByPlan);
+    if (!editablePerms.length) return;
     setSelected((s) => {
       const cur = new Set(s[activeRole] || []);
-      if (allOn) perms.forEach((p) => cur.delete(p));
-      else perms.forEach((p) => cur.add(p));
+      if (allOn) editablePerms.forEach((p) => cur.delete(p));
+      else editablePerms.forEach((p) => cur.add(p));
       return { ...s, [activeRole]: [...cur] };
     });
   };
 
   const resetToDefault = () => {
-    setSelected((s) => ({ ...s, [activeRole]: [...(BASELINE[activeRole] || [])] }));
+    setSelected((s) => ({ ...s, [activeRole]: (BASELINE[activeRole] || []).filter(isAllowedByPlan) }));
     toast('Reverted to baseline — click Save to persist.', { icon: '↩' });
   };
 
@@ -170,7 +186,7 @@ export default function AccessManagement() {
     setSaving(true);
     try {
       await api.put(endpoints.hospitals.saveAccessRole(hospitalId, activeRole), {
-        permissions: selected[activeRole] || [],
+        permissions: (selected[activeRole] || []).filter(isAllowedByPlan),
       });
       toast.success(`Saved access for ${activeRole.replace('_', ' ')}. Users in this role need to log out and back in for changes to apply.`, { duration: 6000 });
     } catch (err) {
@@ -187,8 +203,12 @@ export default function AccessManagement() {
   }, [search]);
 
   const selectedSet = new Set(selected[activeRole] || []);
-  const totalPerms = PERMISSION_GROUPS.reduce((sum, g) => sum + g.perms.length, 0);
+  const allowedSet = new Set(allowedPermissions);
+  const hasPlanCap = allowedPermissions.length > 0;
+  const isAllowedByPlan = (permission) => !hasPlanCap || allowedSet.has(permission);
+  const totalPerms = PERMISSION_GROUPS.reduce((sum, g) => sum + g.perms.filter(isAllowedByPlan).length, 0);
   const activeHospital = hospitals.find((h) => h.id === hospitalId);
+  const planFeatureCount = Array.isArray(plan?.features) ? plan.features.length : 0;
 
   if (loadingHospitals) return <Spinner fullPage />;
 
@@ -202,7 +222,7 @@ export default function AccessManagement() {
           <div>
             <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Access Management</h2>
             <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5 max-w-2xl">
-              Control which menu items, buttons, and pages each persona can use inside a hospital. Hospital admin always has full access.
+              Control which menu items, buttons, and pages each persona can use inside a hospital. The selected hospital plan is the maximum access ceiling.
             </p>
           </div>
         </div>
@@ -228,8 +248,25 @@ export default function AccessManagement() {
           {activeHospital?.schemaName && (
             <span className="text-[11px] text-gray-400 font-mono">schema: {activeHospital.schemaName}</span>
           )}
+          {plan && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+              {plan.name} plan
+            </span>
+          )}
         </div>
       </Card>
+
+      {plan && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-100">
+          <div className="flex items-start gap-2">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              {plan.name} allows {planFeatureCount} feature{planFeatureCount === 1 ? '' : 's'}.
+              Permissions outside this plan are locked here and in the hospital app; even a platform admin cannot enable them without changing the hospital plan.
+            </p>
+          </div>
+        </div>
+      )}
 
       {!hospitalId ? (
         <Card>
@@ -267,7 +304,7 @@ export default function AccessManagement() {
                 {activeRole.replace('_', ' ')} permissions
               </h3>
               <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-                {selectedSet.size} of {totalPerms} permissions enabled
+                {selectedSet.size} of {totalPerms} plan-allowed permissions enabled
               </p>
             </div>
             <input
@@ -284,11 +321,22 @@ export default function AccessManagement() {
               <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-6">No permissions match your search.</p>
             ) : (
               filteredGroups.map((group) => {
-                const groupCount = group.perms.filter((p) => selectedSet.has(p)).length;
-                const allOn = groupCount === group.perms.length;
+                const allowedPerms = group.perms.filter(isAllowedByPlan);
+                const lockedCount = group.perms.length - allowedPerms.length;
+                const groupCount = allowedPerms.filter((p) => selectedSet.has(p)).length;
+                const groupLocked = allowedPerms.length === 0;
+                const allOn = allowedPerms.length > 0 && groupCount === allowedPerms.length;
                 const someOn = groupCount > 0 && !allOn;
                 return (
-                  <div key={group.label} className="rounded-lg border border-gray-200 dark:border-slate-800">
+                  <div
+                    key={group.label}
+                    className={clsx(
+                      'rounded-lg border',
+                      groupLocked
+                        ? 'border-dashed border-gray-200 bg-gray-50/70 dark:border-slate-800 dark:bg-slate-900/35'
+                        : 'border-gray-200 dark:border-slate-800'
+                    )}
+                  >
                     <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-slate-800 bg-gray-50/60 dark:bg-slate-800/40">
                       <div className="flex items-center gap-2">
                         <h4 className="font-medium text-sm text-gray-900 dark:text-slate-100">{group.label}</h4>
@@ -298,41 +346,55 @@ export default function AccessManagement() {
                             : someOn ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
                               : 'bg-gray-100 text-gray-600 dark:bg-slate-700/60 dark:text-slate-400'
                         )}>
-                          {groupCount}/{group.perms.length}
+                          {groupCount}/{allowedPerms.length}
                         </span>
+                        {lockedCount > 0 && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-700/60 dark:text-slate-300">
+                            <Lock className="h-3 w-3" />
+                            {lockedCount} plan locked
+                          </span>
+                        )}
                       </div>
                       <button
                         type="button"
                         onClick={() => toggleGroup(group.perms, allOn)}
-                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                        disabled={groupLocked}
+                        className="text-xs text-blue-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline dark:text-blue-400 dark:disabled:text-slate-600"
                       >
-                        {allOn ? 'Disable all' : 'Enable all'}
+                        {groupLocked ? `Not in ${plan?.name || 'plan'}` : allOn ? 'Disable all' : 'Enable all'}
                       </button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 p-2">
                       {group.perms.map((perm) => {
                         const on = selectedSet.has(perm);
+                        const locked = !isAllowedByPlan(perm);
                         return (
                           <button
                             key={perm}
                             type="button"
                             onClick={() => togglePermission(perm)}
+                            disabled={locked}
                             className={clsx(
                               'flex items-center gap-2 px-3 py-2 rounded-md text-sm transition text-left',
-                              on
+                              locked
+                                ? 'bg-gray-50 text-gray-400 border border-dashed border-gray-200 cursor-not-allowed dark:bg-slate-950/40 dark:text-slate-600 dark:border-slate-800'
+                                : on
                                 ? 'bg-blue-50 text-blue-800 dark:bg-blue-500/10 dark:text-blue-200 border border-blue-200 dark:border-blue-500/30'
                                 : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-400 border border-gray-200 dark:border-slate-700 hover:border-blue-300'
                             )}
                           >
                             <span className={clsx(
                               'w-4 h-4 rounded flex items-center justify-center shrink-0 border',
-                              on
+                              locked
+                                ? 'border-gray-300 dark:border-slate-700'
+                                : on
                                 ? 'bg-blue-600 border-blue-600 text-white'
                                 : 'border-gray-300 dark:border-slate-600'
                             )}>
-                              {on && <Check className="w-3 h-3" />}
+                              {locked ? <Lock className="w-3 h-3" /> : on && <Check className="w-3 h-3" />}
                             </span>
                             <span className="font-medium">{actionLabel(perm)}</span>
+                            {locked && <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-slate-800 dark:text-slate-500">Plan</span>}
                             <span className="ml-auto text-[10px] font-mono text-gray-400 dark:text-slate-500 truncate">{perm}</span>
                           </button>
                         );

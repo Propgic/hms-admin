@@ -135,6 +135,7 @@ export default function HospitalList() {
     }
   };
 
+
   const statusColor = (s) => {
     const map = { active: 'success', trial: 'warning', trial_expired: 'danger', suspended: 'danger', inactive: 'gray' };
     return map[s] || 'gray';

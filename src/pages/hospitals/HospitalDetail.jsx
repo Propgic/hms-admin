@@ -324,7 +324,7 @@ export default function HospitalDetail() {
                         <CreditCard className={`w-5 h-5 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400'}`} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-slate-100 truncate">{sub.planName || sub.plan?.name || hospital.plan?.name || 'Plan'}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-slate-100 truncate">{sub.plan?.name || sub.planName || 'Plan'}</p>
                         <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
                           {dayjs(sub.startDate).format('MMM D, YYYY')} → {dayjs(sub.endDate).format('MMM D, YYYY')}
                         </p>

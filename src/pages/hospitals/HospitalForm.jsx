@@ -123,8 +123,11 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
         isActive: source.isActive !== undefined ? !!source.isActive : (source.status !== 'suspended'),
         isTrial: !!source.isTrial,
         trialEndsAt: source.trialEndsAt ? new Date(source.trialEndsAt).toISOString().slice(0, 10) : '',
-        adminName: source.admin?.name || '',
-        adminEmail: source.admin?.email || '',
+        // Older tenants may not have an explicit `admin` row returned by the
+        // backend — fall back to the hospital's own contact name/email so the
+        // form is never blank on edit.
+        adminName: source.admin?.name || source.adminName || source.name || '',
+        adminEmail: source.admin?.email || source.adminEmail || source.email || '',
         adminPassword: '',
       });
     } else if (!isEditing) {
