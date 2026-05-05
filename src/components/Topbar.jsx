@@ -1,20 +1,54 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bell, ChevronDown, LogOut, User, Settings, Sun, Moon, Monitor, Building2, CreditCard, PowerOff, Inbox } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import api from '../api/axios';
-import endpoints from '../api/endpoints';
-import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '../hooks/useTheme';
-import { getPageTitle } from '../utils/pageTitles';
+import { useState, useRef, useEffect, useCallback } from "react";
+import {
+  Bell,
+  ChevronDown,
+  LogOut,
+  User,
+  Settings,
+  Sun,
+  Moon,
+  Monitor,
+  Building2,
+  CreditCard,
+  PowerOff,
+  Inbox,
+} from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import api from "../api/axios";
+import endpoints from "../api/endpoints";
+import { useAuth } from "../hooks/useAuth";
+import { useTheme } from "../hooks/useTheme";
+import { getPageTitle } from "../utils/pageTitles";
 
 dayjs.extend(relativeTime);
 
-const NOTIF_LAST_SEEN_KEY = 'hms_admin_notif_last_seen';
+const NOTIF_LAST_SEEN_KEY = "hms_admin_notif_last_seen";
 
-const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const dayNames = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+const monthNames = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 function formatToday() {
   const now = new Date();
@@ -24,6 +58,52 @@ function formatToday() {
   };
 }
 
+function formatLiveTime(d) {
+  let h = d.getHours();
+  const m = d.getMinutes();
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = ((h + 11) % 12) + 1;
+  return `${String(h12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+// Cross-fades date ↔ time every 5s, mirroring hms-care. Width transitions
+// in sync between date-size and time-size so the gap to the next icon stays
+// tight when the shorter time string is showing.
+function LiveDateTime() {
+  const [phase, setPhase] = useState("date");
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const tick = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(tick);
+  }, []);
+  useEffect(() => {
+    const swap = setInterval(
+      () => setPhase((p) => (p === "date" ? "time" : "date")),
+      5000
+    );
+    return () => clearInterval(swap);
+  }, []);
+  const dateText = `${monthNames[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+  const timeText = formatLiveTime(now);
+  return (
+    <span
+      className="relative inline-block tabular-nums h-[1.25rem] align-middle"
+      style={{ width: "7rem" }}
+    >
+      <span
+        className={`absolute inset-0 transition-opacity duration-500 ease-out ${phase === "date" ? "opacity-100" : "opacity-0"}`}
+      >
+        {dateText}
+      </span>
+      <span
+        className={`absolute inset-0 transition-opacity duration-500 ease-out ${phase === "time" ? "opacity-100" : "opacity-0"}`}
+      >
+        {timeText}
+      </span>
+    </span>
+  );
+}
+
 const NOTIF_ICON = {
   hospital_created: Building2,
   subscription_created: CreditCard,
@@ -31,9 +111,12 @@ const NOTIF_ICON = {
 };
 
 const NOTIF_TONE = {
-  hospital_created: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10',
-  subscription_created: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10',
-  hospital_deactivated: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10',
+  hospital_created:
+    "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10",
+  subscription_created:
+    "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10",
+  hospital_deactivated:
+    "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10",
 };
 
 export default function Topbar({ leftOffset = 248, gutter = 12 }) {
@@ -45,7 +128,9 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifs, setNotifs] = useState([]);
   const [notifLoading, setNotifLoading] = useState(false);
-  const [lastSeen, setLastSeen] = useState(() => Number(localStorage.getItem(NOTIF_LAST_SEEN_KEY)) || 0);
+  const [lastSeen, setLastSeen] = useState(
+    () => Number(localStorage.getItem(NOTIF_LAST_SEEN_KEY)) || 0
+  );
   const dropdownRef = useRef(null);
   const notifRef = useRef(null);
   const today = formatToday();
@@ -60,14 +145,16 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
         setNotifOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   const loadNotifs = useCallback(async () => {
     setNotifLoading(true);
     try {
-      const res = await api.get(endpoints.notifications.list, { params: { limit: 15 } });
+      const res = await api.get(endpoints.notifications.list, {
+        params: { limit: 15 },
+      });
       const data = res.data?.data || res.data || [];
       setNotifs(Array.isArray(data) ? data : []);
     } catch {
@@ -78,7 +165,9 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
   }, []);
 
   // Load once on mount so the unread badge is accurate.
-  useEffect(() => { loadNotifs(); }, [loadNotifs]);
+  useEffect(() => {
+    loadNotifs();
+  }, [loadNotifs]);
 
   // Refresh when opening the panel, and mark everything as seen.
   const handleNotifToggle = () => {
@@ -94,43 +183,45 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
 
   const unreadCount = notifs.reduce(
     (n, item) => (new Date(item.createdAt).getTime() > lastSeen ? n + 1 : n),
-    0,
+    0
   );
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const toggleTheme = () => {
-    setTheme(isDark ? 'light' : 'dark');
+    setTheme(isDark ? "light" : "dark");
   };
 
-  const ThemeIcon = theme === 'system' ? Monitor : isDark ? Moon : Sun;
+  const ThemeIcon = theme === "system" ? Monitor : isDark ? Moon : Sun;
 
   return (
     <header
-      className="fixed h-16 flex items-center px-6 gap-4 z-30 transition-[left] duration-200 border rounded-2xl"
+      className="fixed h-16 flex items-center px-6 gap-2 z-30 transition-[left] duration-200 border rounded-2xl"
       style={{
         left: leftOffset,
         top: gutter,
         right: gutter,
-        backgroundColor: 'var(--topbar-bg)',
-        borderColor: 'var(--topbar-border)',
+        backgroundColor: "var(--topbar-bg)",
+        borderColor: "var(--topbar-border)",
       }}
     >
       <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate mr-auto">
         {pageTitle}
       </h1>
-      <div className="hidden sm:flex items-center text-[13px] text-slate-500 dark:text-slate-400">
-        <span className="font-semibold text-slate-900 dark:text-slate-100">{today.day}</span>
-        <span className="mx-2 text-slate-300 dark:text-slate-600">|</span>
-        <span>{today.date}</span>
+      <div className="hidden sm:flex items-center text-[13px] text-slate-500 dark:text-slate-400 mr-1">
+        <span className="font-semibold text-slate-900 dark:text-slate-100">
+          {today.day}
+        </span>
+        <span className="mx-1.5 text-slate-300 dark:text-slate-600">|</span>
+        <LiveDateTime />
       </div>
 
       <button
         onClick={toggleTheme}
-        title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+        title={`Switch to ${isDark ? "light" : "dark"} mode`}
         className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition"
       >
         <ThemeIcon className="w-[18px] h-[18px]" strokeWidth={1.75} />
@@ -145,7 +236,7 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
           <Bell className="w-[18px] h-[18px]" strokeWidth={1.75} />
           {unreadCount > 0 && (
             <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
         </button>
@@ -153,12 +244,18 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
         {notifOpen && (
           <div className="absolute right-0 top-full mt-2 w-80 max-h-[460px] bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col z-50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Notifications</h3>
-              <span className="text-xs text-slate-500 dark:text-slate-400">{notifs.length} recent</span>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Notifications
+              </h3>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                {notifs.length} recent
+              </span>
             </div>
             <div className="overflow-y-auto flex-1">
               {notifLoading ? (
-                <div className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">Loading…</div>
+                <div className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                  Loading…
+                </div>
               ) : notifs.length === 0 ? (
                 <div className="py-10 flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
                   <Inbox className="w-6 h-6" />
@@ -167,8 +264,11 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
               ) : (
                 notifs.map((item) => {
                   const Icon = NOTIF_ICON[item.type] || Bell;
-                  const tone = NOTIF_TONE[item.type] || 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800';
-                  const isUnread = new Date(item.createdAt).getTime() > lastSeen;
+                  const tone =
+                    NOTIF_TONE[item.type] ||
+                    "text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800";
+                  const isUnread =
+                    new Date(item.createdAt).getTime() > lastSeen;
                   return (
                     <button
                       key={item.id}
@@ -178,18 +278,26 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
                       }}
                       className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/60 border-b border-slate-50 dark:border-slate-800 last:border-b-0"
                     >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${tone}`}>
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${tone}`}
+                      >
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
                           {item.title}
-                          {isUnread && <span className="w-1.5 h-1.5 rounded-full bg-red-500" />}
+                          {isUnread && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                          )}
                         </p>
                         {item.message && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{item.message}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                            {item.message}
+                          </p>
                         )}
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{dayjs(item.createdAt).fromNow()}</p>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                          {dayjs(item.createdAt).fromNow()}
+                        </p>
                       </div>
                     </button>
                   );
@@ -197,7 +305,10 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
               )}
             </div>
             <button
-              onClick={() => { setNotifOpen(false); navigate('/activity-logs'); }}
+              onClick={() => {
+                setNotifOpen(false);
+                navigate("/activity-logs");
+              }}
               className="block w-full px-4 py-2.5 text-center text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 rounded-b-xl"
             >
               View all activity
@@ -212,10 +323,12 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
           className="flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl px-2 py-1.5 transition"
         >
           <div className="hidden sm:block text-right">
-            <p className="text-sm text-slate-700 dark:text-slate-200 font-medium leading-tight">My Profile</p>
+            <p className="text-sm text-slate-700 dark:text-slate-200 font-medium leading-tight">
+              My Profile
+            </p>
           </div>
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
-            {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+            {user?.name?.charAt(0)?.toUpperCase() || "A"}
           </div>
           <ChevronDown className="w-4 h-4 text-slate-400 hidden sm:block" />
         </button>
@@ -223,18 +336,28 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
         {dropdownOpen && (
           <div className="absolute right-0 top-full mt-2 w-60 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1.5 z-50">
             <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">{user?.name || 'Admin'}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{user?.email || ''}</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
+                {user?.name || "Admin"}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {user?.email || ""}
+              </p>
             </div>
             <button
-              onClick={() => { setDropdownOpen(false); navigate('/settings'); }}
+              onClick={() => {
+                setDropdownOpen(false);
+                navigate("/settings");
+              }}
               className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <User className="w-4 h-4 text-slate-400" />
               Profile
             </button>
             <button
-              onClick={() => { setDropdownOpen(false); navigate('/settings'); }}
+              onClick={() => {
+                setDropdownOpen(false);
+                navigate("/settings");
+              }}
               className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <Settings className="w-4 h-4 text-slate-400" />

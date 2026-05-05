@@ -177,3 +177,11 @@ input[type="number"]::-webkit-inner-spin-button {
   margin: 0;
 }
 input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+/* Subtle fade-in used by the topbar's live date/time so each tick "blooms"
+   in instead of snapping. Keyed re-mount of the span re-runs the animation. */
+@keyframes hms-fadein-kf {
+  from { opacity: 0.35; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hms-fadein { display: inline-block; animation: hms-fadein-kf 220ms ease-out; }
