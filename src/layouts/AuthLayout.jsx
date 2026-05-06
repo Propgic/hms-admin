@@ -13,7 +13,20 @@ function Orb({ className, delay = 0 }) {
   );
 }
 
+// Time-of-day greeting. Avoids awkward role labels by speaking to the human
+// directly. Resolves at render time; AuthLayout doesn't outlive an hour
+// in practice so we don't bother re-ticking it.
+function timeAwareHello() {
+  const h = new Date().getHours();
+  if (h < 5)  return 'Burning the midnight oil';
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  if (h < 21) return 'Good evening';
+  return 'Good night';
+}
+
 export default function AuthLayout() {
+  const hello = timeAwareHello();
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#0b0d1a] text-white flex">
       {/* animated mesh-gradient background — blue/indigo to match the
@@ -65,10 +78,14 @@ export default function AuthLayout() {
             <div className="relative">
               <DoctorMascot size={320} />
             </div>
-            {/* speech bubble */}
-            <div className="absolute -top-4 left-72 bg-white text-slate-900 rounded-2xl rounded-bl-none px-4 py-2 shadow-xl text-sm font-medium auth-bubble">
-              Welcome, operator 👋
-              <span className="absolute -bottom-2 left-2 w-3 h-3 bg-white rotate-45" />
+            {/* speech bubble — whitespace-nowrap stops text from wrapping;
+                the tail is a 45°-rotated square positioned with its center
+                exactly on the bubble's bottom edge so half is inside the
+                bubble and half visually pokes out as a triangle. */}
+            <div className="absolute -top-4 left-72 whitespace-nowrap bg-white text-slate-900 rounded-2xl rounded-bl-none px-4 py-2 shadow-xl text-sm font-medium auth-bubble">
+              <span className="text-blue-600 font-semibold">{hello}</span>
+              <span className="ml-1">👋</span>
+              <span className="absolute bottom-0 left-3 translate-y-1/2 w-3 h-3 bg-white rotate-45 shadow-[2px_2px_4px_rgba(0,0,0,0.06)]" />
             </div>
           </div>
           <div className="pb-6">
