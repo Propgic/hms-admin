@@ -185,3 +185,41 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   to   { opacity: 1; transform: translateY(0); }
 }
 .hms-fadein { display: inline-block; animation: hms-fadein-kf 220ms ease-out; }
+
+/* Auth screen — animated background orbs and form micro-interactions. */
+@keyframes auth-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(40px, -30px) scale(1.05); }
+  66%      { transform: translate(-30px, 25px) scale(0.97); }
+}
+
+@keyframes auth-shine {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes auth-card-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.auth-card { animation: auth-card-in 520ms cubic-bezier(.2,.8,.2,1) both; }
+
+@keyframes auth-bubble-in {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.94); }
+  60%  { opacity: 1; transform: translateY(-2px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.auth-bubble {
+  animation: auth-bubble-in 720ms cubic-bezier(.2,.9,.3,1.2) both 240ms;
+}
+
+.auth-cta {
+  box-shadow:
+    0 10px 30px -10px rgba(37, 99, 235, 0.6),     /* blue-600 */
+    0 0 0 1px rgba(255,255,255,0.06) inset;
+}
+.auth-cta:hover {
+  box-shadow:
+    0 14px 40px -12px rgba(67, 56, 202, 0.55),    /* indigo-700 */
+    0 0 0 1px rgba(255,255,255,0.1) inset;
+}

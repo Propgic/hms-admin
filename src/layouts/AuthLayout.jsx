@@ -1,85 +1,147 @@
 import { Outlet } from 'react-router-dom';
-import { ShieldCheck, Activity, Users, Building2, TrendingUp } from 'lucide-react';
+import { ShieldCheck, Activity, Building2, Sparkles, Users, TrendingUp } from 'lucide-react';
+import DoctorMascot from '../components/auth/DoctorMascot';
+
+// Reusable floating-orb decorations. Pure CSS animation via index.css
+// keyframes — no JS-driven raf loop, so they don't fight React's renders.
+function Orb({ className, delay = 0 }) {
+  return (
+    <div
+      className={`absolute rounded-full blur-3xl opacity-60 mix-blend-screen pointer-events-none ${className}`}
+      style={{ animation: `auth-float 14s ease-in-out infinite`, animationDelay: `${delay}s` }}
+    />
+  );
+}
 
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
-      {/* Left brand panel */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-700 to-slate-900">
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage:
-            'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15) 0%, transparent 40%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 40%)',
-        }} />
-        <div className="absolute inset-0" style={{
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
-        }} />
+    <div className="min-h-screen relative overflow-hidden bg-[#0b0d1a] text-white flex">
+      {/* animated mesh-gradient background — blue/indigo to match the
+          dashboard sidebar (from-blue-600 to-indigo-700). */}
+      <div className="absolute inset-0 -z-10">
+        <Orb className="w-[520px] h-[520px] bg-blue-600 -top-40 -left-32" />
+        <Orb className="w-[420px] h-[420px] bg-indigo-700 top-1/3 -right-32" delay={3} />
+        <Orb className="w-[480px] h-[480px] bg-sky-500 bottom-[-180px] left-1/3" delay={6} />
+        <Orb className="w-[360px] h-[360px] bg-indigo-500 top-1/4 left-1/2" delay={9} />
+        {/* subtle grid */}
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+            backgroundSize: '56px 56px',
+          }}
+        />
+        {/* radial vignette */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, transparent 30%, rgba(11,13,26,0.85) 100%)',
+          }}
+        />
+      </div>
 
-        <div className="relative z-10 flex flex-col justify-between p-12 w-full text-white">
+      {/* Left: brand + mascot panel */}
+      <div className="hidden lg:flex lg:w-1/2 relative px-12 py-10 flex-col justify-between">
+        {/* brand bar — match sidebar logo (blue-600 → indigo-700) */}
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/30 font-bold text-white">
+            H
+          </div>
           <div>
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center">
-                <span className="font-bold text-lg">H</span>
-              </div>
-              <div>
-                <p className="font-semibold tracking-wide">HMS PLATFORM</p>
-                <p className="text-xs text-blue-200">Clinical curator</p>
-              </div>
+            <p className="text-lg font-bold tracking-tight">
+              <span className="text-blue-300">hms</span>
+              <span className="text-white">·admin</span>
+            </p>
+            <p className="text-[11px] text-blue-200/80">Operator console</p>
+          </div>
+        </div>
+
+        {/* mascot + headline */}
+        <div className="flex items-end gap-8 -mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/30 to-indigo-600/30 rounded-full blur-3xl" />
+            <div className="relative">
+              <DoctorMascot size={320} />
+            </div>
+            {/* speech bubble */}
+            <div className="absolute -top-4 left-72 bg-white text-slate-900 rounded-2xl rounded-bl-none px-4 py-2 shadow-xl text-sm font-medium auth-bubble">
+              Welcome, operator 👋
+              <span className="absolute -bottom-2 left-2 w-3 h-3 bg-white rotate-45" />
             </div>
           </div>
+          <div className="pb-6">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur border border-white/15 px-3 py-1 text-[11px] font-medium">
+              <Sparkles className="w-3 h-3" /> Operator console
+            </span>
+            <h2 className="mt-4 text-4xl font-bold leading-[1.1] tracking-tight">
+              Every hospital, <br />
+              <span className="bg-gradient-to-r from-blue-300 via-indigo-300 to-sky-300 bg-clip-text text-transparent">
+                one console.
+              </span>
+            </h2>
+            <p className="mt-3 text-sm text-blue-100/80 max-w-sm">
+              Provision tenants, manage subscriptions, monitor compliance and revenue — everything you need to run the HMS network in one place.
+            </p>
+          </div>
+        </div>
 
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-4xl font-bold leading-tight">
-                Orchestrate your entire<br />hospital network.
-              </h2>
-              <p className="mt-4 text-blue-100 max-w-md">
-                A unified command center for hospitals, subscriptions, compliance and analytics — built for healthcare operators.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 max-w-md">
-              {[
-                { icon: Building2, label: 'Hospitals', value: '142' },
-                { icon: Users, label: 'Active users', value: '2,845' },
-                { icon: Activity, label: 'Uptime', value: '99.98%' },
-                { icon: TrendingUp, label: 'Growth', value: '+12.2%' },
-              ].map((s) => (
-                <div key={s.label} className="rounded-xl bg-white/5 backdrop-blur border border-white/10 p-4">
-                  <s.icon className="w-4 h-4 text-blue-200" />
-                  <p className="mt-3 text-2xl font-semibold">{s.value}</p>
-                  <p className="text-xs text-blue-200 mt-0.5">{s.label}</p>
+        {/* stats + compliance */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 max-w-lg">
+            {[
+              { icon: Building2, label: 'Hospitals',    value: '142',     accent: 'text-blue-200',  trend: null },
+              { icon: Users,     label: 'Active users', value: '2,845',   accent: 'text-indigo-200', trend: null },
+              { icon: TrendingUp,label: 'Growth',       value: '+12.2%',  accent: 'text-emerald-200', trend: 'up' },
+              { icon: Activity,  label: 'Uptime',       value: '99.98%',  accent: 'text-sky-200',    trend: null },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="rounded-2xl bg-white/[0.04] backdrop-blur-md border border-white/10 p-3.5 hover:bg-white/[0.07] transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <s.icon className={`w-4 h-4 ${s.accent}`} />
+                  {s.trend === 'up' && (
+                    <span className="text-[10px] font-medium text-emerald-300/90">↑ trending</span>
+                  )}
                 </div>
-              ))}
-            </div>
+                <p className="mt-2 text-xl font-semibold tracking-tight">{s.value}</p>
+                <p className="text-[10px] uppercase tracking-wider text-blue-200/60 mt-0.5">{s.label}</p>
+              </div>
+            ))}
           </div>
-
-          <div className="flex items-center gap-3 text-xs text-blue-100">
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 text-emerald-300" />
+          <div className="flex items-center gap-3 text-[11px] text-blue-100/70">
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
             </div>
-            <div>
-              <p className="font-medium text-white">HIPAA compliant environment</p>
-              <p>All sessions are end-to-end encrypted.</p>
-            </div>
+            <p>HIPAA · DPDP Act 2023 · ABDM compliant · End-to-end encrypted</p>
           </div>
         </div>
       </div>
 
-      {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold">H</div>
-            <div>
-              <p className="font-semibold text-slate-900">HMS Admin</p>
-              <p className="text-xs text-slate-500">Hospital Management Platform</p>
-            </div>
+      {/* Right: glass form */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative">
+        {/* mobile brand bar */}
+        <div className="lg:hidden absolute top-6 left-6 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center font-bold text-white">
+            H
           </div>
-          <Outlet />
-          <p className="mt-10 text-center text-xs text-slate-400">
-            © {new Date().getFullYear()} HMS Platform · Secured by TLS 1.3
+          <div>
+            <p className="font-bold text-sm">
+              <span className="text-blue-300">hms</span>
+              <span className="text-white">·admin</span>
+            </p>
+            <p className="text-[10px] text-blue-200">Operator console</p>
+          </div>
+        </div>
+
+        <div className="w-full max-w-md">
+          <div className="rounded-3xl bg-white/[0.04] backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/40 p-8 auth-card">
+            <Outlet />
+          </div>
+          <p className="mt-6 text-center text-[11px] text-blue-200/50">
+            © {new Date().getFullYear()} hms·admin · Operator Console · Secured by TLS 1.3
           </p>
         </div>
       </div>
