@@ -26,11 +26,15 @@ export default function BillingList() {
       const res = await api.get(endpoints.billing.list, {
         params: { page, limit: pageSize, search, status: statusFilter || undefined, sortBy: sortField, sortOrder },
       });
-      const d = res.data.data || res.data;
-      const list = d.subscriptions || d.rows || d.items || (Array.isArray(d) ? d : []);
+      // Backend response: { success, message, data: [...rows], pagination: {...} }
+      // Pagination lives on res.data.pagination, NOT on the items array.
+      const payload = res.data || {};
+      const d = payload.data;
+      const list = Array.isArray(d) ? d : (d?.subscriptions || d?.rows || d?.items || []);
+      const pag = payload.pagination || d?.pagination || {};
       setSubscriptions(list);
-      setTotalPages(d.totalPages || d.pagination?.totalPages || 1);
-      setTotalItems(d.total ?? d.pagination?.total ?? list.length);
+      setTotalPages(pag.totalPages || 1);
+      setTotalItems(pag.total ?? list.length);
     } catch {
       setSubscriptions([]);
       setTotalItems(0);
