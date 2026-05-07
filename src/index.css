@@ -3,12 +3,15 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --app-bg: #f9fafb;
+  /* Slightly cooler page background — softer than pure gray-50, picks up
+     the brand's blue undertone without being noticeably tinted. Removes
+     the "bright stark white" feel without sacrificing readability. */
+  --app-bg: #f4f6fb;
   --surface: #ffffff;
   --surface-muted: #f1f5f9;
   --surface-hover: #f8fafc;
-  --border: #eef2f6;
-  --border-strong: #e2e8f0;
+  --border: #e8ecf3;
+  --border-strong: #d8deea;
   --text: #0f172a;
   --text-muted: #64748b;
   --text-subtle: #94a3b8;
@@ -54,11 +57,20 @@
 body {
   margin: 0;
   background-color: var(--app-bg);
+  /* Subtle ambient brand glow — two faint radial halos in opposite corners
+     that read as light texture rather than overlay. Fixed attachment so it
+     doesn't scroll with content. */
+  background-image:
+    radial-gradient(ellipse 800px 600px at 0% 0%,    rgba(59, 130, 246, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 100%, rgba(99, 102, 241, 0.05) 0%, transparent 55%);
+  background-attachment: fixed;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color .2s ease, color .2s ease;
 }
+/* Dark mode keeps a solid page bg — the gradient only suits light mode. */
+:where(.dark) body { background-image: none; }
 
 #root {
   min-height: 100vh;
@@ -211,6 +223,18 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 }
 .auth-bubble {
   animation: auth-bubble-in 720ms cubic-bezier(.2,.9,.3,1.2) both 240ms;
+}
+
+/* Topbar — theme-toggle icon swap and notification bell shake. */
+@keyframes topbar-icon-spin {
+  from { transform: rotate(-90deg) scale(0.8); opacity: 0; }
+  to   { transform: rotate(0)      scale(1);   opacity: 1; }
+}
+@keyframes topbar-bell-shake {
+  0%, 92%, 100% { transform: rotate(0); }
+  94%           { transform: rotate(-12deg); }
+  96%           { transform: rotate(10deg); }
+  98%           { transform: rotate(-6deg); }
 }
 
 .auth-cta {

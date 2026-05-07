@@ -199,45 +199,76 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
 
   return (
     <header
-      className="fixed h-16 flex items-center px-6 gap-2 z-30 transition-[left] duration-200 border rounded-2xl"
+      className="fixed h-16 flex items-center px-5 gap-2 z-40 transition-[left] duration-200 border rounded-2xl"
       style={{
         left: leftOffset,
         top: gutter,
         right: gutter,
+        // Solid background — no backdrop-blur — so scrolled content can't
+        // bleed through the header.
         backgroundColor: "var(--topbar-bg)",
         borderColor: "var(--topbar-border)",
+        boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 4px 16px -6px rgba(15,23,42,0.06)",
       }}
     >
-      <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate mr-auto">
-        {pageTitle}
-      </h1>
+      <div className="flex items-center gap-3 mr-auto min-w-0">
+        <h1 className="text-[18px] font-bold tracking-tight text-slate-900 dark:text-slate-100 truncate">
+          {pageTitle}
+        </h1>
+        {/* Live system pulse — small green dot reassures the operator that
+            the platform is online. Updates implicitly via the LiveDateTime
+            tick already running below. */}
+        <span
+          className="hidden md:inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/30 rounded-full px-2 py-0.5"
+          title="All systems operational"
+        >
+          <span className="relative flex w-1.5 h-1.5">
+            <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+            <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500" />
+          </span>
+          Online
+        </span>
+      </div>
+
       <div className="hidden sm:flex items-center text-[13px] text-slate-500 dark:text-slate-400 mr-1">
-        <span className="font-semibold text-slate-900 dark:text-slate-100">
+        <span className="font-semibold text-slate-700 dark:text-slate-200">
           {today.day}
         </span>
-        <span className="mx-1.5 text-slate-300 dark:text-slate-600">|</span>
+        <span className="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
         <LiveDateTime />
       </div>
 
+      {/* Reusable icon-button shape — subtle base bg, refined hover with
+          ring, smooth icon swap on theme toggle. */}
       <button
         onClick={toggleTheme}
         title={`Switch to ${isDark ? "light" : "dark"} mode`}
-        className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition"
+        className="relative w-9 h-9 grid place-items-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-50/60 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 ring-1 ring-slate-200/70 dark:ring-slate-700/60 hover:ring-slate-300 dark:hover:ring-slate-600 rounded-lg transition-all"
       >
-        <ThemeIcon className="w-[18px] h-[18px]" strokeWidth={1.75} />
+        <ThemeIcon
+          key={theme}
+          className="w-[17px] h-[17px] transition-transform duration-300 [animation:topbar-icon-spin_300ms_ease-out]"
+          strokeWidth={1.9}
+        />
       </button>
 
       <div className="relative" ref={notifRef}>
         <button
           onClick={handleNotifToggle}
-          className="relative p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition"
+          className="relative w-9 h-9 grid place-items-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-50/60 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 ring-1 ring-slate-200/70 dark:ring-slate-700/60 hover:ring-slate-300 dark:hover:ring-slate-600 rounded-lg transition-all"
           title="Notifications"
         >
-          <Bell className="w-[18px] h-[18px]" strokeWidth={1.75} />
+          <Bell
+            className={`w-[17px] h-[17px] ${unreadCount > 0 ? "[animation:topbar-bell-shake_2s_ease-in-out_infinite]" : ""}`}
+            strokeWidth={1.9}
+          />
           {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
+            <>
+              <span className="absolute top-1 right-1 min-w-[16px] h-[16px] px-1 bg-rose-500 text-white text-[9.5px] font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-900 shadow-sm">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+              <span className="absolute top-1 right-1 w-[16px] h-[16px] rounded-full bg-rose-500 opacity-75 animate-ping" />
+            </>
           )}
         </button>
 
@@ -320,15 +351,19 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setDropdownOpen((o) => !o)}
-          className="flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl px-2 py-1.5 transition"
+          className="flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 ring-1 ring-transparent hover:ring-slate-200/70 dark:hover:ring-slate-700/60 rounded-xl pl-2 pr-1.5 py-1 transition-all"
         >
-          <div className="hidden sm:block text-right">
-            <p className="text-sm text-slate-700 dark:text-slate-200 font-medium leading-tight">
-              My Profile
+          <div className="hidden md:block text-right leading-tight">
+            <p className="text-[13px] text-slate-800 dark:text-slate-100 font-semibold truncate max-w-[140px]">
+              {user?.name || "Admin"}
+            </p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+              {user?.role === "super_admin" ? "Super admin" : (user?.role || "Operator")}
             </p>
           </div>
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-sm font-semibold shadow-md shadow-blue-500/20">
             {user?.name?.charAt(0)?.toUpperCase() || "A"}
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
           </div>
           <ChevronDown className="w-4 h-4 text-slate-400 hidden sm:block" />
         </button>
