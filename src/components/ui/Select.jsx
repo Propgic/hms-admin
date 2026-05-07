@@ -14,6 +14,11 @@ const LIGHT = {
   border: '#d1d5db',
   borderFocus: '#3b82f6',
   shadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+  // Multi-value chip palette — readable badge on the field surface.
+  chipBg: '#dbeafe',         // blue-100
+  chipText: '#1e3a8a',       // blue-900
+  chipRemoveHoverBg: '#bfdbfe',
+  chipRemoveHoverText: '#1e40af',
 };
 
 const DARK = {
@@ -27,6 +32,12 @@ const DARK = {
   border: '#334155',
   borderFocus: '#3b82f6',
   shadow: '0 10px 15px -3px rgba(0,0,0,0.4)',
+  // Multi-value chip palette — high-contrast badge so selected pills don't
+  // disappear against the dark control background (the original bug).
+  chipBg: 'rgba(59, 130, 246, 0.20)',  // blue-500 @ 20%
+  chipText: '#bfdbfe',                  // blue-200
+  chipRemoveHoverBg: 'rgba(59, 130, 246, 0.35)',
+  chipRemoveHoverText: '#dbeafe',       // blue-100
 };
 
 const buildStyles = (hasError, c) => ({
@@ -65,6 +76,30 @@ const buildStyles = (hasError, c) => ({
   input: (base) => ({ ...base, color: c.text }),
   indicatorSeparator: () => ({ display: 'none' }),
   dropdownIndicator: (base) => ({ ...base, color: c.muted, padding: '6px' }),
+  // Multi-value chip styling — overrides react-select's default light pill
+  // so selected items stay readable in dark mode.
+  multiValue: (base) => ({
+    ...base,
+    backgroundColor: c.chipBg,
+    borderRadius: '6px',
+  }),
+  multiValueLabel: (base) => ({
+    ...base,
+    color: c.chipText,
+    fontSize: '12px',
+    fontWeight: 500,
+    padding: '2px 6px',
+  }),
+  multiValueRemove: (base) => ({
+    ...base,
+    color: c.chipText,
+    borderRadius: '0 6px 6px 0',
+    ':hover': {
+      backgroundColor: c.chipRemoveHoverBg,
+      color: c.chipRemoveHoverText,
+    },
+  }),
+  clearIndicator: (base) => ({ ...base, color: c.muted, ':hover': { color: c.text } }),
 });
 
 const Select = forwardRef(function Select(
