@@ -13,20 +13,7 @@ function Orb({ className, delay = 0 }) {
   );
 }
 
-// Time-of-day greeting. Avoids awkward role labels by speaking to the human
-// directly. Resolves at render time; AuthLayout doesn't outlive an hour
-// in practice so we don't bother re-ticking it.
-function timeAwareHello() {
-  const h = new Date().getHours();
-  if (h < 5)  return 'Burning the midnight oil';
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  if (h < 21) return 'Good evening';
-  return 'Good night';
-}
-
 export default function AuthLayout() {
-  const hello = timeAwareHello();
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#0b0d1a] text-white flex">
       {/* animated mesh-gradient background — blue/indigo to match the
@@ -55,104 +42,114 @@ export default function AuthLayout() {
         />
       </div>
 
-      {/* Left: brand + mascot panel */}
-      <div className="hidden lg:flex lg:w-1/2 relative px-12 py-10 flex-col justify-between">
+      {/* Left: brand + mascot panel — single tight column, vertically
+          centered. Brand pinned top-left, compliance pinned bottom-left,
+          everything else is one cohesive group between them. */}
+      <div className="hidden lg:flex lg:w-1/2 relative px-12 py-8 flex-col">
         {/* brand bar — match sidebar logo (blue-600 → indigo-700) */}
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/30 font-bold text-white">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/30 font-bold text-white">
             H
           </div>
           <div>
-            <p className="text-lg font-bold tracking-tight">
+            <p className="text-base font-bold tracking-tight leading-none">
               <span className="text-blue-300">hms</span>
               <span className="text-white">·admin</span>
             </p>
-            <p className="text-[11px] text-blue-200/80">Operator console</p>
+            <p className="text-[11px] text-blue-200/80 mt-0.5">Operator console</p>
           </div>
         </div>
 
-        {/* mascot + headline */}
-        <div className="flex items-end gap-8 -mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/30 to-indigo-600/30 rounded-full blur-3xl" />
-            <div className="relative">
-              <DoctorMascot size={320} />
+        {/* main content — centered in the remaining vertical space, kept
+            cohesive (mascot + copy + stats all in one block, no splits). */}
+        <div className="flex-1 flex flex-col justify-center gap-6">
+          <div className="flex items-center gap-6">
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/30 to-indigo-600/30 rounded-full blur-3xl" />
+              <div className="relative">
+                <DoctorMascot size={240} />
+              </div>
+              {/* speech bubble — sits centered ABOVE the mascot's head so
+                  it stays inside the mascot's column and never collides
+                  with the headline pill in the adjacent column. Tail
+                  points straight down to the mascot. */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white text-slate-900 rounded-2xl px-3.5 py-1.5 shadow-xl text-sm font-medium auth-bubble">
+                <span className="text-blue-600 font-semibold">Welcome back</span>
+                <span className="ml-1">👋</span>
+                <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 shadow-[2px_2px_4px_rgba(0,0,0,0.06)]" />
+              </div>
             </div>
-            {/* speech bubble — whitespace-nowrap stops text from wrapping;
-                the tail is a 45°-rotated square positioned with its center
-                exactly on the bubble's bottom edge so half is inside the
-                bubble and half visually pokes out as a triangle. */}
-            <div className="absolute -top-4 left-72 whitespace-nowrap bg-white text-slate-900 rounded-2xl rounded-bl-none px-4 py-2 shadow-xl text-sm font-medium auth-bubble">
-              <span className="text-blue-600 font-semibold">{hello}</span>
-              <span className="ml-1">👋</span>
-              <span className="absolute bottom-0 left-3 translate-y-1/2 w-3 h-3 bg-white rotate-45 shadow-[2px_2px_4px_rgba(0,0,0,0.06)]" />
-            </div>
-          </div>
-          <div className="pb-6">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur border border-white/15 px-3 py-1 text-[11px] font-medium">
-              <Sparkles className="w-3 h-3" /> Operator console
-            </span>
-            <h2 className="mt-4 text-4xl font-bold leading-[1.1] tracking-tight">
-              Every hospital, <br />
-              <span className="bg-gradient-to-r from-blue-300 via-indigo-300 to-sky-300 bg-clip-text text-transparent">
-                one console.
+            <div className="min-w-0">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur border border-white/15 px-2.5 py-1 text-[11px] font-medium">
+                <Sparkles className="w-3 h-3" /> Operator console
               </span>
-            </h2>
-            <p className="mt-3 text-sm text-blue-100/80 max-w-sm">
-              Provision tenants, manage subscriptions, monitor compliance and revenue — everything you need to run the HMS network in one place.
-            </p>
+              <h2 className="mt-3 text-[32px] font-bold leading-[1.1] tracking-tight">
+                Every hospital,<br />
+                <span className="bg-gradient-to-r from-blue-300 via-indigo-300 to-sky-300 bg-clip-text text-transparent">
+                  one console.
+                </span>
+              </h2>
+              <p className="mt-2.5 text-sm text-blue-100/75 max-w-sm leading-relaxed">
+                Provision tenants, manage subscriptions, monitor compliance and revenue — everything you need to run the HMS network in one place.
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* stats + compliance */}
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 max-w-lg">
+          {/* Stats — single row, four cards, fits below the mascot/copy
+              block with breathing room but no dead band. */}
+          <div className="grid grid-cols-4 gap-2.5 max-w-2xl">
             {[
-              { icon: Building2, label: 'Hospitals',    value: '142',     accent: 'text-blue-200',  trend: null },
-              { icon: Users,     label: 'Active users', value: '2,845',   accent: 'text-indigo-200', trend: null },
-              { icon: TrendingUp,label: 'Growth',       value: '+12.2%',  accent: 'text-emerald-200', trend: 'up' },
-              { icon: Activity,  label: 'Uptime',       value: '99.98%',  accent: 'text-sky-200',    trend: null },
+              { icon: Building2, label: 'Hospitals',    value: '142',     accent: 'text-blue-300',     trend: null },
+              { icon: Users,     label: 'Active users', value: '2,845',   accent: 'text-indigo-300',   trend: null },
+              { icon: TrendingUp,label: 'Growth',       value: '+12.2%',  accent: 'text-emerald-300',  trend: 'up' },
+              { icon: Activity,  label: 'Uptime',       value: '99.98%',  accent: 'text-sky-300',      trend: null },
             ].map((s) => (
               <div
                 key={s.label}
-                className="rounded-2xl bg-white/[0.04] backdrop-blur-md border border-white/10 p-3.5 hover:bg-white/[0.07] transition-colors"
+                className="rounded-2xl bg-white/[0.04] backdrop-blur-md border border-white/10 p-3 hover:bg-white/[0.07] transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <s.icon className={`w-4 h-4 ${s.accent}`} />
                   {s.trend === 'up' && (
-                    <span className="text-[10px] font-medium text-emerald-300/90">↑ trending</span>
+                    <span className="text-[9px] font-medium text-emerald-300/90">↑</span>
                   )}
                 </div>
-                <p className="mt-2 text-xl font-semibold tracking-tight">{s.value}</p>
+                <p className="mt-2 text-lg font-semibold tracking-tight">{s.value}</p>
                 <p className="text-[10px] uppercase tracking-wider text-blue-200/60 mt-0.5">{s.label}</p>
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-blue-100/70">
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
-            </div>
-            <p>HIPAA · DPDP Act 2023 · ABDM compliant · End-to-end encrypted</p>
+        </div>
+
+        {/* compliance — bottom rail */}
+        <div className="flex items-center gap-3 text-[11px] text-blue-100/70">
+          <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
           </div>
+          <p>HIPAA · DPDP Act 2023 · ABDM compliant · End-to-end encrypted</p>
         </div>
       </div>
 
-      {/* Right: glass form */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative">
-        {/* mobile brand bar */}
-        <div className="lg:hidden absolute top-6 left-6 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center font-bold text-white">
+      {/* Right: glass form. On mobile we drop the absolute brand bar and
+          let it flow above the form card so it never overlaps. On lg+ the
+          left brand panel handles identity and this section just centers
+          the form. */}
+      <div className="flex-1 flex flex-col p-6 sm:p-10 lg:p-12 relative">
+        {/* mobile-only brand bar — flows above the card */}
+        <div className="lg:hidden flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center font-bold text-white shrink-0">
             H
           </div>
           <div>
-            <p className="font-bold text-sm">
+            <p className="font-bold text-sm leading-none">
               <span className="text-blue-300">hms</span>
               <span className="text-white">·admin</span>
             </p>
-            <p className="text-[10px] text-blue-200">Operator console</p>
+            <p className="text-[10px] text-blue-200 mt-0.5">Operator console</p>
           </div>
         </div>
 
+        <div className="flex-1 flex items-center justify-center w-full">
         <div className="w-full max-w-md">
           <div className="rounded-3xl bg-white/[0.04] backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/40 p-8 auth-card">
             <Outlet />
@@ -160,6 +157,7 @@ export default function AuthLayout() {
           <p className="mt-6 text-center text-[11px] text-blue-200/50">
             © {new Date().getFullYear()} hms·admin · Operator Console · Secured by TLS 1.3
           </p>
+        </div>
         </div>
       </div>
     </div>
