@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { ShieldCheck, Activity, Building2, Sparkles, Users, TrendingUp } from 'lucide-react';
 import DoctorMascot from '../components/auth/DoctorMascot';
+import RouteTransition from './../components/RouteTransition';
 
 // Reusable floating-orb decorations. Pure CSS animation via index.css
 // keyframes — no JS-driven raf loop, so they don't fight React's renders.
@@ -152,7 +153,7 @@ export default function AuthLayout() {
         <div className="flex-1 flex items-center justify-center w-full">
         <div className="w-full max-w-md">
           <div className="rounded-3xl bg-white/[0.04] backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/40 p-8 auth-card">
-            <Outlet />
+            <RouteTransition><Outlet /></RouteTransition>
           </div>
           <p className="mt-6 text-center text-[11px] text-blue-200/50">
             © {new Date().getFullYear()} hms·admin · Operator Console · Secured by TLS 1.3

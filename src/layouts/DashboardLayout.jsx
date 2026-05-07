@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
 import CommandPalette from '../components/CommandPalette';
+import RouteTransition from '../components/RouteTransition';
 
 const GUTTER = 12;
 const TOPBAR_H = 64;
@@ -53,7 +54,7 @@ export default function DashboardLayout() {
           paddingRight: 0,
         }}
       >
-        <Outlet />
+        <RouteTransition><Outlet /></RouteTransition>
       </main>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
