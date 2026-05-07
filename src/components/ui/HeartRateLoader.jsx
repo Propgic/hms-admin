@@ -16,7 +16,7 @@ const SIZES = {
 
 const STROKE = 'oklch(54.6% 0.245 262.881)';
 
-export default function HeartRateLoader({ fullPage = false, label, size = 'md', inline = false }) {
+export default function HeartRateLoader({ fullPage = false, label, size = 'md', inline = false, stroke = STROKE }) {
   const { w, h } = SIZES[size] || SIZES.md;
 
   const wrapperClass = inline
@@ -39,7 +39,7 @@ export default function HeartRateLoader({ fullPage = false, label, size = 'md', 
         <polyline
           className="hr-ecg-line"
           fill="none"
-          stroke={STROKE}
+          stroke={stroke}
           strokeWidth={3}
           strokeLinecap="round"
           strokeLinejoin="round"

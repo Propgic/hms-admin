@@ -4,8 +4,28 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import HeartRateLoader from '../../components/ui/HeartRateLoader';
+
+// Translate raw backend errors into something a human can act on.
+function friendlyLoginError(err) {
+  if (!err.response) return "Couldn't reach the server. Check your connection and try again.";
+  const status = err.response?.status;
+  const raw = String(err.response?.data?.message || '').toLowerCase();
+  if (/invalid.*credential|incorrect|wrong.*password|email.*not.*found|user.*not.*found/.test(raw)) {
+    return 'Email or password is incorrect.';
+  }
+  if (/inactive|disabled|suspended/.test(raw)) {
+    return 'Your account is inactive. Contact a super admin.';
+  }
+  if (status === 400) return err.response.data?.message || 'Some details look off — please check and try again.';
+  if (status === 401) return 'Email or password is incorrect.';
+  if (status === 403) return 'You do not have access to the operator console.';
+  if (status === 429) return 'Too many attempts. Please wait a minute and try again.';
+  if (status >= 500) return 'Something went wrong on our side. Please try again in a moment.';
+  return err.response?.data?.message || 'Login failed. Please try again.';
+}
 
 const schema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
@@ -17,6 +37,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const {
     register,
@@ -28,17 +49,23 @@ export default function Login() {
   });
 
   const onSubmit = async (data) => {
+    setSubmitError(null);
     setLoading(true);
     try {
       await login(data.email, data.password);
       toast.success('Welcome back!');
       navigate('/');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      const msg = friendlyLoginError(err);
+      setSubmitError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
+
+  // Clear the inline error when the user starts editing again.
+  const clearOnKey = () => { if (submitError) setSubmitError(null); };
 
   return (
     <div>
@@ -68,6 +95,7 @@ export default function Login() {
               autoComplete="email"
               className="w-full pl-10 pr-3 py-3 text-sm bg-white/[0.04] border border-white/10 rounded-xl text-white placeholder:text-blue-200/30 focus:outline-none focus:border-blue-400/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-blue-500/15 transition"
               {...register('email')}
+              onKeyDown={clearOnKey}
             />
           </div>
           {errors.email && (
@@ -96,6 +124,7 @@ export default function Login() {
               autoComplete="current-password"
               className="w-full pl-10 pr-10 py-3 text-sm bg-white/[0.04] border border-white/10 rounded-xl text-white placeholder:text-blue-200/30 focus:outline-none focus:border-blue-400/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-blue-500/15 transition"
               {...register('password')}
+              onKeyDown={clearOnKey}
             />
             <button
               type="button"
@@ -119,14 +148,23 @@ export default function Login() {
           Keep me signed in on this workstation
         </label>
 
+        {submitError && (
+          <div role="alert" className="flex items-start gap-2 rounded-xl bg-rose-500/10 border border-rose-400/30 px-3 py-2 text-sm text-rose-200">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{submitError}</span>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={loading}
           className="auth-cta group relative w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-white text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden"
         >
           <span className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 bg-[length:200%_100%] animate-[auth-shine_3s_linear_infinite]" />
-          <span className="relative flex items-center gap-2">
-            {loading ? 'Signing in…' : (
+          <span className="relative flex items-center justify-center gap-2 min-h-[20px]">
+            {loading ? (
+              <HeartRateLoader inline size="sm" stroke="#ffffff" />
+            ) : (
               <>
                 Sign in to dashboard
                 <ArrowRight className="w-4 h-4 transition group-hover:translate-x-0.5" />
