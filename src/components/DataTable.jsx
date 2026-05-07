@@ -37,6 +37,7 @@ export default function DataTable({
   onSort,
   emptyTitle,
   emptyMessage,
+  emptyIllustration,
   headerActions,
 }) {
   // Input text shown in the box — updated immediately for responsive typing.
@@ -140,7 +141,11 @@ export default function DataTable({
             ) : filteredData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-8">
-                  <EmptyState title={emptyTitle} message={emptyMessage} />
+                  <EmptyState
+                    illustration={emptyIllustration}
+                    title={emptyTitle}
+                    message={emptyMessage}
+                  />
                 </td>
               </tr>
             ) : (

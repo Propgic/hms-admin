@@ -270,6 +270,7 @@ export default function HospitalList() {
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={(f, o) => { setSortField(f); setSortOrder(o); }}
+        emptyIllustration="patients"
         emptyTitle="No hospitals found"
         emptyMessage="Get started by adding your first hospital."
         headerActions={(

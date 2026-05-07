@@ -267,6 +267,7 @@ export default function InvoiceList() {
         pageSize={pageSize}
         onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
         totalItems={totalItems}
+        emptyIllustration="invoices"
         emptyTitle="No invoices yet"
         emptyMessage="Generate your first tax invoice for a hospital subscription."
         headerActions={

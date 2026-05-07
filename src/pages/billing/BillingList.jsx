@@ -122,6 +122,7 @@ export default function BillingList() {
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={(f, o) => { setSortField(f); setSortOrder(o); }}
+        emptyIllustration="invoices"
         emptyTitle="No billing records"
         emptyMessage="Billing records will appear here when hospitals subscribe to plans."
         headerActions={(

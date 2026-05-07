@@ -152,6 +152,7 @@ export default function CouponList() {
         pageSize={pageSize}
         onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
         totalItems={totalItems}
+        emptyIllustration="invoices"
         emptyTitle="No coupons yet"
         emptyMessage="Create your first promotional discount code."
         headerActions={

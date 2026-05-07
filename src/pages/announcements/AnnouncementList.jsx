@@ -164,6 +164,7 @@ export default function AnnouncementList() {
         pageSize={pageSize}
         onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
         totalItems={totalItems}
+        emptyIllustration="notifications"
         emptyTitle="No announcements yet"
         emptyMessage="Broadcast a message to hospitals — outage notices, feature releases, billing reminders."
         headerActions={

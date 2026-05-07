@@ -1,10 +1,10 @@
 import { Sidebar as ProSidebar } from 'react-pro-sidebar';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   LayoutDashboard, Building2, CreditCard, Receipt, HelpCircle, ScrollText,
   BarChart3, Settings, ChevronsLeft, ChevronsRight, Ticket, FileText,
-  Megaphone, LifeBuoy, KeyRound, Search,
+  Megaphone, LifeBuoy, KeyRound,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useTheme } from '../hooks/useTheme';
@@ -102,7 +102,6 @@ function NavRow({ item, active, collapsed, palette }) {
 export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
   const location = useLocation();
   const { isDark } = useTheme();
-  const [search, setSearch] = useState('');
 
   const isActive = (path) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
@@ -118,8 +117,6 @@ export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
         hoverBg: 'rgba(255, 255, 255, 0.04)',
         hoverText: '#f1f5f9',
         sectionLabel: '#475569',
-        searchBg: 'rgba(255,255,255,0.04)',
-        searchBorder: '#1f2937',
       }
     : {
         bg: '#ffffff',
@@ -131,18 +128,11 @@ export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
         hoverBg: '#f8fafc',
         hoverText: '#0f172a',
         sectionLabel: '#94a3b8',
-        searchBg: '#f8fafc',
-        searchBorder: '#e2e8f0',
       };
 
-  // Filter nav by search term — keeps section structure if any item matches.
-  const filteredSections = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return navSections;
-    return navSections
-      .map((s) => ({ ...s, items: s.items.filter((i) => i.label.toLowerCase().includes(q)) }))
-      .filter((s) => s.items.length > 0);
-  }, [search]);
+  // Search lives in the global ⌘K Command Palette now — sidebar just
+  // renders the full nav structure without its own filter.
+  const filteredSections = navSections;
 
   return (
     <ProSidebar
@@ -177,30 +167,11 @@ export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
           </div>
         </div>
 
-        {/* Search — collapses with sidebar */}
-        {!collapsed && (
-          <div className="px-4 pb-3">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search menu…"
-                className="w-full pl-8 pr-2 py-1.5 text-[12.5px] rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition"
-                style={{ backgroundColor: palette.searchBg, borderColor: palette.searchBorder, color: palette.hoverText }}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="mx-5 border-t border-slate-100 dark:border-slate-800" />
+        <div className="mx-5 mt-2 border-t border-slate-100 dark:border-slate-800" />
 
         {/* Menu */}
         <div className="flex-1 min-h-0 overflow-y-auto py-3">
-          {filteredSections.length === 0 ? (
-            <p className="text-xs text-slate-400 px-5 py-6 text-center">No matches</p>
-          ) : (
-            filteredSections.map((section) => (
+          {filteredSections.map((section) => (
               <div key={section.header} className="mb-2">
                 {!collapsed && section.header && (
                   <p
@@ -223,8 +194,7 @@ export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
                   />
                 ))}
               </div>
-            ))
-          )}
+            ))}
         </div>
 
         {/* Collapse toggle */}

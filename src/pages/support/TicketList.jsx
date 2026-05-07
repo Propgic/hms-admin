@@ -140,6 +140,7 @@ export default function TicketList() {
         pageSize={pageSize}
         onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
         totalItems={totalItems}
+        emptyIllustration="support"
         emptyTitle="No support tickets"
         emptyMessage="Tickets opened by hospitals will appear here."
         headerActions={

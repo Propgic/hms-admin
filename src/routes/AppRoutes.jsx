@@ -14,6 +14,9 @@ import ResetPassword from '../pages/auth/ResetPassword';
 // Dashboard
 import Dashboard from '../pages/dashboard/Dashboard';
 
+// 404 fallback
+import NotFound from '../pages/NotFound';
+
 // Hospitals
 import HospitalList from '../pages/hospitals/HospitalList';
 import HospitalDetail from '../pages/hospitals/HospitalDetail';
@@ -129,10 +132,10 @@ export default function AppRoutes() {
         <Route path="/reports" element={<ReportsDashboard />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/access-management" element={<AccessManagement />} />
-      </Route>
 
-      {/* Catch all */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+        {/* 404 — confused-nurse illustration, sidebar + topbar visible */}
+        <Route path="*" element={<NotFound />} />
+      </Route>
     </Routes>
   );
 }

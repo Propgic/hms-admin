@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
+import CommandPalette from '../components/CommandPalette';
 
 const GUTTER = 12;
 const TOPBAR_H = 64;
@@ -10,10 +11,23 @@ export default function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem('hms_admin_sidebar_collapsed') === '1';
   });
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('hms_admin_sidebar_collapsed', collapsed ? '1' : '0');
   }, [collapsed]);
+
+  // Global ⌘K / Ctrl+K toggles the Command Palette anywhere in the app.
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const sidebarWidth = collapsed ? 80 : 248;
   const contentLeft = sidebarWidth + GUTTER * 2;
@@ -41,6 +55,7 @@ export default function DashboardLayout() {
       >
         <Outlet />
       </main>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }

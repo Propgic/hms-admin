@@ -139,6 +139,7 @@ export default function PlanList() {
         pageSize={pageSize}
         onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
         totalItems={totalItems}
+        emptyIllustration="invoices"
         emptyTitle="No plans found"
         emptyMessage="Create your first subscription plan."
         headerActions={
