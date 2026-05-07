@@ -27,7 +27,6 @@ const featuresList = [
   'AI Growth Engine',
   'ABDM Integration',
   'Multi-clinic Support',
-  'API Access',
   'Priority Support',
 ];
 
