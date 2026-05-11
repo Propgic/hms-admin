@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Building2, CreditCard, DollarSign, Users, RefreshCw, TrendingUp } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dayjs from 'dayjs';
-import api from '../../api/axios';
+import api, { forceLogout } from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import StatCard from '../../components/StatCard';
 import Card from '../../components/ui/Card';
@@ -141,6 +141,14 @@ export default function Dashboard() {
             : status
               ? `http_${status}`
               : 'network';
+        // If the failure was 401/403 the access token is no longer trusted
+        // and the axios interceptor's refresh+retry already gave up — there
+        // is nothing useful left to show. Kick the user to /login so they
+        // re-authenticate instead of staring at a stale-data banner.
+        if (reason === 'unauthorized') {
+          forceLogout('Your session expired. Please login again.');
+          return;
+        }
         const fb = await buildFallbackStats();
         setStats(fb.stats);
         setRecent(fb.recent);

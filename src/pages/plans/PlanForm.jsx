@@ -25,6 +25,7 @@ const featuresList = [
   'Leads / CRM',
   'Reports & Analytics',
   'AI Growth Engine',
+  'AI Assistant (Ask AI)',
   'ABDM Integration',
   'Multi-clinic Support',
   'Priority Support',

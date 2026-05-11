@@ -46,6 +46,23 @@ async function tryRefresh() {
   return refreshPromise;
 }
 
+// Centralizes the "your session is over, go to login" flow so every code
+// path leads to the same place. Idempotent — calling it twice in the same
+// tick is safe; only the first one navigates.
+let loggingOut = false;
+export function forceLogout(reason = 'Session expired. Please login again.') {
+  if (loggingOut) return;
+  loggingOut = true;
+  try {
+    localStorage.removeItem('hms_admin_token');
+    localStorage.removeItem('hms_admin_user');
+  } catch (_) { /* private mode etc. */ }
+  if (window.location.pathname !== '/login') {
+    if (reason) toast.error(reason);
+    window.location.replace('/login');
+  }
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -62,16 +79,11 @@ api.interceptors.response.use(
           original.headers.Authorization = `Bearer ${newToken}`;
           return api(original);
         }
-      } catch (_) { /* fall through */ }
+      } catch (_) { /* fall through to forceLogout */ }
     }
 
     if (status === 401 && !isAuthEndpoint) {
-      localStorage.removeItem('hms_admin_token');
-      localStorage.removeItem('hms_admin_user');
-      if (window.location.pathname !== '/login') {
-        toast.error('Session expired. Please login again.');
-        window.location.href = '/login';
-      }
+      forceLogout();
     }
     return Promise.reject(error);
   }
