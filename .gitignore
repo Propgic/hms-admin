@@ -1,1 +1,11 @@
 node_modules/
+dist/
+
+# Local secrets — VITE_API_URL etc. May still leak if committed to public
+# repo since Vite inlines them at build time, but at least we don't help.
+.env
+.env.local
+.env.*.local
+
+.DS_Store
+*.log

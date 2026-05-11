@@ -1,14 +1,21 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+const RAW_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+// Strip the /api/v1 suffix when present so we can hit /auth/refresh-token on
+// the same origin without double-prefixing. baseURL keeps /api/v1.
+const API_ORIGIN = RAW_BASE.replace(/\/api\/v\d+\/?$/, '');
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
+  baseURL: RAW_BASE,
+  // Required so the httpOnly refreshToken cookie set by the backend gets
+  // sent along with our requests (especially POST /platform/auth/refresh-token).
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor - attach JWT token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('hms_admin_token');
@@ -20,11 +27,45 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor - handle 401
+// Single in-flight refresh promise — see comments in hms/src/api/axios.js
+// for the rationale (avoids N concurrent refresh calls on N stale-token
+// requests that race each other after token expiry).
+let refreshPromise = null;
+
+async function tryRefresh() {
+  if (!refreshPromise) {
+    refreshPromise = axios
+      .post(`${API_ORIGIN}/api/v1/platform/auth/refresh-token`, {}, { withCredentials: true })
+      .then((r) => {
+        const newToken = r.data?.data?.accessToken;
+        if (newToken) localStorage.setItem('hms_admin_token', newToken);
+        return newToken;
+      })
+      .finally(() => { refreshPromise = null; });
+  }
+  return refreshPromise;
+}
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  async (error) => {
+    const status = error.response?.status;
+    const original = error.config;
+    const url = original?.url || '';
+    const isAuthEndpoint = /\/auth\/(login|forgot-password|reset-password|refresh-token|me)/.test(url);
+
+    if (status === 401 && !isAuthEndpoint && !original._retried) {
+      try {
+        original._retried = true;
+        const newToken = await tryRefresh();
+        if (newToken) {
+          original.headers.Authorization = `Bearer ${newToken}`;
+          return api(original);
+        }
+      } catch (_) { /* fall through */ }
+    }
+
+    if (status === 401 && !isAuthEndpoint) {
       localStorage.removeItem('hms_admin_token');
       localStorage.removeItem('hms_admin_user');
       if (window.location.pathname !== '/login') {

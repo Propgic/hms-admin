@@ -113,6 +113,8 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [usedFallback, setUsedFallback] = useState(false);
 
+  const [fallbackReason, setFallbackReason] = useState(null);
+
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true); else setRefreshing(true);
     try {
@@ -125,17 +127,30 @@ export default function Dashboard() {
       const primaryStats = statsRes.status === 'fulfilled' ? unwrap(statsRes) : null;
       const primaryRecent = recentRes.status === 'fulfilled' ? unwrap(recentRes) : null;
 
-      // If the dedicated dashboard endpoints failed or returned nothing, compute from list endpoints
+      // If the dedicated dashboard endpoints failed or returned nothing, fall
+      // back to building stats from list endpoints. Record *why* the primary
+      // request failed so the banner doesn't lie about a missing endpoint
+      // when the real cause is a 401, network blip, etc.
       const dashboardMissing = !primaryStats && statsRes.status !== 'fulfilled';
       if (dashboardMissing) {
+        const status = statsRes.reason?.response?.status;
+        const reason = status === 404
+          ? 'endpoint_missing'
+          : status === 401 || status === 403
+            ? 'unauthorized'
+            : status
+              ? `http_${status}`
+              : 'network';
         const fb = await buildFallbackStats();
         setStats(fb.stats);
         setRecent(fb.recent);
         setUsedFallback(true);
+        setFallbackReason(reason);
       } else {
         setStats(primaryStats);
         setRecent(Array.isArray(primaryRecent) ? primaryRecent : []);
         setUsedFallback(false);
+        setFallbackReason(null);
       }
       setGrowth(growthRes.status === 'fulfilled' ? (unwrap(growthRes) || []) : []);
     } finally {
@@ -208,7 +223,18 @@ export default function Dashboard() {
     <div className="space-y-6">
       {usedFallback && (
         <div className="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-xs text-amber-800 dark:text-amber-200">
-          Dashboard endpoints (<code className="mx-1 font-mono">/platform/dashboard/*</code>) aren't registered — showing stats computed from the hospitals list. Restart the backend to switch to the live dashboard service.
+          {fallbackReason === 'unauthorized' && (
+            <>Couldn't load the live dashboard — your session may have expired. Try logging out and back in.</>
+          )}
+          {fallbackReason === 'endpoint_missing' && (
+            <>Dashboard endpoints (<code className="mx-1 font-mono">/platform/dashboard/*</code>) aren't registered. Restart the backend.</>
+          )}
+          {fallbackReason === 'network' && (
+            <>Couldn't reach the backend — showing fallback stats. Check that the API server is running.</>
+          )}
+          {fallbackReason && !['unauthorized','endpoint_missing','network'].includes(fallbackReason) && (
+            <>Dashboard request failed ({fallbackReason}) — showing fallback stats computed from the hospitals list.</>
+          )}
         </div>
       )}
       <div className="flex items-center justify-between">
