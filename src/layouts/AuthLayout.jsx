@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { ShieldCheck, Activity, Building2, Sparkles, Users, TrendingUp } from 'lucide-react';
-import DoctorMascot from '../components/auth/DoctorMascot';
+import OperatorMascot from '../components/auth/OperatorMascot';
 import RouteTransition from './../components/RouteTransition';
 
 // Reusable floating-orb decorations. Pure CSS animation via index.css
@@ -68,7 +68,7 @@ export default function AuthLayout() {
             <div className="relative shrink-0">
               <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/30 to-indigo-600/30 rounded-full blur-3xl" />
               <div className="relative">
-                <DoctorMascot size={240} />
+                <OperatorMascot size={240} />
               </div>
               {/* speech bubble — sits centered ABOVE the mascot's head so
                   it stays inside the mascot's column and never collides
