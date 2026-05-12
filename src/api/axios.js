@@ -69,7 +69,11 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const original = error.config;
     const url = original?.url || '';
-    const isAuthEndpoint = /\/auth\/(login|forgot-password|reset-password|refresh-token|me)/.test(url);
+    // /auth/me used to be in this list, but excluding it meant a page reload
+    // after the access-token expired bounced to /login even though the
+    // refresh-cookie was still valid. /me now refreshes-and-retries like any
+    // other call; the `_retried` guard below still prevents loops.
+    const isAuthEndpoint = /\/auth\/(login|forgot-password|reset-password|refresh-token)/.test(url);
 
     if (status === 401 && !isAuthEndpoint && !original._retried) {
       try {
