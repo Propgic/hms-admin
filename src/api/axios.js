@@ -6,8 +6,16 @@ const RAW_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 // the same origin without double-prefixing. baseURL keeps /api/v1.
 const API_ORIGIN = RAW_BASE.replace(/\/api\/v\d+\/?$/, '');
 
+// Mirrors hms/src/api/axios.js — see that file for the rationale on the
+// retry knobs. Override via VITE_API_TIMEOUT_MS / VITE_API_RETRIES.
+const DEFAULT_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS) || 30_000;
+const RETRIES           = Math.max(0, Number(import.meta.env.VITE_API_RETRIES) ?? 2);
+const RETRY_BASE_MS     = 300;
+const RETRYABLE_STATUSES = new Set([408, 502, 503, 504]);
+
 const api = axios.create({
   baseURL: RAW_BASE,
+  timeout: DEFAULT_TIMEOUT_MS,
   // Required so the httpOnly refreshToken cookie set by the backend gets
   // sent along with our requests (especially POST /platform/auth/refresh-token).
   withCredentials: true,
@@ -15,6 +23,20 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+function isTransient(error) {
+  if (!error.response) return true; // network err / timeout / CORS / refused
+  return RETRYABLE_STATUSES.has(error.response.status);
+}
+function isSafeToRetry(config) {
+  const method = (config?.method || 'get').toLowerCase();
+  if (method === 'get' || method === 'head' || method === 'options') return true;
+  return config?.retryWrites === true;
+}
+function shouldAnnounceRetry(url) {
+  return !/\/auth\/(login|forgot-password|reset-password|refresh-token)/.test(url || '');
+}
+const announcedRetries = new Set();
 
 api.interceptors.request.use(
   (config) => {
@@ -64,11 +86,45 @@ export function forceLogout(reason = 'Session expired. Please login again.') {
 }
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const url = response.config?.url || '';
+    announcedRetries.delete(url);
+    toast.dismiss(`retry-${url}`);
+    return response;
+  },
   async (error) => {
     const status = error.response?.status;
     const original = error.config;
     const url = original?.url || '';
+
+    // ── Transient-failure retry (network/timeout/5xx) ──────────────────
+    if (original && isTransient(error) && isSafeToRetry(original)) {
+      const attempt = (original._retryAttempt || 0) + 1;
+      if (attempt <= RETRIES) {
+        original._retryAttempt = attempt;
+        if (attempt === 1 && shouldAnnounceRetry(url) && !announcedRetries.has(url)) {
+          announcedRetries.add(url);
+          toast.loading('Slow connection — retrying…', {
+            id: `retry-${url}`,
+            duration: 2500,
+          });
+        }
+        const delay = RETRY_BASE_MS * Math.pow(3, attempt - 1)
+                    + Math.floor(Math.random() * 200);
+        await new Promise((r) => setTimeout(r, delay));
+        return api(original);
+      }
+      announcedRetries.delete(url);
+      if (shouldAnnounceRetry(url) && !error.response) {
+        toast.error(
+          navigator.onLine
+            ? "Couldn't reach the server. Please try again in a moment."
+            : "You appear to be offline. We'll resume when you're back online.",
+          { id: `offline-${url}` }
+        );
+      }
+    }
+
     // /auth/me used to be in this list, but excluding it meant a page reload
     // after the access-token expired bounced to /login even though the
     // refresh-cookie was still valid. /me now refreshes-and-retries like any
