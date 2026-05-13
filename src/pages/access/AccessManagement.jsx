@@ -15,9 +15,8 @@ import Select from '../../components/ui/Select';
 // no shared package is needed. Keep in sync if the tenant app adds more.
 const PERMISSION_GROUPS = [
   { label: 'Dashboard', perms: ['dashboard:view'] },
-  { label: 'Users & Clinics', perms: [
+  { label: 'Users', perms: [
     'users:view', 'users:create', 'users:edit', 'users:delete',
-    'clinics:view', 'clinics:create', 'clinics:edit', 'clinics:delete',
   ] },
   { label: 'Doctors', perms: ['doctors:view', 'doctors:create', 'doctors:edit', 'doctors:delete'] },
   { label: 'Patients', perms: ['patients:view', 'patients:create', 'patients:edit', 'patients:delete'] },
