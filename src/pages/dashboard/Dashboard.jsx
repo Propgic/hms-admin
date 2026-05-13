@@ -247,14 +247,27 @@ export default function Dashboard() {
       )}
       <div className="flex items-center justify-between">
         <p className="text-base text-gray-600 dark:text-slate-400">Platform overview and key metrics</p>
+        {/* Gradient pill refresh button. Reuses the auth-shine keyframes
+            already defined in index.css (slow gradient sweep), pairs it
+            with a soft blue glow on hover and a 180° icon rotation. When
+            refreshing, the icon spins continuously and the shine pauses
+            so the two animations don't fight each other. */}
         <button
           onClick={() => load(true)}
           disabled={refreshing}
-          className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-60 transition"
+          className="group relative inline-flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-full overflow-hidden text-white shadow-sm shadow-blue-500/30 ring-1 ring-inset ring-white/15 disabled:opacity-70 disabled:cursor-not-allowed transition active:scale-[0.97]"
           title="Refresh data"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing…' : 'Refresh'}
+          <span
+            aria-hidden
+            className={`absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600 bg-[length:200%_100%] ${refreshing ? '' : 'animate-[auth-shine_4s_linear_infinite]'}`}
+          />
+          <span aria-hidden className="absolute inset-0 bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
+          <span aria-hidden className="absolute -inset-1 rounded-full bg-blue-500/30 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none -z-10" />
+          <RefreshCw
+            className={`relative w-3.5 h-3.5 transition-transform duration-500 ${refreshing ? 'animate-spin' : 'group-hover:rotate-180'}`}
+          />
+          <span className="relative">{refreshing ? 'Refreshing…' : 'Refresh'}</span>
         </button>
       </div>
 
