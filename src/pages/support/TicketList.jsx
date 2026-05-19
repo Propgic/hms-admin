@@ -9,6 +9,7 @@ import Badge from '../../components/ui/Badge';
 import Select from '../../components/ui/Select';
 import StatCard from '../../components/StatCard';
 import { Inbox, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import RoleChip from './RoleChip';
 
 const STATUS_COLOR = {
   open: 'info',
@@ -78,7 +79,16 @@ export default function TicketList() {
       cell: (row) => (
         <div>
           <div className="font-medium text-gray-900 dark:text-slate-100 line-clamp-1">{row.subject}</div>
-          <div className="text-xs text-gray-500 dark:text-slate-400">{row.hospital?.name || '—'}</div>
+          <div className="text-xs flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            <span className="text-gray-500 dark:text-slate-400">{row.hospital?.name || '—'}</span>
+            {row.createdByName && (
+              <>
+                <span className="text-gray-300 dark:text-slate-600">·</span>
+                <span className="font-bold text-blue-700 dark:text-blue-300">{row.createdByName}</span>
+              </>
+            )}
+            {row.createdByRole && <RoleChip role={row.createdByRole} />}
+          </div>
         </div>
       ),
     },
@@ -116,7 +126,7 @@ export default function TicketList() {
   return (
     <div className="space-y-6">
       <p className="text-base text-gray-600 dark:text-slate-400">
-        Inbound support tickets from hospitals. Reply, change status, or leave internal notes.
+        Inbound support tickets from hospitals. Reply or change status.
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

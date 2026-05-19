@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, Lock } from 'lucide-react';
+import { ArrowLeft, Send } from 'lucide-react';
+import RoleChip from './RoleChip';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
@@ -42,7 +43,6 @@ export default function TicketDetail() {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState('');
-  const [internal, setInternal] = useState(false);
   const [sending, setSending] = useState(false);
   const [savingMeta, setSavingMeta] = useState(false);
 
@@ -76,10 +76,9 @@ export default function TicketDetail() {
     if (!reply.trim()) return;
     setSending(true);
     try {
-      await api.post(endpoints.support.reply(id), { body: reply.trim(), internal });
+      await api.post(endpoints.support.reply(id), { body: reply.trim() });
       setReply('');
-      setInternal(false);
-      toast.success(internal ? 'Internal note saved' : 'Reply sent');
+      toast.success('Reply sent');
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send');
@@ -106,6 +105,13 @@ export default function TicketDetail() {
             <Badge color={PRIORITY_COLOR[ticket.priority]}>{ticket.priority}</Badge>
           </div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100">{ticket.subject}</h1>
+          {(ticket.createdByName || ticket.createdByRole) && (
+            <div className="text-xs text-gray-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+              <span>Filed by</span>
+              {ticket.createdByName && <span className="font-bold text-blue-700 dark:text-blue-300">{ticket.createdByName}</span>}
+              {ticket.createdByRole && <RoleChip role={ticket.createdByRole} />}
+            </div>
+          )}
         </div>
       </div>
 
@@ -132,22 +138,18 @@ export default function TicketDetail() {
                 <div key={m.id} className={`flex items-end gap-2 ${isAdmin ? 'justify-end' : 'justify-start'}`}>
                   {!isAdmin && avatar}
                   <div className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-                    m.internal
-                      ? 'bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-700'
-                      : isAdmin
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100'
+                    isAdmin
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100'
                   }`}>
-                    {m.internal && (
-                      <div className="text-xs font-semibold flex items-center gap-1 mb-1 text-amber-700 dark:text-amber-300">
-                        <Lock className="w-3 h-3" /> Internal note (not visible to hospital)
-                      </div>
-                    )}
                     <p className="text-sm whitespace-pre-wrap">{m.body}</p>
-                    <div className={`text-xs mt-2 ${
-                      m.internal ? 'text-amber-700 dark:text-amber-400' : isAdmin ? 'text-blue-100' : 'text-gray-500 dark:text-slate-400'
+                    <div className={`text-xs mt-2 flex flex-wrap items-center gap-1.5 ${
+                      isAdmin ? 'text-blue-100' : 'text-gray-500 dark:text-slate-400'
                     }`}>
-                      {displayName} · {dayjs(m.createdAt).format('MMM D, h:mm A')}
+                      <span className={`font-bold ${isAdmin ? 'text-white' : 'text-blue-700 dark:text-blue-300'}`}>{displayName}</span>
+                      {!isAdmin && m.authorRole && <RoleChip role={m.authorRole} />}
+                      <span>·</span>
+                      <span>{dayjs(m.createdAt).format('MMM D, h:mm A')}</span>
                     </div>
                   </div>
                   {isAdmin && avatar}
@@ -162,25 +164,12 @@ export default function TicketDetail() {
                 rows={3}
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
-                placeholder={internal ? 'Internal note (admin-only)…' : 'Type a reply…'}
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  internal
-                    ? 'border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 dark:text-slate-100'
-                    : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100'
-                }`}
+                placeholder="Type a reply…"
+                className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100"
               />
-              <div className="flex items-center justify-between mt-3">
-                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-slate-300">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4"
-                    checked={internal}
-                    onChange={(e) => setInternal(e.target.checked)}
-                  />
-                  Internal note (only visible to admins)
-                </label>
+              <div className="flex items-center justify-end mt-3">
                 <Button icon={Send} onClick={sendReply} loading={sending} disabled={!reply.trim()}>
-                  {internal ? 'Save Note' : 'Send Reply'}
+                  Send Reply
                 </Button>
               </div>
             </Card>
