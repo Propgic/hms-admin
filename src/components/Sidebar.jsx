@@ -1,6 +1,6 @@
 import { Sidebar as ProSidebar } from 'react-pro-sidebar';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Building2, CreditCard, Receipt, HelpCircle, ScrollText,
   BarChart3, Settings, ChevronsLeft, ChevronsRight, Ticket, FileText,
@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useTheme } from '../hooks/useTheme';
+import api from '../api/axios';
+import endpoints from '../api/endpoints';
 
 // Nav items grouped by purpose. Empty `header` means no group label.
 // Section labels render in small caps above the first item of the group.
@@ -57,13 +59,18 @@ const navSections = [
 function NavRow({ item, active, collapsed, palette }) {
   const [hover, setHover] = useState(false);
   const Icon = item.icon;
+  // Optional unread-style badge. Numeric value → red pill ("9+" if ≥10).
+  // When the sidebar is collapsed, becomes a tiny red dot on the icon.
+  const badgeValue = typeof item.badge === 'number' ? item.badge : null;
+  const showBadge = badgeValue !== null && badgeValue > 0;
+  const badgeText = badgeValue > 99 ? '99+' : String(badgeValue);
   return (
     <NavLink
       to={item.path}
       end={item.path === '/'}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      title={collapsed ? item.label : undefined}
+      title={collapsed ? `${item.label}${showBadge ? ` (${badgeText} unresolved)` : ''}` : undefined}
       className={clsx(
         'group relative flex items-center rounded-lg transition-all duration-150',
         collapsed ? 'mx-2.5 h-11 justify-center' : 'mx-3 h-10 px-3 gap-3'
@@ -86,15 +93,34 @@ function NavRow({ item, active, collapsed, palette }) {
           boxShadow: active ? '0 0 12px rgba(59,130,246,0.6)' : 'none',
         }}
       />
-      <Icon
-        className={clsx(
-          'w-[18px] h-[18px] transition-transform duration-200 shrink-0',
-          hover && !active && 'translate-x-0.5'
+      <span className="relative shrink-0">
+        <Icon
+          className={clsx(
+            'w-[18px] h-[18px] transition-transform duration-200',
+            hover && !active && 'translate-x-0.5'
+          )}
+          strokeWidth={active ? 2.25 : 2}
+          style={{ color: active ? palette.activeText : palette.itemIcon }}
+        />
+        {showBadge && collapsed && (
+          <span
+            className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold leading-none flex items-center justify-center ring-2"
+            style={{ '--tw-ring-color': palette.bg, ringColor: palette.bg }}
+          >
+            {badgeText}
+          </span>
         )}
-        strokeWidth={active ? 2.25 : 2}
-        style={{ color: active ? palette.activeText : palette.itemIcon }}
-      />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      </span>
+      {!collapsed && (
+        <>
+          <span className="truncate flex-1">{item.label}</span>
+          {showBadge && (
+            <span className="shrink-0 inline-flex items-center justify-center min-w-[20px] h-[18px] px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold tabular-nums leading-none">
+              {badgeText}
+            </span>
+          )}
+        </>
+      )}
     </NavLink>
   );
 }
@@ -130,9 +156,32 @@ export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
         sectionLabel: '#94a3b8',
       };
 
-  // Search lives in the global ⌘K Command Palette now — sidebar just
-  // renders the full nav structure without its own filter.
-  const filteredSections = navSections;
+  // Live counter for the Support row's badge. Polled every 60 s so admins
+  // always see a current "X unresolved tickets" pill on the nav. Failures
+  // are silent — worst case the badge stays at the last known number.
+  const [supportUnresolved, setSupportUnresolved] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await api.get(endpoints.dashboard.supportOverview);
+        const c = res.data?.data?.counts || res.data?.counts || {};
+        if (!cancelled) setSupportUnresolved(c.unresolved || 0);
+      } catch (_) { /* leave previous value in place */ }
+    };
+    load();
+    const id = setInterval(load, 60_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  // Inject live badges into the nav structure. Keep the source `navSections`
+  // immutable — return a shallow-cloned copy with badge values merged in.
+  const filteredSections = navSections.map((section) => ({
+    ...section,
+    items: section.items.map((item) =>
+      item.path === '/support' ? { ...item, badge: supportUnresolved } : item,
+    ),
+  }));
 
   return (
     <ProSidebar
