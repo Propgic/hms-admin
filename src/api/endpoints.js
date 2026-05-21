@@ -16,6 +16,10 @@ const endpoints = {
     hospitalGrowth: `${PLATFORM}/dashboard/hospital-growth`,
     recentHospitals: `${PLATFORM}/dashboard/recent-hospitals`,
     revenueOverview: `${PLATFORM}/dashboard/revenue-overview`,
+    supportOverview:  `${PLATFORM}/dashboard/support-overview`,
+    recurringRevenue: `${PLATFORM}/dashboard/recurring-revenue`,
+    planDistribution: `${PLATFORM}/dashboard/plan-distribution`,
+    upcomingRenewals: `${PLATFORM}/dashboard/upcoming-renewals`,
   },
 
   // Hospitals

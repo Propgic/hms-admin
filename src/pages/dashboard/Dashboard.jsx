@@ -7,6 +7,12 @@ import api, { forceLogout } from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import StatCard from '../../components/StatCard';
 import Card from '../../components/ui/Card';
+import {
+  SupportOverviewCard,
+  RecurringRevenueCard,
+  PlanDistributionCard,
+  UpcomingRenewalsCard,
+} from '../../components/dashboard/PlatformCards';
 import Spinner from '../../components/ui/Spinner';
 import Badge from '../../components/ui/Badge';
 import { AreaGradient, CustomTooltip, ChartEmpty, isEmpty } from '../../components/charts/ChartPrimitives';
@@ -275,6 +281,15 @@ export default function Dashboard() {
         {statCards.map((card) => (
           <StatCard key={card.label} {...card} />
         ))}
+      </div>
+
+      {/* Platform widgets — SaaS owner's daily glance. Default CSS Grid
+          items-stretch is back, so cards in a row equalize to the tallest. */}
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4">
+        <SupportOverviewCard />
+        <RecurringRevenueCard />
+        <PlanDistributionCard />
+        <UpcomingRenewalsCard />
       </div>
 
       <Card className="p-5 chart-fade-in">
