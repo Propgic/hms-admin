@@ -185,7 +185,10 @@
   display: none;
 }
 
-/* Clear ("x") button inside the input — vertically centred next to the value */
+/* Clear ("x") button inside the input. The library's default uses the unicode
+   "×" character which isn't perfectly glyph-centred — visible as a slight
+   nudge inside the circle. We replace it with an SVG so the cross is pixel-
+   centred at every zoom level. */
 .react-datepicker__close-icon {
   position: absolute;
   top: 50%;
@@ -200,27 +203,29 @@
   justify-content: center;
 }
 .react-datepicker__close-icon::after {
+  /* Wipe the library's "×" character — replaced by a centred SVG. */
+  content: "";
   position: static;
-  background: #94a3b8;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
+  background-color: #94a3b8;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round'><line x1='5' y1='5' x2='11' y2='11'/><line x1='11' y1='5' x2='5' y2='11'/></svg>");
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 10px 10px;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
   height: 16px;
   width: 16px;
-  line-height: 16px;
   padding: 0;
   border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
 }
 .react-datepicker__close-icon:hover::after {
-  background: #64748b;
+  background-color: #64748b;
 }
 .hms-dp-dark .react-datepicker__close-icon::after {
-  background: #475569;
-  color: #f1f5f9;
+  background-color: #475569;
 }
 .hms-dp-dark .react-datepicker__close-icon:hover::after {
-  background: #64748b;
+  background-color: #64748b;
 }
