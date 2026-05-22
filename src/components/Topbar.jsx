@@ -11,7 +11,6 @@ import {
   CreditCard,
   PowerOff,
   Inbox,
-  Search,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
@@ -240,21 +239,6 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
 
       {/* Reusable icon-button shape — subtle base bg, refined hover with
           ring, smooth icon swap on theme toggle. */}
-      {/* ⌘K hint button — kicks off the global Command Palette via the
-          same keyboard shortcut. Hidden on small screens. */}
-      <button
-        onClick={() => {
-          // Synthesize the same keyboard event the layout listens to.
-          window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
-        }}
-        title="Open command palette (⌘K)"
-        className="hidden md:inline-flex items-center gap-2 h-9 px-2.5 text-[12px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-50/60 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 ring-1 ring-slate-200/70 dark:ring-slate-700/60 hover:ring-slate-300 dark:hover:ring-slate-600 rounded-lg transition-all"
-      >
-        <Search className="w-3.5 h-3.5" />
-        <span>Search</span>
-        <kbd className="inline-flex items-center px-1 py-0.5 text-[10px] font-medium rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500">⌘K</kbd>
-      </button>
-
       <button
         onClick={toggleTheme}
         title={`Switch to ${isDark ? "light" : "dark"} mode`}
