@@ -72,7 +72,7 @@ export default function PlanList() {
     {
       header: 'Price',
       accessor: 'price',
-      cell: (row) => `${formatCurrency(row.price || 0)}/mo`,
+      cell: (row) => `${formatCurrency(row.price || 0)}/${row.billingCycle === 'yearly' ? 'yr' : 'mo'}`,
     },
     {
       header: 'Duration',
