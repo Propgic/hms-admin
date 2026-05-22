@@ -7,7 +7,6 @@ import {
   Settings,
   Sun,
   Moon,
-  Monitor,
   Building2,
   CreditCard,
   PowerOff,
@@ -196,7 +195,7 @@ export default function Topbar({ leftOffset = 248, gutter = 12 }) {
     setTheme(isDark ? "light" : "dark");
   };
 
-  const ThemeIcon = theme === "system" ? Monitor : isDark ? Moon : Sun;
+  const ThemeIcon = isDark ? Moon : Sun;
 
   return (
     <header

@@ -1,10 +1,9 @@
-import { Sun, Moon, Monitor, Palette } from 'lucide-react';
+import { Sun, Moon, Palette } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 
 const options = [
   { value: 'light', label: 'Light', Icon: Sun, desc: 'Bright surfaces, ideal for daytime.' },
   { value: 'dark', label: 'Dark', Icon: Moon, desc: 'Gentle on the eyes in low-light.' },
-  { value: 'system', label: 'System', Icon: Monitor, desc: 'Follow your OS preference.' },
 ];
 
 export default function ThemeSettings() {
@@ -22,7 +21,7 @@ export default function ThemeSettings() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {options.map(({ value, label, Icon, desc }) => {
           const active = theme === value;
           return (

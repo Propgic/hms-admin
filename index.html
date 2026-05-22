@@ -17,6 +17,23 @@
       rel="stylesheet"
     />
     <title>HMS Admin</title>
+    <!-- Theme boot: apply the persisted theme to <html> synchronously, before
+         React mounts. Prevents the brief light/dark flash on every load.
+         Mirrors the resolution rules in src/store/themeStore.jsx. -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('hms_admin_theme');
+          // Legacy 'system' values migrate to 'light' so the user lands on
+          // a deterministic theme.
+          if (saved !== 'light' && saved !== 'dark') saved = 'light';
+          var root = document.documentElement;
+          if (saved === 'dark') root.classList.add('dark');
+          else root.classList.remove('dark');
+          root.style.colorScheme = saved;
+        } catch (_) { /* fail-soft: leave html as authored */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
