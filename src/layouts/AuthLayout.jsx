@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { ShieldCheck, Activity, Building2, Sparkles, Users, TrendingUp } from 'lucide-react';
+import { ShieldCheck, Activity, Building2, Sparkles, CreditCard, BarChart3 } from 'lucide-react';
 import OperatorMascot from '../components/auth/OperatorMascot';
 import RouteTransition from './../components/RouteTransition';
 
@@ -96,27 +96,23 @@ export default function AuthLayout() {
             </div>
           </div>
 
-          {/* Stats — single row, four cards, fits below the mascot/copy
-              block with breathing room but no dead band. */}
+          {/* Feature highlights — what the operator console delivers.
+              Four-up grid mirrors the prior rhythm; replaces vanity stats
+              with USPs so the marquee doesn't lie pre-launch. */}
           <div className="grid grid-cols-4 gap-2.5 max-w-2xl">
             {[
-              { icon: Building2, label: 'Hospitals',    value: '142',     accent: 'text-blue-300',     trend: null },
-              { icon: Users,     label: 'Active users', value: '2,845',   accent: 'text-indigo-300',   trend: null },
-              { icon: TrendingUp,label: 'Growth',       value: '+12.2%',  accent: 'text-emerald-300',  trend: 'up' },
-              { icon: Activity,  label: 'Uptime',       value: '99.98%',  accent: 'text-sky-300',      trend: null },
-            ].map((s) => (
+              { icon: Building2,  title: 'Multi-tenant',    description: 'Provision unlimited hospitals',  accent: 'text-blue-300' },
+              { icon: CreditCard, title: 'Billing built-in', description: 'Plans, coupons, invoices',       accent: 'text-indigo-300' },
+              { icon: BarChart3,  title: 'Live insights',    description: 'Revenue, MRR, growth signals',  accent: 'text-emerald-300' },
+              { icon: Activity,   title: 'Platform health',  description: 'Uptime, audit logs, compliance', accent: 'text-sky-300' },
+            ].map((f) => (
               <div
-                key={s.label}
+                key={f.title}
                 className="rounded-2xl bg-white/[0.04] backdrop-blur-md border border-white/10 p-3 hover:bg-white/[0.07] transition-colors"
               >
-                <div className="flex items-center justify-between">
-                  <s.icon className={`w-4 h-4 ${s.accent}`} />
-                  {s.trend === 'up' && (
-                    <span className="text-[9px] font-medium text-emerald-300/90">↑</span>
-                  )}
-                </div>
-                <p className="mt-2 text-lg font-semibold tracking-tight">{s.value}</p>
-                <p className="text-[10px] uppercase tracking-wider text-blue-200/60 mt-0.5">{s.label}</p>
+                <f.icon className={`w-4 h-4 ${f.accent}`} />
+                <p className="mt-2 text-[13px] font-semibold tracking-tight leading-snug">{f.title}</p>
+                <p className="text-[10px] text-blue-200/60 mt-0.5 leading-snug">{f.description}</p>
               </div>
             ))}
           </div>
