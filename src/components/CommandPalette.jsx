@@ -105,7 +105,7 @@ export default function CommandPalette({ open, onClose }) {
       try {
         const [hRes, tRes] = await Promise.all([
           api.get(endpoints.hospitals.list, { params: { search: q, limit: 5 } }).catch(() => null),
-          api.get(endpoints.tickets.list,  { params: { search: q, limit: 5 } }).catch(() => null),
+          api.get(endpoints.support.list,  { params: { search: q, limit: 5 } }).catch(() => null),
         ]);
         const hList = hRes?.data?.data?.hospitals || hRes?.data?.data || [];
         const tList = tRes?.data?.data?.tickets   || tRes?.data?.data || [];
