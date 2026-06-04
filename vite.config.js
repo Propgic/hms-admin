@@ -21,6 +21,12 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), ...cssStubPlugin],
   server: {
     port: 3002,
+    // Proxy API calls to the backend so the browser talks to a single origin
+    // (localhost:3002). This keeps the httpOnly refresh cookie first-party, so
+    // the silent token refresh works and users aren't logged out hourly.
+    proxy: {
+      '/api': { target: 'http://localhost:5001', changeOrigin: true },
+    },
   },
   test: {
     // `globals: true` exposes describe/test/expect/vi without per-file imports.
