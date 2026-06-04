@@ -12,12 +12,14 @@ import Spinner from '../../components/ui/Spinner';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import StatCard from '../../components/StatCard';
 import { formatCurrency } from '../../utils/formatters';
+import { useAuth } from '../../hooks/useAuth';
 
 const HMS_TENANT_URL = import.meta.env.VITE_HMS_URL || 'http://localhost:3004';
 
 export default function HospitalDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isSuperAdmin } = useAuth();
   const [hospital, setHospital] = useState(null);
   const [stats, setStats] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
@@ -153,17 +155,19 @@ export default function HospitalDetail() {
                 )}
               </div>
             </div>
-            <div className="shrink-0">
-              <Button
-                variant="secondary"
-                icon={LogIn}
-                onClick={() => setImpersonateOpen(true)}
-                disabled={!hospital.isActive}
-                title={hospital.isActive ? 'Sign in as this hospital' : 'Hospital is suspended'}
-              >
-                Login as Hospital
-              </Button>
-            </div>
+            {isSuperAdmin && (
+              <div className="shrink-0">
+                <Button
+                  variant="secondary"
+                  icon={LogIn}
+                  onClick={() => setImpersonateOpen(true)}
+                  disabled={!hospital.isActive}
+                  title={hospital.isActive ? 'Sign in as this hospital' : 'Hospital is suspended'}
+                >
+                  Login as Hospital
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -11,6 +11,7 @@ import Badge from '../../components/ui/Badge';
 import Select from '../../components/ui/Select';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import AnnouncementForm from './AnnouncementForm';
+import { useAuth } from '../../hooks/useAuth';
 
 const SEVERITY_COLOR = {
   info: 'info',
@@ -28,6 +29,7 @@ function isLive(a) {
 }
 
 export default function AnnouncementList() {
+  const { isSuperAdmin } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -134,8 +136,8 @@ export default function AnnouncementList() {
       width: '110px',
       cell: (row) => (
         <RowActions
-          onEdit={() => { setEditing(row); setFormOpen(true); }}
-          onDelete={() => setDeleteTarget(row)}
+          onEdit={isSuperAdmin ? () => { setEditing(row); setFormOpen(true); } : undefined}
+          onDelete={isSuperAdmin ? () => setDeleteTarget(row) : undefined}
         />
       ),
     },
@@ -145,9 +147,11 @@ export default function AnnouncementList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="text-base text-gray-600 dark:text-slate-400">Broadcast banners shown inside hospital apps</p>
-        <Button icon={Plus} onClick={() => { setEditing(null); setFormOpen(true); }}>
-          New Announcement
-        </Button>
+        {isSuperAdmin && (
+          <Button icon={Plus} onClick={() => { setEditing(null); setFormOpen(true); }}>
+            New Announcement
+          </Button>
+        )}
       </div>
 
       <DataTable

@@ -7,9 +7,10 @@
 //   - Quick actions      (Add hospital, New plan, etc.)
 //   - Recent             (last 5 things you opened)
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Command } from 'cmdk';
+import toast from 'react-hot-toast';
 import {
   Search, LayoutDashboard, Building2, CreditCard, Receipt, FileText,
   Ticket, Megaphone, LifeBuoy, HelpCircle, ScrollText, BarChart3,
@@ -89,7 +90,7 @@ export default function CommandPalette({ open, onClose }) {
         const list = res?.data?.data?.plans || res?.data?.data || [];
         setPlans(Array.isArray(list) ? list : []);
       })
-      .catch(() => {});
+      .catch(() => { toast.error('Could not load plans'); });
   }, [open, plans.length]);
 
   // Debounced search for hospitals + tickets — these can be many.

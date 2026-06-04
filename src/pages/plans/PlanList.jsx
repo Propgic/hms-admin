@@ -11,8 +11,10 @@ import Select from '../../components/ui/Select';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import PlanForm from './PlanForm';
 import { formatCurrency } from '../../utils/formatters';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function PlanList() {
+  const { isSuperAdmin } = useAuth();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -109,8 +111,8 @@ export default function PlanList() {
       width: '110px',
       cell: (row) => (
         <RowActions
-          onEdit={() => { setEditingPlan(row); setFormOpen(true); }}
-          onDelete={() => setDeleteConfirm(row)}
+          onEdit={isSuperAdmin ? () => { setEditingPlan(row); setFormOpen(true); } : undefined}
+          onDelete={isSuperAdmin ? () => setDeleteConfirm(row) : undefined}
         />
       ),
     },
@@ -120,9 +122,11 @@ export default function PlanList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="text-base text-gray-600 dark:text-slate-400">Manage subscription plans and pricing</p>
-        <Button icon={Plus} onClick={() => { setEditingPlan(null); setFormOpen(true); }}>
-          Add Plan
-        </Button>
+        {isSuperAdmin && (
+          <Button icon={Plus} onClick={() => { setEditingPlan(null); setFormOpen(true); }}>
+            Add Plan
+          </Button>
+        )}
       </div>
 
       <DataTable

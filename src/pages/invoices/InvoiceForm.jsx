@@ -135,7 +135,7 @@ export default function InvoiceForm({
         const list = Array.isArray(d) ? d : (d.hospitals || d.rows || d.items || []);
         setHospitals(list);
       })
-      .catch(() => setHospitals([]));
+      .catch(() => { toast.error('Could not load hospitals'); setHospitals([]); });
   }, [isOpen]);
 
   useEffect(() => {

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
+import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import DataTable from '../../components/DataTable';
@@ -64,7 +65,7 @@ export default function TicketList() {
   useEffect(() => {
     api.get(endpoints.support.stats)
       .then((res) => setStats(res.data.data || res.data))
-      .catch(() => {});
+      .catch(() => { toast.error('Could not load ticket stats'); });
   }, [items.length]);
 
   const columns = [

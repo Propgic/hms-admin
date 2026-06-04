@@ -11,6 +11,7 @@ import {
   CalendarClock, Building2, TrendingUp, Layers,
 } from 'lucide-react';
 import clsx from 'clsx';
+import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import { formatCurrency } from '../../utils/formatters';
@@ -25,7 +26,12 @@ function useFetch(url, fallback) {
     setLoading(true);
     api.get(url)
       .then((r) => { if (!cancelled) setData(r.data?.data ?? r.data ?? fallback); })
-      .catch(() => { if (!cancelled) setData(fallback); })
+      .catch(() => {
+        if (!cancelled) setData(fallback);
+        // Cards share this helper; dedupe via a stable id so a full outage
+        // collapses to a single toast instead of one per card.
+        toast.error('Could not load some dashboard data', { id: 'dashboard-card-fetch' });
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps

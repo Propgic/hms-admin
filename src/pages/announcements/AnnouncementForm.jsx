@@ -93,14 +93,14 @@ export default function AnnouncementForm({ isOpen, onClose, onSuccess, announcem
         const list = d.plans || d.rows || d.items || (Array.isArray(d) ? d : []);
         setPlans(list);
       })
-      .catch(() => setPlans([]));
+      .catch(() => { toast.error('Could not load plans'); setPlans([]); });
     api.get(endpoints.hospitals.list, { params: { limit: 500 } })
       .then((res) => {
         const d = res.data.data || res.data;
         const list = Array.isArray(d) ? d : (d.hospitals || d.items || d.rows || []);
         setHospitals(list);
       })
-      .catch(() => setHospitals([]));
+      .catch(() => { toast.error('Could not load hospitals'); setHospitals([]); });
   }, [isOpen]);
 
   const onSubmit = async (data) => {

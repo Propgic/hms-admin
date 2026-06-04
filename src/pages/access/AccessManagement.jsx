@@ -17,6 +17,7 @@ import Button from "../../components/ui/Button";
 import Spinner from "../../components/ui/Spinner";
 import Badge from "../../components/ui/Badge";
 import Select from "../../components/ui/Select";
+import { useAuth } from "../../hooks/useAuth";
 
 // String registry of all tenant permissions. These mirror the constants in
 // the hms (hms-care) frontend; the backend stores them as plain strings so
@@ -244,6 +245,7 @@ function actionLabel(perm) {
 }
 
 export default function AccessManagement() {
+  const { isSuperAdmin } = useAuth();
   const [hospitals, setHospitals] = useState([]);
   const [hospitalId, setHospitalId] = useState("");
   const [loadingHospitals, setLoadingHospitals] = useState(true);
@@ -269,7 +271,7 @@ export default function AccessManagement() {
         setHospitals(list);
         if (list.length && !hospitalId) setHospitalId(list[0].id);
       })
-      .catch(() => {})
+      .catch(() => { toast.error('Could not load access settings'); })
       .finally(() => {
         if (!cancelled) setLoadingHospitals(false);
       });
@@ -415,24 +417,26 @@ export default function AccessManagement() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            icon={RotateCcw}
-            onClick={resetToDefault}
-            disabled={!hospitalId}
-          >
-            Reset to default
-          </Button>
-          <Button
-            icon={Save}
-            onClick={save}
-            loading={saving}
-            disabled={!hospitalId}
-          >
-            Save changes
-          </Button>
-        </div>
+        {isSuperAdmin && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              icon={RotateCcw}
+              onClick={resetToDefault}
+              disabled={!hospitalId}
+            >
+              Reset to default
+            </Button>
+            <Button
+              icon={Save}
+              onClick={save}
+              loading={saving}
+              disabled={!hospitalId}
+            >
+              Save changes
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Hospital picker */}

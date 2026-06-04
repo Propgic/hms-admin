@@ -12,6 +12,7 @@ import Select from '../../components/ui/Select';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import InvoiceForm from './InvoiceForm';
 import { formatCurrency } from '../../utils/formatters';
+import { useAuth } from '../../hooks/useAuth';
 
 const STATUS_COLOR = {
   draft: 'warning',
@@ -42,6 +43,7 @@ async function openPrintable(id) {
 }
 
 export default function InvoiceList() {
+  const { isSuperAdmin } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -204,7 +206,7 @@ export default function InvoiceList() {
                 <Printer className="w-4 h-4" />
               </button>
             )}
-            {isDraft && (
+            {isSuperAdmin && isDraft && (
               <>
                 <button
                   onClick={() => setEditTarget(row)}
@@ -222,7 +224,7 @@ export default function InvoiceList() {
                 </button>
               </>
             )}
-            {(row.status === 'issued' || row.status === 'overdue') && (
+            {isSuperAdmin && (row.status === 'issued' || row.status === 'overdue') && (
               <button
                 onClick={() => setPaidTarget(row)}
                 className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg"
@@ -231,7 +233,7 @@ export default function InvoiceList() {
                 <CheckCircle2 className="w-4 h-4" />
               </button>
             )}
-            {!isFinal && (
+            {isSuperAdmin && !isFinal && (
               <button
                 onClick={() => setVoidTarget(row)}
                 className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
@@ -250,7 +252,7 @@ export default function InvoiceList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="text-base text-gray-600 dark:text-slate-400">GST-compliant tax invoices for hospital subscriptions</p>
-        <Button icon={Plus} onClick={() => setFormOpen(true)}>New Invoice</Button>
+        {isSuperAdmin && <Button icon={Plus} onClick={() => setFormOpen(true)}>New Invoice</Button>}
       </div>
 
       <DataTable

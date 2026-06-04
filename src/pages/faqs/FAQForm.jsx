@@ -53,7 +53,7 @@ export default function FAQForm({ isOpen, onClose, faq, onSuccess }) {
           const list = d.categories || d.rows || d.items || (Array.isArray(d) ? d : []);
           setCategories(list.map((c) => ({ value: c.id || c._id, label: c.name })));
         })
-        .catch(() => setCategories([]));
+        .catch(() => { toast.error('Could not load categories'); setCategories([]); });
     }
   }, [isOpen]);
 

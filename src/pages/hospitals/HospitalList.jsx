@@ -11,6 +11,7 @@ import Badge from '../../components/ui/Badge';
 import Select from '../../components/ui/Select';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import HospitalForm from './HospitalForm';
+import { useAuth } from '../../hooks/useAuth';
 
 const BAND_STYLES = {
   green: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
@@ -54,6 +55,7 @@ function TrialCell({ trial }) {
 
 export default function HospitalList() {
   const navigate = useNavigate();
+  const { isSuperAdmin } = useAuth();
   const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -207,33 +209,39 @@ export default function HospitalList() {
           >
             <Eye className="h-4 w-4" />
           </button>
-          <button
-            type="button"
-            onClick={() => { setEditingHospital(row); setFormOpen(true); }}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-primary-500/40 dark:hover:bg-primary-500/10 dark:hover:text-primary-300"
-            title="Edit"
-            aria-label="Edit"
-          >
-            <Edit2 className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleToggleStatus(row)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-amber-200 hover:bg-amber-50 hover:text-amber-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-amber-500/40 dark:hover:bg-amber-500/10 dark:hover:text-amber-300"
-            title="Toggle Status"
-            aria-label="Toggle Status"
-          >
-            <Power className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setDeleteConfirm(row)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-100 text-red-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
-            title="Delete"
-            aria-label="Delete"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {isSuperAdmin && (
+            <button
+              type="button"
+              onClick={() => { setEditingHospital(row); setFormOpen(true); }}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-primary-500/40 dark:hover:bg-primary-500/10 dark:hover:text-primary-300"
+              title="Edit"
+              aria-label="Edit"
+            >
+              <Edit2 className="h-4 w-4" />
+            </button>
+          )}
+          {isSuperAdmin && (
+            <button
+              type="button"
+              onClick={() => handleToggleStatus(row)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-amber-200 hover:bg-amber-50 hover:text-amber-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-amber-500/40 dark:hover:bg-amber-500/10 dark:hover:text-amber-300"
+              title="Toggle Status"
+              aria-label="Toggle Status"
+            >
+              <Power className="h-4 w-4" />
+            </button>
+          )}
+          {isSuperAdmin && (
+            <button
+              type="button"
+              onClick={() => setDeleteConfirm(row)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-100 text-red-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
+              title="Delete"
+              aria-label="Delete"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -244,12 +252,16 @@ export default function HospitalList() {
       <div className="flex items-center justify-between gap-2">
         <p className="text-base text-gray-600 dark:text-slate-400">Manage all registered hospitals</p>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={sweepTrials} title="Suspend hospitals whose trial has expired and who have no active paid subscription">
-            Sweep Expired Trials
-          </Button>
-          <Button icon={Plus} onClick={() => { setEditingHospital(null); setFormOpen(true); }}>
-            Add Hospital
-          </Button>
+          {isSuperAdmin && (
+            <Button variant="secondary" onClick={sweepTrials} title="Suspend hospitals whose trial has expired and who have no active paid subscription">
+              Sweep Expired Trials
+            </Button>
+          )}
+          {isSuperAdmin && (
+            <Button icon={Plus} onClick={() => { setEditingHospital(null); setFormOpen(true); }}>
+              Add Hospital
+            </Button>
+          )}
         </div>
       </div>
 

@@ -112,7 +112,7 @@ export default function CouponForm({ isOpen, onClose, coupon, onSuccess }) {
         const list = Array.isArray(d) ? d : (d.plans || d.rows || d.items || []);
         setPlans(list);
       })
-      .catch(() => setPlans([]));
+      .catch(() => { toast.error('Could not load plans'); setPlans([]); });
   }, [isOpen]);
 
   useEffect(() => {

@@ -92,7 +92,7 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
           const list = d.plans || d.rows || d.items || (Array.isArray(d) ? d : []);
           setPlans(list.map((p) => ({ value: p.id || p._id, label: p.name })));
         })
-        .catch(() => setPlans([]));
+        .catch(() => { toast.error('Could not load plans'); setPlans([]); });
     }
   }, [isOpen]);
 
@@ -100,7 +100,7 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
     if (isOpen && hospital) {
       api.get(endpoints.hospitals.get(hospital.id || hospital._id))
         .then((res) => setFullHospital(res.data.data || res.data))
-        .catch(() => setFullHospital(hospital));
+        .catch(() => { toast.error('Could not load full hospital details'); setFullHospital(hospital); });
     } else {
       setFullHospital(null);
     }

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Building2, CreditCard, DollarSign, Users, RefreshCw, TrendingUp } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dayjs from 'dayjs';
+import toast from 'react-hot-toast';
 import api, { forceLogout } from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import StatCard from '../../components/StatCard';
@@ -53,7 +54,12 @@ async function buildFallbackStats() {
   const [hospitalsRes, plansRes, subsRes] = await Promise.allSettled([
     api.get(endpoints.hospitals.list, { params: { limit: 100 } }),
     api.get(endpoints.plans.list, { params: { limit: 100 } }),
-    api.get('/platform/subscriptions', { params: { limit: 200 } }).catch(() => null),
+    api.get('/platform/subscriptions', { params: { limit: 200 } }).catch(() => {
+      // Revenue in the fallback view depends on this; warn (deduped) so the
+      // monthly-revenue figure isn't silently understated.
+      toast.error('Could not load subscriptions — revenue may be incomplete', { id: 'dashboard-subs-fallback' });
+      return null;
+    }),
   ]);
 
   const hospitals = hospitalsRes.status === 'fulfilled' ? (unwrap(hospitalsRes) || []) : [];

@@ -10,8 +10,10 @@ import Badge from "../../components/ui/Badge";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import FAQForm from "./FAQForm";
 import FAQCategoryForm from "./FAQCategoryForm";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function FAQList() {
+  const { isSuperAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState("faqs");
   const [faqs, setFaqs] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -135,8 +137,8 @@ export default function FAQList() {
       width: "110px",
       cell: (row) => (
         <RowActions
-          onEdit={() => { setEditingFaq(row); setFaqFormOpen(true); }}
-          onDelete={() => setDeleteConfirm(row)}
+          onEdit={isSuperAdmin ? () => { setEditingFaq(row); setFaqFormOpen(true); } : undefined}
+          onDelete={isSuperAdmin ? () => setDeleteConfirm(row) : undefined}
         />
       ),
     },
@@ -181,8 +183,8 @@ export default function FAQList() {
       width: "110px",
       cell: (row) => (
         <RowActions
-          onEdit={() => { setEditingCat(row); setCatFormOpen(true); }}
-          onDelete={() => setDeleteConfirm({ ...row, _type: "category" })}
+          onEdit={isSuperAdmin ? () => { setEditingCat(row); setCatFormOpen(true); } : undefined}
+          onDelete={isSuperAdmin ? () => setDeleteConfirm({ ...row, _type: "category" }) : undefined}
         />
       ),
     },
@@ -199,20 +201,22 @@ export default function FAQList() {
         <p className="text-base text-gray-600 dark:text-slate-400">
           Manage frequently asked questions and categories
         </p>
-        <Button
-          icon={Plus}
-          onClick={() => {
-            if (activeTab === "faqs") {
-              setEditingFaq(null);
-              setFaqFormOpen(true);
-            } else {
-              setEditingCat(null);
-              setCatFormOpen(true);
-            }
-          }}
-        >
-          Add {activeTab === "faqs" ? "FAQ" : "Category"}
-        </Button>
+        {isSuperAdmin && (
+          <Button
+            icon={Plus}
+            onClick={() => {
+              if (activeTab === "faqs") {
+                setEditingFaq(null);
+                setFaqFormOpen(true);
+              } else {
+                setEditingCat(null);
+                setCatFormOpen(true);
+              }
+            }}
+          >
+            Add {activeTab === "faqs" ? "FAQ" : "Category"}
+          </Button>
+        )}
       </div>
 
       <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">

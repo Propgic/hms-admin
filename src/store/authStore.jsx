@@ -35,9 +35,15 @@ export function AuthProvider({ children }) {
     localStorage.setItem('hms_admin_user', JSON.stringify(updatedUser));
   }, []);
 
+  // Platform roles: `super_admin` (full control) and `support` (read + tickets
+  // only). `isSuperAdmin` drives whether write/manage UI is shown — the backend
+  // already enforces this, so the UI gate is purely for a cleaner experience.
+  const role = user?.role || null;
+  const isSuperAdmin = role === 'super_admin';
+
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, isAuthenticated: !!token, login, logout, updateUser }}
+      value={{ user, token, loading, isAuthenticated: !!token, role, isSuperAdmin, login, logout, updateUser }}
     >
       {children}
     </AuthContext.Provider>

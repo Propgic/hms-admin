@@ -5,6 +5,7 @@ import { ThemeProvider } from './store/themeStore.jsx';
 import { PlatformSettingsProvider } from './store/platformSettingsContext.jsx';
 import AppRoutes from './routes/AppRoutes';
 import OfflineGuard from './components/OfflineGuard.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 export default function App() {
   return (
@@ -13,7 +14,9 @@ export default function App() {
         <BrowserRouter>
           <AuthProvider>
             <PlatformSettingsProvider>
-              <AppRoutes />
+              <ErrorBoundary>
+                <AppRoutes />
+              </ErrorBoundary>
               <Toaster
                 position="top-right"
                 toastOptions={{

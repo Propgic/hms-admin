@@ -12,6 +12,7 @@ import Spinner from '../../components/ui/Spinner';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import InvoiceForm from './InvoiceForm';
 import { formatCurrency } from '../../utils/formatters';
+import { useAuth } from '../../hooks/useAuth';
 
 const STATUS_COLOR = {
   draft: 'warning',
@@ -44,6 +45,7 @@ async function openPrintable(id) {
 export default function InvoiceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isSuperAdmin } = useAuth();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -129,19 +131,23 @@ export default function InvoiceDetail() {
           {!isDraft && (
             <Button variant="secondary" icon={Printer} onClick={() => openPrintable(id)}>Print / PDF</Button>
           )}
-          {isDraft && (
+          {isSuperAdmin && (
             <>
-              <Button variant="secondary" icon={Pencil} onClick={() => setEditOpen(true)}>Edit</Button>
-              <Button variant="primary" icon={Send} onClick={() => setIssueOpen(true)} loading={busy}>Issue Invoice</Button>
+              {isDraft && (
+                <>
+                  <Button variant="secondary" icon={Pencil} onClick={() => setEditOpen(true)}>Edit</Button>
+                  <Button variant="primary" icon={Send} onClick={() => setIssueOpen(true)} loading={busy}>Issue Invoice</Button>
+                </>
+              )}
+              {canMarkPaid && (
+                <Button variant="success" icon={CheckCircle2} onClick={() => setPaidOpen(true)} loading={busy}>Mark Paid</Button>
+              )}
+              {!isFinal && (
+                <Button variant="danger" icon={XCircle} onClick={() => setVoidOpen(true)} loading={busy}>
+                  {isDraft ? 'Discard' : 'Void'}
+                </Button>
+              )}
             </>
-          )}
-          {canMarkPaid && (
-            <Button variant="success" icon={CheckCircle2} onClick={() => setPaidOpen(true)} loading={busy}>Mark Paid</Button>
-          )}
-          {!isFinal && (
-            <Button variant="danger" icon={XCircle} onClick={() => setVoidOpen(true)} loading={busy}>
-              {isDraft ? 'Discard' : 'Void'}
-            </Button>
           )}
         </div>
       </div>

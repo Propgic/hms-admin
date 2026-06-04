@@ -11,6 +11,7 @@ import Badge from '../../components/ui/Badge';
 import Select from '../../components/ui/Select';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import CouponForm from './CouponForm';
+import { useAuth } from '../../hooks/useAuth';
 
 function discountLabel(c) {
   if (!c) return '—';
@@ -32,6 +33,7 @@ function statusOf(c) {
 }
 
 export default function CouponList() {
+  const { isSuperAdmin } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -122,8 +124,8 @@ export default function CouponList() {
       width: '110px',
       cell: (row) => (
         <RowActions
-          onEdit={() => { setEditing(row); setFormOpen(true); }}
-          onDelete={() => setDeleteConfirm(row)}
+          onEdit={isSuperAdmin ? () => { setEditing(row); setFormOpen(true); } : undefined}
+          onDelete={isSuperAdmin ? () => setDeleteConfirm(row) : undefined}
         />
       ),
     },
@@ -133,9 +135,11 @@ export default function CouponList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="text-base text-gray-600 dark:text-slate-400">Create and manage promotional discount codes</p>
-        <Button icon={Plus} onClick={() => { setEditing(null); setFormOpen(true); }}>
-          New Coupon
-        </Button>
+        {isSuperAdmin && (
+          <Button icon={Plus} onClick={() => { setEditing(null); setFormOpen(true); }}>
+            New Coupon
+          </Button>
+        )}
       </div>
 
       <DataTable

@@ -3,8 +3,22 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+// Under vitest only, stub every `.css` import to an empty module. Component
+// tests don't assert on styles, and this makes the suite resilient to missing
+// CSS files (e.g. a third-party stylesheet like react-datepicker's that this
+// machine's iCloud-synced node_modules occasionally evicts). Never active for
+// dev/build, so the real app still loads its real CSS.
+const cssStubPlugin = process.env.VITEST
+  ? [{
+      name: 'vitest-css-stub',
+      enforce: 'pre',
+      resolveId(id) { if (id.endsWith('.css')) return '\0' + id; },
+      load(id) { if (id.startsWith('\0') && id.endsWith('.css')) return ''; },
+    }]
+  : []
+
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), ...cssStubPlugin],
   server: {
     port: 3002,
   },

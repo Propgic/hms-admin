@@ -118,7 +118,7 @@ function extractServerError(err, fallback) {
 }
 
 export default function SettingsPage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, isSuperAdmin } = useAuth();
 
   return (
     <div className="space-y-6">
@@ -131,15 +131,15 @@ export default function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ProfileCard user={user} updateUser={updateUser} />
         <PasswordCard />
-        <PlatformCard />
-        <AbdmCard />
-        <BillingCard />
+        <PlatformCard canEdit={isSuperAdmin} />
+        <AbdmCard canEdit={isSuperAdmin} />
+        <BillingCard canEdit={isSuperAdmin} />
       </div>
     </div>
   );
 }
 
-function AbdmCard() {
+function AbdmCard({ canEdit }) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const {
@@ -252,16 +252,18 @@ function AbdmCard() {
             <Input label="HFR Base URL" error={errors.abdmHfrBaseUrl?.message} {...register('abdmHfrBaseUrl')} />
             <Input label="HPR Base URL" error={errors.abdmHprBaseUrl?.message} {...register('abdmHprBaseUrl')} />
           </div>
-          <div className="flex justify-end">
-            <Button type="submit" loading={loading} disabled={!isDirty || loading}>Save ABDM Settings</Button>
-          </div>
+          {canEdit && (
+            <div className="flex justify-end">
+              <Button type="submit" loading={loading} disabled={!isDirty || loading}>Save ABDM Settings</Button>
+            </div>
+          )}
         </form>
       )}
     </Card>
   );
 }
 
-function BillingCard() {
+function BillingCard({ canEdit }) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const {
@@ -348,9 +350,11 @@ function BillingCard() {
             <Input label="Default HSN/SAC Code" error={errors.defaultHsnCode?.message} {...register('defaultHsnCode')} />
             <Input label="Invoice Prefix" error={errors.invoicePrefix?.message} {...register('invoicePrefix')} />
           </div>
-          <div className="flex justify-end">
-            <Button type="submit" loading={loading} disabled={!isDirty || loading}>Save Billing Settings</Button>
-          </div>
+          {canEdit && (
+            <div className="flex justify-end">
+              <Button type="submit" loading={loading} disabled={!isDirty || loading}>Save Billing Settings</Button>
+            </div>
+          )}
         </form>
       )}
     </Card>
@@ -492,7 +496,7 @@ function PasswordCard() {
   );
 }
 
-function PlatformCard() {
+function PlatformCard({ canEdit }) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const { refresh: refreshPlatform } = usePlatformSettings();
@@ -655,9 +659,11 @@ function PlatformCard() {
               )}
             />
           </div>
-          <div className="flex justify-end">
-            <Button type="submit" loading={loading} disabled={!isDirty || loading}>Save Platform Settings</Button>
-          </div>
+          {canEdit && (
+            <div className="flex justify-end">
+              <Button type="submit" loading={loading} disabled={!isDirty || loading}>Save Platform Settings</Button>
+            </div>
+          )}
         </form>
       )}
     </Card>
