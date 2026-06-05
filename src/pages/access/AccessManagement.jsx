@@ -143,9 +143,10 @@ const PERMISSION_GROUPS = [
 
 const ALL_PERMISSIONS = PERMISSION_GROUPS.flatMap((group) => group.perms);
 
-// Hardcoded baseline per role — matches what the hms-care frontend ships
-// out of the box. When a hospital has no override saved, this is what runs.
-// Surfaced here so the admin can see what would apply if they reset.
+// Fallback baseline per role. The backend's access-control response now returns
+// the authoritative `baseline` (see listAccessState), which the UI uses as the
+// source of truth; this local copy is only used if an older backend omits it,
+// so the two can't silently drift in normal operation.
 const BASELINE = {
   hospital_admin: ALL_PERMISSIONS,
   doctor: [
@@ -255,6 +256,9 @@ export default function AccessManagement() {
   const [roles, setRoles] = useState([]);
   // selected[role] = string[] currently-active permissions for that role.
   const [selected, setSelected] = useState({});
+  // Per-role default permissions, fetched from the backend (source of truth).
+  // Falls back to the local BASELINE only if an older backend omits it.
+  const [baseline, setBaseline] = useState({});
   const [allowedPermissions, setAllowedPermissions] = useState([]);
   const [plan, setPlan] = useState(null);
   const [activeRole, setActiveRole] = useState("doctor");
@@ -290,6 +294,8 @@ export default function AccessManagement() {
       const editableRoles = payload.roles || [];
       const overrides = payload.overrides || {};
       const effective = payload.effective || {};
+      // Backend-provided role defaults (source of truth); BASELINE is a fallback.
+      const apiBaseline = payload.baseline || {};
       const allowed = payload.allowedPermissions || [];
       const next = {};
       for (const r of editableRoles) {
@@ -297,13 +303,14 @@ export default function AccessManagement() {
           ? [...effective[r]]
           : (overrides[r]?.length
               ? [...overrides[r]]
-              : [...(BASELINE[r] || [])]
+              : [...(apiBaseline[r] || BASELINE[r] || [])]
             ).filter(
               (permission) => !allowed.length || allowed.includes(permission)
             );
       }
       setRoles(editableRoles);
       setSelected(next);
+      setBaseline(apiBaseline);
       setAllowedPermissions(allowed);
       setPlan(payload.plan || null);
       if (editableRoles.length && !editableRoles.includes(activeRole)) {
@@ -347,7 +354,8 @@ export default function AccessManagement() {
   const resetToDefault = () => {
     setSelected((s) => ({
       ...s,
-      [activeRole]: (BASELINE[activeRole] || []).filter(isAllowedByPlan),
+      // Prefer the backend-provided default; fall back to the local copy.
+      [activeRole]: (baseline[activeRole] || BASELINE[activeRole] || []).filter(isAllowedByPlan),
     }));
     toast("Reverted to baseline — click Save to persist.", { icon: "↩" });
   };
