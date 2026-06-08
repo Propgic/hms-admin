@@ -93,14 +93,18 @@ export default function HospitalList() {
       });
       const d = res.data.data || res.data;
       const list = d.hospitals || d.rows || d.items || (Array.isArray(d) ? d : []);
+      // Pagination lives at the response root (res.data.pagination), not inside
+      // `data` — when `data` is the bare array, d.pagination is undefined and
+      // the pager would be stuck on page 1. Read the root first.
+      const pg = res.data.pagination || d.pagination || {};
       // Normalize: derive `status` from `isActive` if the backend hasn't sent it yet
       setHospitals(list.map((h) => ({
         ...h,
         status: h.status || (h.isActive === false ? 'suspended' : 'active'),
         planName: h.planName || h.plan?.name || null,
       })));
-      setTotalPages(d.totalPages || d.pagination?.totalPages || 1);
-      setTotalItems(d.total ?? d.pagination?.total ?? list.length);
+      setTotalPages(pg.totalPages || d.totalPages || 1);
+      setTotalItems(pg.total ?? d.total ?? list.length);
     } catch {
       setHospitals([]);
       setTotalItems(0);

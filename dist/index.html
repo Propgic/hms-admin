@@ -11,8 +11,25 @@
       rel="stylesheet"
     />
     <title>HMS Admin</title>
-    <script type="module" crossorigin src="/assets/index-oKZa_3fd.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index--kq8k0-C.css">
+    <!-- Theme boot: apply the persisted theme to <html> synchronously, before
+         React mounts. Prevents the brief light/dark flash on every load.
+         Mirrors the resolution rules in src/store/themeStore.jsx. -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('hms_admin_theme');
+          // Legacy 'system' values migrate to 'light' so the user lands on
+          // a deterministic theme.
+          if (saved !== 'light' && saved !== 'dark') saved = 'light';
+          var root = document.documentElement;
+          if (saved === 'dark') root.classList.add('dark');
+          else root.classList.remove('dark');
+          root.style.colorScheme = saved;
+        } catch (_) { /* fail-soft: leave html as authored */ }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-xSo7iLpL.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-B-iu-BOt.css">
   </head>
   <body>
     <div id="root"></div>

@@ -36,10 +36,12 @@ const PAGES = [
 ];
 
 const ACTIONS = [
-  { id: 'a:newHospital', label: 'Add new hospital',   path: '/hospitals/new',     icon: Plus, breadcrumb: 'Hospitals' },
-  { id: 'a:newPlan',     label: 'Create new plan',    path: '/plans/new',         icon: Plus, breadcrumb: 'Plans' },
-  { id: 'a:newCoupon',   label: 'Create coupon',      path: '/coupons',           icon: Plus, breadcrumb: 'Coupons' },
-  { id: 'a:newAnnounce', label: 'New announcement',   path: '/announcements/new', icon: Plus, breadcrumb: 'Announcements' },
+  // Create flows are modals on the list pages (no /new or /:id/edit routes
+  // exist), so these navigate to the list page where the "Add" button lives.
+  { id: 'a:newHospital', label: 'Add new hospital',   path: '/hospitals',     icon: Plus, breadcrumb: 'Hospitals' },
+  { id: 'a:newPlan',     label: 'Create new plan',    path: '/plans',         icon: Plus, breadcrumb: 'Plans' },
+  { id: 'a:newCoupon',   label: 'Create coupon',      path: '/coupons',       icon: Plus, breadcrumb: 'Coupons' },
+  { id: 'a:newAnnounce', label: 'New announcement',   path: '/announcements', icon: Plus, breadcrumb: 'Announcements' },
 ];
 
 const RECENT_KEY = 'hms_admin_palette_recent_v1';
@@ -214,7 +216,7 @@ export default function CommandPalette({ open, onClose }) {
                       label={p.name}
                       detail={p.price ? `₹${p.price} · ${p.billingCycle || 'monthly'}` : ''}
                       breadcrumb="Plans"
-                      onSelect={() => select({ id: `pl:${p.id}`, label: p.name, path: `/plans/${p.id}/edit`, breadcrumb: 'Plans', kind: 'plan' })}
+                      onSelect={() => select({ id: `pl:${p.id}`, label: p.name, path: '/plans', breadcrumb: 'Plans', kind: 'plan' })}
                     />
                   ))}
               </Command.Group>

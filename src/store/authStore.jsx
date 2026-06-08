@@ -5,8 +5,14 @@ import { AuthContext } from './authContext';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('hms_admin_user');
-    return stored ? JSON.parse(stored) : null;
+    // Guard a corrupted/tampered value — an unguarded JSON.parse throws on the
+    // initial render and locks the user out (login lives inside this provider).
+    try {
+      const stored = localStorage.getItem('hms_admin_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
   });
   const [token, setToken] = useState(() => localStorage.getItem('hms_admin_token'));
   const [loading] = useState(false);
