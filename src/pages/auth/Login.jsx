@@ -53,7 +53,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login(data.email, data.password);
-      toast.success('Welcome back!');
+      toast.success('Signed in successfully');
       navigate('/');
     } catch (err) {
       const msg = friendlyLoginError(err);
@@ -74,7 +74,7 @@ export default function Login() {
           <Sparkles className="w-3 h-3" /> Operator console
         </span>
         <h1 className="mt-4 text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
-          Welcome back
+          Sign in to your console
         </h1>
         <p className="mt-1.5 text-sm text-blue-100/60">
           Sign in to manage hospitals, plans and platform health.

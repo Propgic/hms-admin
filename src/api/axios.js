@@ -145,6 +145,19 @@ api.interceptors.response.use(
     if (status === 401 && !isAuthEndpoint) {
       forceLogout();
     }
+
+    // Self-heal an invalid platform session: a 403 "Platform admin access
+    // required" means the stored token isn't a platform token at all (e.g. a
+    // tenant login on the shared localhost cookie clobbered this app's token).
+    // Refresh can't fix that — force a clean re-login. We DON'T log out on a
+    // "Super admin access required" 403, which is a legitimate permission deny
+    // for the support role.
+    if (status === 403 && !isAuthEndpoint) {
+      const msg = error.response?.data?.message || '';
+      if (/platform admin access required/i.test(msg)) {
+        forceLogout('Your session is no longer valid — please sign in again.');
+      }
+    }
     return Promise.reject(error);
   }
 );
