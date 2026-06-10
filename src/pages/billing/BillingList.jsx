@@ -68,6 +68,14 @@ export default function BillingList() {
       cell: (row) => row.planName || row.plan?.name || '-',
     },
     {
+      header: 'Billing Cycle',
+      accessor: 'planBillingCycle',
+      cell: (row) => {
+        const c = row.planBillingCycle || row.plan?.billingCycle;
+        return c ? c.charAt(0).toUpperCase() + c.slice(1) : '-';
+      },
+    },
+    {
       header: 'Amount',
       accessor: 'amount',
       sortable: true,
@@ -88,7 +96,12 @@ export default function BillingList() {
       header: 'Status',
       accessor: 'status',
       sortable: true,
-      cell: (row) => <Badge color={statusColor(row.status)}>{row.status}</Badge>,
+      // Backend sends `effectiveStatus` (a stored-'active' row whose endDate
+      // has passed reads as 'expired'); fall back to raw status defensively.
+      cell: (row) => {
+        const s = row.effectiveStatus ?? row.status;
+        return <Badge color={statusColor(s)}>{s}</Badge>;
+      },
     },
     {
       header: 'Payment',
