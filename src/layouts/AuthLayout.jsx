@@ -48,7 +48,7 @@ export default function AuthLayout() {
           everything else is one cohesive group between them. */}
       <div className="hidden lg:flex lg:w-1/2 relative px-12 py-8 flex-col">
         {/* brand bar — match sidebar logo (blue-600 → indigo-700) */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-1.5">
           <img src="/trasnparent_bg_hms_logo.png" alt="Hosgic" className="w-10 h-10 object-contain" />
           <div>
             <p className="text-base font-bold tracking-tight leading-none">
@@ -122,7 +122,7 @@ export default function AuthLayout() {
           the form. */}
       <div className="flex-1 flex flex-col p-6 sm:p-10 lg:p-12 relative">
         {/* mobile-only brand bar — flows above the card */}
-        <div className="lg:hidden flex items-center gap-2.5 mb-6">
+        <div className="lg:hidden flex items-center gap-1.5 mb-6">
           <img src="/trasnparent_bg_hms_logo.png" alt="Hosgic" className="w-10 h-10 shrink-0 object-contain" />
           <div>
             <p className="font-bold text-sm leading-none">

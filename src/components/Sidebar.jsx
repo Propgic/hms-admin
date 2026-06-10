@@ -203,7 +203,7 @@ export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
       <div className="flex flex-col h-full relative">
         {/* Brand */}
         <div className={clsx('pt-6 pb-4 flex items-center', collapsed ? 'justify-center' : 'px-5')}>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5">
             <img src="/trasnparent_bg_hms_logo.png" alt="Hosgic" className="w-9 h-9 object-contain" />
             {!collapsed && (
               <span className="text-[19px] font-bold tracking-tight leading-none">
