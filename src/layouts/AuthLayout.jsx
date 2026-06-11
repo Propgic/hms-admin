@@ -49,7 +49,7 @@ export default function AuthLayout() {
       <div className="hidden lg:flex lg:w-1/2 relative px-12 py-8 flex-col">
         {/* brand bar — match sidebar logo (blue-600 → indigo-700) */}
         <div className="flex items-center gap-1.5">
-          <img src="/trasnparent_bg_hms_logo.png" alt="Hosgic" className="w-10 h-10 object-contain" />
+          <img src="/new_hms_logo.png" alt="Hosgic" className="w-14 h-14 object-contain" />
           <div>
             <p className="text-base font-bold tracking-tight leading-none">
               <span className="text-blue-300">Hos</span>
@@ -123,7 +123,7 @@ export default function AuthLayout() {
       <div className="flex-1 flex flex-col p-6 sm:p-10 lg:p-12 relative">
         {/* mobile-only brand bar — flows above the card */}
         <div className="lg:hidden flex items-center gap-1.5 mb-6">
-          <img src="/trasnparent_bg_hms_logo.png" alt="Hosgic" className="w-10 h-10 shrink-0 object-contain" />
+          <img src="/new_hms_logo.png" alt="Hosgic" className="w-14 h-14 shrink-0 object-contain" />
           <div>
             <p className="font-bold text-sm leading-none">
               <span className="text-blue-300">Hos</span>
