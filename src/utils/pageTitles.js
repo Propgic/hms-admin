@@ -5,6 +5,7 @@ const titles = [
   { match: /^\/plans/, title: 'Subscription Plans' },
   { match: /^\/billing/, title: 'Billing' },
   { match: /^\/revenue/, title: 'Monthly Revenue' },
+  { match: /^\/recurring-revenue/, title: 'Recurring Revenue' },
   { match: /^\/invoices\/[^/]+/, title: 'Invoice Details' },
   { match: /^\/invoices/, title: 'Invoices' },
   { match: /^\/coupons/, title: 'Coupons' },

@@ -4,7 +4,7 @@
 // cards (CardShell pattern, accent gradients, scroll-on-overflow).
 
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import {
   LifeBuoy, ArrowRight, AlertTriangle, Repeat, CreditCard,
@@ -48,6 +48,7 @@ function EmptyState({ children }) {
 }
 
 function CardShell({ title, subtitle, icon: Icon, accent = 'blue', linkTo, linkLabel, badge, children }) {
+  const navigate = useNavigate();
   const ACCENT = {
     blue:    'from-blue-500 to-blue-700',
     emerald: 'from-emerald-500 to-emerald-700',
@@ -56,8 +57,26 @@ function CardShell({ title, subtitle, icon: Icon, accent = 'blue', linkTo, linkL
     rose:    'from-rose-500 to-rose-700',
     indigo:  'from-indigo-500 to-indigo-700',
   }[accent] || 'from-blue-500 to-blue-700';
+  const clickable = !!linkTo;
+  // The whole card navigates to linkTo — except when the click lands on an
+  // inner link/button (e.g. a ticket row or hospital name), which keeps its
+  // own destination.
+  const handleClick = (e) => { if (clickable && !e.target.closest('a, button')) navigate(linkTo); };
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm flex flex-col h-full min-w-0">
+    <div
+      onClick={clickable ? handleClick : undefined}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={
+        clickable
+          ? (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) { e.preventDefault(); navigate(linkTo); } }
+          : undefined
+      }
+      className={clsx(
+        'rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm flex flex-col h-full min-w-0',
+        clickable && 'cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40',
+      )}
+    >
       <div className="shrink-0 flex items-start gap-2 mb-3 min-w-0">
         <span className={clsx('shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br text-white flex items-center justify-center shadow-sm', ACCENT)}>
           <Icon className="w-4.5 h-4.5" />
@@ -184,8 +203,8 @@ export function RecurringRevenueCard() {
       subtitle="Live from active subscriptions"
       icon={Repeat}
       accent="emerald"
-      linkTo="/billing"
-      linkLabel="Billing"
+      linkTo="/recurring-revenue"
+      linkLabel="MRR / ARR breakdown"
     >
       {loading ? <EmptyState>Loading…</EmptyState> : (
         <div className="flex flex-col h-full">

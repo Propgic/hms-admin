@@ -28,6 +28,7 @@ import PlanList from '../pages/plans/PlanList';
 import BillingList from '../pages/billing/BillingList';
 import BillingDetail from '../pages/billing/BillingDetail';
 import RevenueDetails from '../pages/revenue/RevenueDetails';
+import RecurringRevenueDetails from '../pages/revenue/RecurringRevenueDetails';
 
 // Invoices
 import InvoiceList from '../pages/invoices/InvoiceList';
@@ -125,6 +126,7 @@ export default function AppRoutes() {
         <Route path="/billing" element={<BillingList />} />
         <Route path="/billing/:id" element={<BillingDetail />} />
         <Route path="/revenue" element={<RevenueDetails />} />
+        <Route path="/recurring-revenue" element={<RecurringRevenueDetails />} />
         <Route path="/invoices" element={<InvoiceList />} />
         <Route path="/invoices/:id" element={<InvoiceDetail />} />
         <Route path="/coupons" element={<CouponList />} />
