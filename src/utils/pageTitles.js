@@ -13,6 +13,7 @@ const titles = [
   { match: /^\/faqs/, title: 'FAQs' },
   { match: /^\/activity-logs/, title: 'Activity Logs' },
   { match: /^\/reports/, title: 'Reports & Analytics' },
+  { match: /^\/access-management/, title: 'Access Management' },
   { match: /^\/settings/, title: 'Settings' },
 ];
 
