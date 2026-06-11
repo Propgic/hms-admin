@@ -73,6 +73,7 @@ const endpoints = {
     list: `${PLATFORM}/billing`,
     get: (id) => `${PLATFORM}/billing/${id}`,
     stats: `${PLATFORM}/billing/stats`,
+    recordPayment: (id) => `${PLATFORM}/billing/${id}/payment`,
   },
 
   // FAQs

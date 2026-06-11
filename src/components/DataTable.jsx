@@ -39,6 +39,7 @@ export default function DataTable({
   emptyMessage,
   emptyIllustration,
   headerActions,
+  onRowClick,
 }) {
   // Input text shown in the box — updated immediately for responsive typing.
   const [inputValue, setInputValue] = useState(searchValue);
@@ -150,7 +151,11 @@ export default function DataTable({
               </tr>
             ) : (
               filteredData.map((row, rowIdx) => (
-                <tr key={row.id || row._id || rowIdx} className="hover:bg-gray-50 text-sm">
+                <tr
+                  key={row.id || row._id || rowIdx}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={`hover:bg-gray-50 text-sm ${onRowClick ? 'cursor-pointer' : ''}`}
+                >
                   {columns.map((col) => {
                     const align = col.align || 'left';
                     const alignText = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Wallet } from 'lucide-react';
 import dayjs from 'dayjs';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
@@ -7,6 +8,7 @@ import DataTable from '../../components/DataTable';
 import Badge from '../../components/ui/Badge';
 import Select from '../../components/ui/Select';
 import { formatCurrency } from '../../utils/formatters';
+import PaymentModal from './PaymentModal';
 
 export default function BillingList() {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -45,9 +47,28 @@ export default function BillingList() {
 
   useEffect(() => { fetchBilling(); }, [fetchBilling]);
 
+  const [payRow, setPayRow] = useState(null);
+  const navigate = useNavigate();
+
   const statusColor = (s) => {
     const map = { active: 'success', expired: 'danger', trial: 'warning', cancelled: 'gray' };
     return map[s] || 'gray';
+  };
+
+  const paymentColor = (s) => {
+    const map = { paid: 'success', partial: 'warning', advance: 'info', refunded: 'danger', pending: 'gray' };
+    return map[s] || 'gray';
+  };
+
+  const paymentDot = (s) => {
+    const map = {
+      paid: 'bg-emerald-500',
+      partial: 'bg-yellow-500',
+      advance: 'bg-blue-500',
+      refunded: 'bg-red-500',
+      pending: 'bg-gray-400 dark:bg-slate-500',
+    };
+    return map[s] || 'bg-gray-400 dark:bg-slate-500';
   };
 
   const columns = [
@@ -106,10 +127,41 @@ export default function BillingList() {
     {
       header: 'Payment',
       accessor: 'paymentStatus',
+      cell: (row) => {
+        const ps = row.paymentStatus || 'pending';
+        const label = ps === 'pending' ? 'Unpaid' : ps.charAt(0).toUpperCase() + ps.slice(1);
+        const total = Number(row.amount || 0);
+        const paid = Number(row.amountPaid || 0);
+        return (
+          <div className="flex flex-col gap-0.5">
+            <Badge color={paymentColor(ps)} className="gap-1.5">
+              <span className={`inline-block w-1.5 h-1.5 rounded-full ${paymentDot(ps)}`} />
+              {label}
+            </Badge>
+            {paid > 0 && ps !== 'paid' && (
+              <span className="text-[11px] text-gray-500 dark:text-slate-400">
+                {formatCurrency(paid)} / {formatCurrency(total)}
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Actions',
+      accessor: 'actions',
       cell: (row) => (
-        <Badge color={row.paymentStatus === 'paid' ? 'success' : row.paymentStatus === 'pending' ? 'warning' : 'danger'}>
-          {row.paymentStatus || 'N/A'}
-        </Badge>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setPayRow(row); }}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
+            title="Record payment"
+            aria-label="Record payment"
+          >
+            <Wallet className="h-4 w-4" />
+          </button>
+        </div>
       ),
     },
   ];
@@ -121,6 +173,7 @@ export default function BillingList() {
       <DataTable
         columns={columns}
         data={subscriptions}
+        onRowClick={(row) => navigate(`/billing/${row.id}`)}
         loading={loading}
         searchable
         searchValue={search}
@@ -152,6 +205,13 @@ export default function BillingList() {
             className="w-40"
           />
         )}
+      />
+
+      <PaymentModal
+        isOpen={!!payRow}
+        subscription={payRow}
+        onClose={() => setPayRow(null)}
+        onSuccess={fetchBilling}
       />
     </div>
   );
