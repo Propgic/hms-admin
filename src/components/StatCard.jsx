@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
 
 // Modern stat card — replaces the flat-white look with a layered surface:
 // soft branded shadow, subtle gradient overlay, and an icon chip with an
@@ -49,7 +49,9 @@ export default function StatCard({
   changeType = 'neutral',
   iconBg = 'bg-blue-100',
   iconColor = 'text-blue-600',
+  onClick,
 }) {
+  const clickable = typeof onClick === 'function';
   const tone = toneFromIconColor(iconColor);
   const ring = TONE_RING[tone] || TONE_RING.blue;
   const glow = TONE_GLOW[tone] || TONE_GLOW.blue;
@@ -65,6 +67,14 @@ export default function StatCard({
 
   return (
     <div
+      onClick={onClick}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={
+        clickable
+          ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(e); } }
+          : undefined
+      }
       className={clsx(
         'group relative overflow-hidden rounded-2xl p-5',
         'bg-white dark:bg-slate-900',
@@ -76,6 +86,7 @@ export default function StatCard({
         // hue matches the icon tone so each stat card feels uniquely tinted.
         'before:absolute before:inset-0 before:-z-0 before:opacity-0 group-hover:before:opacity-100 before:transition-opacity before:duration-300',
         glow,
+        clickable && 'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40',
       )}
     >
       <div className="relative z-10 flex items-start justify-between gap-4">
@@ -111,6 +122,11 @@ export default function StatCard({
           </div>
         )}
       </div>
+      {clickable && (
+        <span className="absolute bottom-3 right-3 z-10 text-slate-300 dark:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
+          <ArrowRight className="w-4 h-4" />
+        </span>
+      )}
     </div>
   );
 }

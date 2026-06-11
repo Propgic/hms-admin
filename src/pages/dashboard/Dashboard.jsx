@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Building2, CreditCard, DollarSign, Users, RefreshCw, TrendingUp } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dayjs from 'dayjs';
@@ -118,6 +118,7 @@ async function buildFallbackStats() {
 
 export default function Dashboard() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [growth, setGrowth] = useState(null);
   const [recent, setRecent] = useState(null);
@@ -198,6 +199,7 @@ export default function Dashboard() {
       changeType: 'positive',
       iconBg: 'bg-blue-100',
       iconColor: 'text-blue-600',
+      onClick: () => navigate('/hospitals'),
     },
     {
       icon: Users,
@@ -207,6 +209,7 @@ export default function Dashboard() {
       changeType: 'positive',
       iconBg: 'bg-green-100',
       iconColor: 'text-green-600',
+      onClick: () => navigate('/hospitals?status=active'),
     },
     {
       icon: CreditCard,
@@ -216,6 +219,7 @@ export default function Dashboard() {
       changeType: 'neutral',
       iconBg: 'bg-purple-100',
       iconColor: 'text-purple-600',
+      onClick: () => navigate('/plans'),
     },
     {
       icon: DollarSign,
@@ -225,6 +229,7 @@ export default function Dashboard() {
       changeType: 'positive',
       iconBg: 'bg-yellow-100',
       iconColor: 'text-yellow-600',
+      onClick: () => navigate('/revenue'),
     },
   ];
 
