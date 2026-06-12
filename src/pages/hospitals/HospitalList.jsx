@@ -278,6 +278,7 @@ export default function HospitalList() {
       <DataTable
         columns={columns}
         data={hospitals}
+        onRowClick={(row) => navigate(`/hospitals/${row.id || row._id}`)}
         loading={loading}
         searchable
         searchValue={search}

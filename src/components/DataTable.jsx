@@ -153,7 +153,7 @@ export default function DataTable({
               filteredData.map((row, rowIdx) => (
                 <tr
                   key={row.id || row._id || rowIdx}
-                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  onClick={onRowClick ? (e) => { if (!e.target.closest('a, button, input, select, [role="button"]')) onRowClick(row); } : undefined}
                   className={`hover:bg-gray-50 text-sm ${onRowClick ? 'cursor-pointer' : ''}`}
                 >
                   {columns.map((col) => {
