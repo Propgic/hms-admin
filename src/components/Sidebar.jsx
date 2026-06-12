@@ -226,7 +226,7 @@ export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
         <div className="mx-5 mt-2 border-t border-slate-100 dark:border-slate-800" />
 
         {/* Menu */}
-        <div ref={navScrollRef} className="flex-1 min-h-0 overflow-y-auto py-3">
+        <div ref={navScrollRef} className="flex-1 min-h-0 overflow-y-auto py-3 sidenav-icons">
           {filteredSections.map((section) => (
               <div key={section.header} className="mb-2">
                 {!collapsed && section.header && (

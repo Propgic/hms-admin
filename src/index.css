@@ -262,6 +262,18 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 @keyframes dash-beat   { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.18); } 30% { transform: scale(1); } 45% { transform: scale(1.1); } }
 @keyframes dash-swing  { 0%, 100% { transform: rotate(0deg); } 20% { transform: rotate(9deg); } 45% { transform: rotate(-7deg); } 70% { transform: rotate(4deg); } }
 
+/* Active sidebar tab — gently pulse its icon so the current page stands out. */
+@media (prefers-reduced-motion: no-preference) {
+  .sidenav-icons [aria-current="page"] svg {
+    transform-origin: center;
+    animation: nav-active-pulse 1.6s ease-in-out infinite;
+  }
+}
+@keyframes nav-active-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18); }
+}
+
 .auth-cta {
   box-shadow:
     0 10px 30px -10px rgba(37, 99, 235, 0.6),     /* blue-600 */
