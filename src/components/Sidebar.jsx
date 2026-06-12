@@ -1,6 +1,6 @@
 import { Sidebar as ProSidebar } from 'react-pro-sidebar';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard, Building2, CreditCard, Receipt, HelpCircle, ScrollText,
   BarChart3, Settings, ChevronsLeft, ChevronsRight, Ticket, FileText,
@@ -132,6 +132,15 @@ export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
   const isActive = (path) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
+  // Keep the active nav item visible — scroll the highlighted item into view on
+  // route change so items low in the list (e.g. Access Management) aren't left
+  // below the fold.
+  const navScrollRef = useRef(null);
+  useEffect(() => {
+    const el = navScrollRef.current?.querySelector('[aria-current="page"]');
+    if (el) el.scrollIntoView({ block: 'nearest' });
+  }, [location.pathname]);
+
   const palette = isDark
     ? {
         bg: '#0b1220',
@@ -217,7 +226,7 @@ export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
         <div className="mx-5 mt-2 border-t border-slate-100 dark:border-slate-800" />
 
         {/* Menu */}
-        <div className="flex-1 min-h-0 overflow-y-auto py-3">
+        <div ref={navScrollRef} className="flex-1 min-h-0 overflow-y-auto py-3">
           {filteredSections.map((section) => (
               <div key={section.header} className="mb-2">
                 {!collapsed && section.header && (
