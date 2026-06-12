@@ -243,13 +243,14 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 @media (prefers-reduced-motion: no-preference) {
   .dash-anim-icons :is(
     .lucide-users, .lucide-user-plus, .lucide-stethoscope, .lucide-building-2,
-    .lucide-building, .lucide-layers, .lucide-life-buoy, .lucide-file-text, .lucide-key-round
+    .lucide-building, .lucide-layers, .lucide-life-buoy, .lucide-file-text, .lucide-key-round,
+    .lucide-pie-chart, .lucide-bar-chart-3, .lucide-trending-up, .lucide-trending-down
   ) { transform-origin: center; will-change: transform; animation: dash-float 2.2s ease-in-out infinite; }
 
   .dash-anim-icons :is(.lucide-calendar, .lucide-calendar-clock, .lucide-calendar-days, .lucide-clock) {
     transform-origin: center; will-change: transform; animation: dash-wiggle 1.8s ease-in-out infinite;
   }
-  .dash-anim-icons :is(.lucide-dollar-sign, .lucide-indian-rupee, .lucide-credit-card, .lucide-receipt, .lucide-repeat, .lucide-activity) {
+  .dash-anim-icons :is(.lucide-dollar-sign, .lucide-indian-rupee, .lucide-credit-card, .lucide-receipt, .lucide-repeat, .lucide-activity, .lucide-piggy-bank) {
     transform-origin: center; will-change: transform; animation: dash-beat 1.5s ease-in-out infinite;
   }
   .dash-anim-icons :is(.lucide-bell, .lucide-alert-triangle, .lucide-triangle-alert, .lucide-megaphone, .lucide-ticket) {
