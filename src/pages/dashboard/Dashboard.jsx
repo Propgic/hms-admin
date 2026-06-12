@@ -366,7 +366,8 @@ export default function Dashboard() {
                 {recentData.map((h, i) => (
                   <tr
                     key={h.id || h._id}
-                    className="hover:bg-gray-50 text-sm row-stagger"
+                    onClick={() => navigate(`/hospitals/${h.id || h._id}`)}
+                    className="hover:bg-gray-50 text-sm row-stagger cursor-pointer"
                     style={{ animationDelay: `${i * 60}ms` }}
                   >
                     <td className="px-4 py-3 font-medium text-gray-900">{h.name}</td>
