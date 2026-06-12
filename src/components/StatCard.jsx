@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 // Modern stat card — replaces the flat-white look with a layered surface:
 // soft branded shadow, subtle gradient overlay, and an icon chip with an
@@ -122,11 +122,6 @@ export default function StatCard({
           </div>
         )}
       </div>
-      {clickable && (
-        <span className="absolute bottom-3 right-3 z-10 text-slate-300 dark:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
-          <ArrowRight className="w-4 h-4" />
-        </span>
-      )}
     </div>
   );
 }
