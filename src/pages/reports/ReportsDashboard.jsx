@@ -7,6 +7,7 @@ import { TrendingUp, DollarSign, Building2, CreditCard, Repeat, Activity, Users,
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import StatCard from '../../components/StatCard';
+import MetricInfoModal from './MetricInfoModal';
 import Card from '../../components/ui/Card';
 import Spinner from '../../components/ui/Spinner';
 import { AreaGradient, BarGradient, CustomTooltip, ChartEmpty, isEmpty } from '../../components/charts/ChartPrimitives';
@@ -35,6 +36,7 @@ export default function ReportsDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activePieIdx, setActivePieIdx] = useState(0);
+  const [infoMetric, setInfoMetric] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -72,10 +74,10 @@ export default function ReportsDashboard() {
   const movement = mrr?.movement || [];
 
   const statCards = [
-    { icon: DollarSign, label: 'Total Revenue', value: overview?.totalRevenue ?? formatCurrency(0), change: overview?.revenueGrowth ?? '', changeType: 'positive', iconBg: 'bg-green-100', iconColor: 'text-green-600' },
-    { icon: Building2, label: 'Total Hospitals', value: overview?.totalHospitals ?? 0, change: overview?.hospitalGrowth ?? '', changeType: 'positive', iconBg: 'bg-blue-100', iconColor: 'text-blue-600' },
-    { icon: CreditCard, label: 'Avg Revenue / Hospital', value: overview?.avgRevenue ?? formatCurrency(0), change: overview?.avgGrowth ?? '', changeType: 'positive', iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
-    { icon: TrendingUp, label: 'Churn Rate', value: overview?.churnRate ?? '0%', change: overview?.churnChange ?? '', changeType: 'positive', iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600' },
+    { icon: DollarSign, label: 'Total Revenue', value: overview?.totalRevenue ?? formatCurrency(0), change: overview?.revenueGrowth ?? '', changeType: 'positive', iconBg: 'bg-green-100', iconColor: 'text-green-600', onClick: () => setInfoMetric('totalRevenue') },
+    { icon: Building2, label: 'Total Hospitals', value: overview?.totalHospitals ?? 0, change: overview?.hospitalGrowth ?? '', changeType: 'positive', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', onClick: () => setInfoMetric('totalHospitals') },
+    { icon: CreditCard, label: 'Avg Revenue / Hospital', value: overview?.avgRevenue ?? formatCurrency(0), change: overview?.avgGrowth ?? '', changeType: 'positive', iconBg: 'bg-purple-100', iconColor: 'text-purple-600', onClick: () => setInfoMetric('avgRevenue') },
+    { icon: TrendingUp, label: 'Churn Rate', value: overview?.churnRate ?? '0%', change: overview?.churnChange ?? '', changeType: 'positive', iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600', onClick: () => setInfoMetric('churnRate') },
   ];
 
   return (
@@ -97,6 +99,7 @@ export default function ReportsDashboard() {
               changeType={mrr.mrrDeltaPct >= 0 ? 'positive' : 'negative'}
               iconBg="bg-emerald-100"
               iconColor="text-emerald-600"
+              onClick={() => setInfoMetric('mrr')}
             />
             <StatCard
               icon={PiggyBank}
@@ -106,6 +109,7 @@ export default function ReportsDashboard() {
               changeType="neutral"
               iconBg="bg-blue-100"
               iconColor="text-blue-600"
+              onClick={() => setInfoMetric('arr')}
             />
             <StatCard
               icon={Users}
@@ -115,6 +119,7 @@ export default function ReportsDashboard() {
               changeType="neutral"
               iconBg="bg-purple-100"
               iconColor="text-purple-600"
+              onClick={() => setInfoMetric('arpu')}
             />
             <StatCard
               icon={Activity}
@@ -124,6 +129,7 @@ export default function ReportsDashboard() {
               changeType={mrr.revenueChurnRate <= 5 ? 'positive' : 'negative'}
               iconBg="bg-yellow-100"
               iconColor="text-yellow-600"
+              onClick={() => setInfoMetric('ltv')}
             />
           </div>
 
@@ -287,6 +293,13 @@ export default function ReportsDashboard() {
           </div>
         </Card>
       </div>
+
+      <MetricInfoModal
+        metric={infoMetric}
+        overview={overview}
+        mrr={mrr}
+        onClose={() => setInfoMetric(null)}
+      />
     </div>
   );
 }
