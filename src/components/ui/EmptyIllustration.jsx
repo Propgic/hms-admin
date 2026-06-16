@@ -18,50 +18,40 @@ const palette = {
   paper:   '#ffffff',
 };
 
-// ── 1. NoPatients — Empty waiting room with chairs + plant ────────────────
+// ── 1. NoPatients — Staff ID badge swinging on a lanyard ──────────────────
 function NoPatients({ size = 220 }) {
   return (
     <svg viewBox="0 0 320 240" width={size} height={size * 0.75} xmlns="http://www.w3.org/2000/svg">
-      {/* wall */}
-      <rect width="320" height="180" fill={palette.amber[100]} opacity="0.5" rx="12" />
-      {/* floor line */}
-      <rect y="180" width="320" height="60" fill={palette.slate[100]} rx="6" />
-      <line x1="0" y1="180" x2="320" y2="180" stroke={palette.slate[300]} strokeWidth="1.5" />
-      {/* clock */}
-      <circle cx="160" cy="50" r="22" fill={palette.paper} stroke={palette.slate[300]} strokeWidth="2" />
-      <circle cx="160" cy="50" r="2" fill={palette.slate[700]} />
-      <line x1="160" y1="50" x2="160" y2="36" stroke={palette.slate[700]} strokeWidth="2" strokeLinecap="round" />
-      <line x1="160" y1="50" x2="170" y2="50" stroke={palette.slate[700]} strokeWidth="1.5" strokeLinecap="round" />
-      {/* chair 1 */}
-      <g>
-        <rect x="50" y="110" width="46" height="14" rx="3" fill={palette.teal[500]} />
-        <rect x="55" y="124" width="36" height="56" fill={palette.teal[600]} />
-        <rect x="55" y="124" width="36" height="6" fill={palette.teal[700]} opacity="0.4" />
-        <rect x="56" y="170" width="6" height="20" fill={palette.slate[700]} />
-        <rect x="84" y="170" width="6" height="20" fill={palette.slate[700]} />
+      {/* floor shadow */}
+      <ellipse cx="160" cy="216" rx="64" ry="7" fill={palette.slate[300]} opacity="0.35" />
+      {/* lanyard clip — the fixed pivot the badge swings from */}
+      <rect x="154" y="24" width="12" height="11" rx="2" fill={palette.slate[400]} />
+      <rect x="149" y="33" width="22" height="8" rx="3" fill={palette.slate[700]} />
+      {/* swinging badge + straps (pendulum pivot at the clip ~160,42) */}
+      <g className="es-sway" style={{ transformBox: 'view-box', transformOrigin: '160px 42px' }}>
+        {/* lanyard straps */}
+        <path d="M157 39 L 130 84 L 139 89 L 160 48 Z" fill={palette.teal[500]} />
+        <path d="M163 39 L 190 84 L 181 89 L 160 48 Z" fill={palette.teal[600]} />
+        {/* badge card */}
+        <rect x="114" y="80" width="92" height="118" rx="12" fill={palette.paper} stroke={palette.slate[200]} strokeWidth="1.5" />
+        {/* card header */}
+        <path d="M114 92 a12 12 0 0 1 12 -12 H194 a12 12 0 0 1 12 12 V104 H114 Z" fill={palette.teal[500]} />
+        {/* lanyard slot */}
+        <rect x="150" y="86" width="20" height="5" rx="2.5" fill={palette.paper} opacity="0.7" />
+        {/* avatar disc */}
+        <circle cx="160" cy="136" r="23" fill={palette.teal[100]} stroke={palette.teal[300]} strokeWidth="1.5" />
+        {/* person silhouette */}
+        <circle cx="160" cy="129" r="7" fill={palette.teal[600]} />
+        <path d="M148 156 a 12 10 0 0 1 24 0 Z" fill={palette.teal[600]} />
+        {/* name + role placeholder lines */}
+        <rect x="128" y="170" width="64" height="7" rx="3.5" fill={palette.slate[200]} />
+        <rect x="138" y="183" width="44" height="6" rx="3" fill={palette.slate[200]} />
       </g>
-      {/* chair 2 */}
-      <g>
-        <rect x="137" y="110" width="46" height="14" rx="3" fill={palette.teal[500]} />
-        <rect x="142" y="124" width="36" height="56" fill={palette.teal[600]} />
-        <rect x="142" y="124" width="36" height="6" fill={palette.teal[700]} opacity="0.4" />
-        <rect x="143" y="170" width="6" height="20" fill={palette.slate[700]} />
-        <rect x="171" y="170" width="6" height="20" fill={palette.slate[700]} />
+      {/* floating "add person" plus — gentle bob */}
+      <g className="es-bob es-d2">
+        <circle cx="244" cy="78" r="15" fill={palette.cyan[500]} />
+        <path d="M244 71 v 14 M237 78 h 14" stroke={palette.paper} strokeWidth="3" strokeLinecap="round" />
       </g>
-      {/* chair 3 */}
-      <g>
-        <rect x="224" y="110" width="46" height="14" rx="3" fill={palette.teal[500]} />
-        <rect x="229" y="124" width="36" height="56" fill={palette.teal[600]} />
-        <rect x="229" y="124" width="36" height="6" fill={palette.teal[700]} opacity="0.4" />
-        <rect x="230" y="170" width="6" height="20" fill={palette.slate[700]} />
-        <rect x="258" y="170" width="6" height="20" fill={palette.slate[700]} />
-      </g>
-      {/* plant pot (right) */}
-      <path d="M280 195 L 305 195 L 300 220 L 285 220 Z" fill={palette.rose[300]} />
-      <path d="M283 195 C 278 175, 290 165, 295 175 C 305 168, 310 180, 300 192" fill={palette.green[400]} />
-      <ellipse cx="290" cy="178" rx="6" ry="9" fill={palette.green[200]} transform="rotate(-25 290 178)" />
-      {/* tiny floor shadow */}
-      <ellipse cx="160" cy="218" rx="120" ry="4" fill={palette.slate[300]} opacity="0.3" />
     </svg>
   );
 }
@@ -88,7 +78,7 @@ function NoAppointments({ size = 220 }) {
         )}
       </g>
       {/* sleeping moon (perched on calendar top right) */}
-      <g>
+      <g className="es-bob">
         <path d="M205 65 a 28 28 0 1 0 28 28 a 22 22 0 0 1 -28 -28 z" fill={palette.amber[300]} stroke={palette.amber[500]} strokeWidth="1.5" />
         {/* sleeping eyes */}
         <path d="M210 88 q 4 -4 8 0" stroke={palette.slate[900]} strokeWidth="2" fill="none" strokeLinecap="round" />
@@ -96,10 +86,10 @@ function NoAppointments({ size = 220 }) {
         {/* small smile */}
         <path d="M214 96 q 4 4 8 0" stroke={palette.slate[900]} strokeWidth="1.5" fill="none" strokeLinecap="round" />
       </g>
-      {/* zzz */}
-      <text x="248" y="62" fontSize="14" fontWeight="700" fill={palette.cyan[600]}>z</text>
-      <text x="262" y="48" fontSize="18" fontWeight="700" fill={palette.cyan[600]}>z</text>
-      <text x="280" y="32" fontSize="22" fontWeight="700" fill={palette.cyan[600]}>z</text>
+      {/* zzz — drift up and fade in sequence */}
+      <text className="es-zzz es-d1" x="248" y="62" fontSize="14" fontWeight="700" fill={palette.cyan[600]}>z</text>
+      <text className="es-zzz es-d2" x="262" y="48" fontSize="18" fontWeight="700" fill={palette.cyan[600]}>z</text>
+      <text className="es-zzz es-d3" x="280" y="32" fontSize="22" fontWeight="700" fill={palette.cyan[600]}>z</text>
     </svg>
   );
 }
@@ -120,17 +110,23 @@ function NoPrescriptions({ size = 220 }) {
       <rect x="100" y="120" width="120" height="4" rx="2" fill={palette.slate[200]} />
       <rect x="100" y="135" width="100" height="4" rx="2" fill={palette.slate[200]} />
       <rect x="100" y="150" width="80"  height="4" rx="2" fill={palette.slate[200]} />
-      {/* big check circle */}
-      <circle cx="200" cy="180" r="22" fill={palette.teal[500]} />
-      <path d="M190 181 l 7 7 l 14 -14" fill="none" stroke={palette.paper} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-      {/* floating pills */}
-      <g transform="translate(40, 145) rotate(-15)">
-        <rect width="42" height="18" rx="9" fill={palette.rose[300]} />
-        <rect width="21" height="18" rx="9" fill={palette.rose[200]} />
+      {/* big check circle — gentle approval pulse */}
+      <g className="es-pulse">
+        <circle cx="200" cy="180" r="22" fill={palette.teal[500]} />
+        <path d="M190 181 l 7 7 l 14 -14" fill="none" stroke={palette.paper} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
       </g>
-      <g transform="translate(248, 70) rotate(20)">
-        <circle cx="10" cy="10" r="10" fill={palette.cyan[300]} />
-        <path d="M2 10 h 16" stroke={palette.paper} strokeWidth="1.5" />
+      {/* floating pills (wrapped so the bob doesn't clobber their position) */}
+      <g className="es-bob es-d1">
+        <g transform="translate(40, 145) rotate(-15)">
+          <rect width="42" height="18" rx="9" fill={palette.rose[300]} />
+          <rect width="21" height="18" rx="9" fill={palette.rose[200]} />
+        </g>
+      </g>
+      <g className="es-bob-slow es-d2">
+        <g transform="translate(248, 70) rotate(20)">
+          <circle cx="10" cy="10" r="10" fill={palette.cyan[300]} />
+          <path d="M2 10 h 16" stroke={palette.paper} strokeWidth="1.5" />
+        </g>
       </g>
     </svg>
   );
@@ -150,7 +146,7 @@ function NoLabResults({ size = 220 }) {
       <ellipse cx="220" cy="174" rx="14" ry="4" fill={palette.hair.dark} />
       {/* test tubes (clear, empty) */}
       {[100, 160, 220].map((cx, i) => (
-        <g key={i}>
+        <g key={i} className={`es-bob es-d${i + 1}`}>
           {/* tube body */}
           <path
             d={`M${cx - 12} 80 v 90 a 12 12 0 0 0 24 0 v -90 z`}
@@ -163,10 +159,10 @@ function NoLabResults({ size = 220 }) {
           <rect x={cx - 14} y="78" width="28" height="6" rx="2" fill={palette.cyan[500]} />
         </g>
       ))}
-      {/* floating bubble (single, sad) */}
-      <circle cx="160" cy="60" r="6" fill={palette.cyan[300]} opacity="0.6" />
-      <circle cx="178" cy="46" r="4" fill={palette.cyan[300]} opacity="0.5" />
-      <circle cx="142" cy="44" r="3" fill={palette.cyan[300]} opacity="0.5" />
+      {/* floating bubbles — rise and fade */}
+      <circle className="es-rise es-d1" cx="160" cy="60" r="6" fill={palette.cyan[300]} />
+      <circle className="es-rise es-d2" cx="178" cy="46" r="4" fill={palette.cyan[300]} />
+      <circle className="es-rise es-d3" cx="142" cy="44" r="3" fill={palette.cyan[300]} />
     </svg>
   );
 }
@@ -176,7 +172,8 @@ function NoNotifications({ size = 220 }) {
   return (
     <svg viewBox="0 0 320 240" width={size} height={size * 0.75} xmlns="http://www.w3.org/2000/svg">
       <ellipse cx="160" cy="218" rx="80" ry="6" fill={palette.slate[300]} opacity="0.35" />
-      {/* bell tilted slightly (asleep) */}
+      {/* bell tilted slightly (asleep) — gently rocking */}
+      <g className="es-sway">
       <g transform="translate(160, 130) rotate(-8)">
         {/* bell body */}
         <path
@@ -200,10 +197,11 @@ function NoNotifications({ size = 220 }) {
         <circle cx="-30" cy="14" r="6" fill={palette.rose[300]} opacity="0.5" />
         <circle cx="30" cy="14" r="6" fill={palette.rose[300]} opacity="0.5" />
       </g>
-      {/* zzz floating up-right */}
-      <text x="216" y="118" fontSize="14" fontWeight="700" fill={palette.slate[400]}>z</text>
-      <text x="232" y="98" fontSize="18" fontWeight="700" fill={palette.slate[400]}>z</text>
-      <text x="252" y="74" fontSize="22" fontWeight="700" fill={palette.slate[400]}>z</text>
+      </g>
+      {/* zzz floating up-right — drift + fade in sequence */}
+      <text className="es-zzz es-d1" x="216" y="118" fontSize="14" fontWeight="700" fill={palette.slate[400]}>z</text>
+      <text className="es-zzz es-d2" x="232" y="98" fontSize="18" fontWeight="700" fill={palette.slate[400]}>z</text>
+      <text className="es-zzz es-d3" x="252" y="74" fontSize="22" fontWeight="700" fill={palette.slate[400]}>z</text>
     </svg>
   );
 }
@@ -216,8 +214,8 @@ function NoInvoices({ size = 220 }) {
       {/* printer body */}
       <rect x="80" y="100" width="160" height="80" rx="10" fill={palette.slate[200]} stroke={palette.slate[400]} strokeWidth="1.5" />
       <rect x="80" y="100" width="160" height="20" rx="10" fill={palette.slate[300]} />
-      {/* small power LED */}
-      <circle cx="100" cy="110" r="3" fill={palette.green[400]} />
+      {/* small power LED — blinking */}
+      <circle className="es-blink" cx="100" cy="110" r="3" fill={palette.green[400]} />
       {/* paper slot */}
       <rect x="100" y="134" width="120" height="6" rx="3" fill={palette.slate[400]} />
       {/* paper hanging out (empty / blank) */}
@@ -227,11 +225,15 @@ function NoInvoices({ size = 220 }) {
       <line x1="120" y1="184" x2="190" y2="184" stroke={palette.slate[200]} strokeWidth="1.5" strokeDasharray="3 4" />
       {/* zigzag perforated bottom */}
       <path d="M100 200 L 110 208 L 120 200 L 130 208 L 140 200 L 150 208 L 160 200 L 170 208 L 180 200 L 190 208 L 200 200 L 210 208 L 220 200" fill="none" stroke={palette.slate[300]} strokeWidth="1.5" />
-      {/* tiny coin floating to suggest "money" */}
-      <circle cx="60" cy="80" r="14" fill={palette.amber[300]} stroke={palette.amber[500]} strokeWidth="1.5" />
-      <text x="55" y="86" fontSize="14" fontWeight="700" fill={palette.amber[500]}>₹</text>
-      <circle cx="270" cy="60" r="10" fill={palette.amber[300]} stroke={palette.amber[500]} strokeWidth="1.5" opacity="0.7" />
-      <text x="266" y="65" fontSize="11" fontWeight="700" fill={palette.amber[500]} opacity="0.8">₹</text>
+      {/* tiny coins floating to suggest "money" */}
+      <g className="es-bob es-d1">
+        <circle cx="60" cy="80" r="14" fill={palette.amber[300]} stroke={palette.amber[500]} strokeWidth="1.5" />
+        <text x="55" y="86" fontSize="14" fontWeight="700" fill={palette.amber[500]}>₹</text>
+      </g>
+      <g className="es-bob-slow es-d2">
+        <circle cx="270" cy="60" r="10" fill={palette.amber[300]} stroke={palette.amber[500]} strokeWidth="1.5" opacity="0.7" />
+        <text x="266" y="65" fontSize="11" fontWeight="700" fill={palette.amber[500]} opacity="0.8">₹</text>
+      </g>
     </svg>
   );
 }
@@ -274,10 +276,10 @@ function NotFound({ size = 220 }) {
       {/* cheeks */}
       <circle cx="118" cy="142" r="9" fill={palette.rose[300]} opacity="0.5" />
       <circle cx="202" cy="142" r="9" fill={palette.rose[300]} opacity="0.5" />
-      {/* floating question marks */}
-      <text x="40"  y="80"  fontSize="32" fontWeight="800" fill={palette.cyan[500]}>?</text>
-      <text x="250" y="60"  fontSize="40" fontWeight="800" fill={palette.teal[500]}>?</text>
-      <text x="270" y="130" fontSize="22" fontWeight="800" fill={palette.cyan[600]} opacity="0.7">?</text>
+      {/* floating question marks — bob in sequence */}
+      <text className="es-bob es-d1" x="40"  y="80"  fontSize="32" fontWeight="800" fill={palette.cyan[500]}>?</text>
+      <text className="es-bob es-d2" x="250" y="60"  fontSize="40" fontWeight="800" fill={palette.teal[500]}>?</text>
+      <text className="es-bob es-d3" x="270" y="130" fontSize="22" fontWeight="800" fill={palette.cyan[600]} opacity="0.7">?</text>
     </svg>
   );
 }
@@ -314,8 +316,9 @@ function NetworkError({ size = 220 }) {
       {/* stethoscope ear pieces (above chest piece) */}
       <path d="M160 148 C 180 130, 200 130, 210 145" fill="none" stroke={palette.slate[700]} strokeWidth="3" />
       <path d="M160 148 C 140 130, 120 130, 110 145" fill="none" stroke={palette.slate[700]} strokeWidth="3" />
-      {/* zigzag "disconnect" bolt between outlet and plug */}
+      {/* zigzag "disconnect" bolt between outlet and plug — blinking */}
       <path
+        className="es-blink"
         d="M115 100 L 110 110 L 117 110 L 110 122"
         stroke={palette.rose[500]}
         strokeWidth="3"
@@ -323,8 +326,8 @@ function NetworkError({ size = 220 }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* x mark above */}
-      <g transform="translate(96, 40)">
+      {/* x mark above — blinking alert */}
+      <g className="es-blink" transform="translate(96, 40)">
         <circle r="14" fill={palette.rose[500]} />
         <path d="M -6 -6 L 6 6 M 6 -6 L -6 6" stroke={palette.paper} strokeWidth="2.5" strokeLinecap="round" />
       </g>

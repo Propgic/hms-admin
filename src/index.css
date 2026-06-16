@@ -284,3 +284,32 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     0 14px 40px -12px rgba(67, 56, 202, 0.55),    /* indigo-700 */
     0 0 0 1px rgba(255,255,255,0.1) inset;
 }
+
+/* ── Empty-state illustration micro-animations ───────────────────────────
+   GIF-like loops for the inline-SVG empty states (no binary assets). Applied
+   to sub-elements of EmptyIllustration; positioned elements are wrapped in a
+   fresh <g> so the bob/scale doesn't clobber their transform. Gated on
+   reduced-motion. Kept in sync with the hms app. */
+@media (prefers-reduced-motion: no-preference) {
+  .es-bob, .es-bob-slow, .es-sway, .es-pulse, .es-rise, .es-zzz {
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: transform, opacity;
+  }
+  .es-bob       { animation: es-bob-kf 1.4s ease-in-out infinite; }
+  .es-bob-slow  { animation: es-bob-kf 1.9s ease-in-out infinite; }
+  .es-sway      { animation: es-sway-kf 1.5s ease-in-out infinite; }
+  .es-pulse     { animation: es-pulse-kf 1.1s ease-in-out infinite; }
+  .es-rise      { animation: es-rise-kf 1.7s ease-in-out infinite; }
+  .es-zzz       { animation: es-zzz-kf 1.7s ease-in-out infinite; }
+  .es-blink     { animation: es-blink-kf 1s ease-in-out infinite; }
+  .es-d1 { animation-delay: 0s; }
+  .es-d2 { animation-delay: .28s; }
+  .es-d3 { animation-delay: .56s; }
+}
+@keyframes es-bob-kf   { 0%,100% { transform: translateY(0); }      50% { transform: translateY(-11px); } }
+@keyframes es-sway-kf  { 0%,100% { transform: rotate(-9deg); }      50% { transform: rotate(9deg); } }
+@keyframes es-pulse-kf { 0%,100% { transform: scale(1); }           50% { transform: scale(1.16); } }
+@keyframes es-rise-kf  { 0% { transform: translateY(6px); opacity: .15; } 45% { opacity: .9; } 100% { transform: translateY(-18px); opacity: 0; } }
+@keyframes es-zzz-kf   { 0% { transform: translateY(6px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(-14px); opacity: 0; } }
+@keyframes es-blink-kf { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
