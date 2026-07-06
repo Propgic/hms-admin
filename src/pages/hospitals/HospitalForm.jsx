@@ -9,6 +9,7 @@ import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import DatePicker from '../../components/ui/DatePicker';
 import Select from '../../components/ui/Select';
+import LocationSelect from '../../components/LocationSelect';
 import Button from '../../components/ui/Button';
 import { nameField, optionalNameField, phoneField, pincodeField, blockDigits, allowDigitsOnly, allowPhoneChars } from '../../utils/validators';
 
@@ -26,6 +27,7 @@ const schema = z.object({
   email: z.string().email('Invalid email'),
   phone: phoneField(),
   address: z.string().min(5, 'Address is required'),
+  country: z.string().optional().or(z.literal('')),
   city: nameField('City'),
   state: nameField('State'),
   pincode: pincodeField(),
@@ -54,6 +56,7 @@ const STATUS_OPTIONS = [
 export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [plans, setPlans] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [fullHospital, setFullHospital] = useState(null);
   const isEditing = !!hospital;
 
@@ -68,7 +71,7 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: '', slug: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
+      name: '', slug: '', email: '', phone: '', address: '', country: 'India', city: '', state: '', pincode: '',
       planId: '', gstin: '', isActive: true, isTrial: false, trialEndsAt: '',
       adminName: '', adminEmail: '', adminPassword: '',
     },
@@ -93,6 +96,12 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
           setPlans(list.map((p) => ({ value: p.id || p._id, label: p.name })));
         })
         .catch(() => { toast.error('Could not load plans'); setPlans([]); });
+      api.get(endpoints.settings.locations)
+        .then((res) => {
+          const list = res.data.data || res.data;
+          setLocations(Array.isArray(list) ? list : []);
+        })
+        .catch(() => setLocations([]));
     }
   }, [isOpen]);
 
@@ -115,6 +124,7 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
         email: source.email || '',
         phone: source.phone || '',
         address: source.address || '',
+        country: source.country || 'India',
         city: source.city || '',
         state: source.state || '',
         pincode: source.pincode || '',
@@ -214,17 +224,17 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
           <div className="col-span-2">
             <Input label="Address" error={errors.address?.message} {...register('address')} />
           </div>
-          <Input
-            label="City"
-            error={errors.city?.message}
-            {...register('city')}
-            onKeyDown={blockDigits}
-          />
-          <Input
-            label="State"
-            error={errors.state?.message}
-            {...register('state')}
-            onKeyDown={blockDigits}
+          <LocationSelect
+            locations={locations}
+            country={watch('country')}
+            state={watch('state')}
+            city={watch('city')}
+            errors={{ state: errors.state?.message, city: errors.city?.message }}
+            onChange={({ country, state, city }) => {
+              setValue('country', country, { shouldDirty: true });
+              setValue('state', state, { shouldDirty: true, shouldValidate: true });
+              setValue('city', city, { shouldDirty: true, shouldValidate: true });
+            }}
           />
           <Input
             label="Pincode"

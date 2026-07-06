@@ -14,7 +14,7 @@ import StatCard from '../../components/StatCard';
 import { formatCurrency } from '../../utils/formatters';
 import { useAuth } from '../../hooks/useAuth';
 
-const HMS_TENANT_URL = import.meta.env.VITE_HMS_URL || 'http://localhost:3004';
+const HMS_TENANT_URL = import.meta.env.VITE_HMS_URL || 'http://localhost:7006';
 
 export default function HospitalDetail() {
   const { id } = useParams();

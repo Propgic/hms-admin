@@ -1,7 +1,7 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const RAW_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const RAW_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7007/api/v1';
 // Strip the /api/v1 suffix when present so we can hit /auth/refresh-token on
 // the same origin without double-prefixing. baseURL keeps /api/v1.
 const API_ORIGIN = RAW_BASE.replace(/\/api\/v\d+\/?$/, '');

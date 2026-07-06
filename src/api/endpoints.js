@@ -147,6 +147,8 @@ const endpoints = {
     changePassword: `${PLATFORM}/settings/profile/password`,
     platform: `${PLATFORM}/settings/platform`,
     updatePlatform: `${PLATFORM}/settings/platform`,
+    locations: `${PLATFORM}/settings/locations`,
+    updateLocations: `${PLATFORM}/settings/locations`,
   },
 };
 

@@ -3,14 +3,17 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { User, Lock, Settings, Receipt, ShieldCheck } from 'lucide-react';
+import clsx from 'clsx';
+import { User, Lock, Settings, Receipt, ShieldCheck, MapPin, Plus, X, ChevronRight } from 'lucide-react';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
 import { useAuth } from '../../hooks/useAuth';
+import { useFetch } from '../../hooks/useFetch';
 import { usePlatformSettings } from '../../hooks/usePlatformSettings';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
+import LocationSelect from '../../components/LocationSelect';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import ThemeSettings from '../../components/ThemeSettings';
@@ -117,6 +120,250 @@ function extractServerError(err, fallback) {
   return data?.message || fallback;
 }
 
+// One selectable list panel (countries / states) for the locations manager.
+function LocationListPanel({
+  title, items, selected, onSelect, onRemove, canEdit,
+  draftValue, onDraftChange, onAdd, onKey, placeholder, disabled = false,
+}) {
+  return (
+    <div className="rounded-lg border border-gray-200 dark:border-slate-700 flex flex-col min-h-[16rem]">
+      <div className="px-3 py-2 border-b border-gray-100 dark:border-slate-800 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+        {title}
+      </div>
+      <div className="flex-1 overflow-y-auto max-h-72 p-1.5 space-y-0.5">
+        {disabled ? (
+          <p className="text-xs text-gray-400 dark:text-slate-500 italic px-2 py-3">{placeholder.empty}</p>
+        ) : items.length === 0 ? (
+          <p className="text-xs text-gray-400 dark:text-slate-500 italic px-2 py-3">Nothing yet.</p>
+        ) : (
+          items.map((name) => (
+            <div
+              key={name}
+              className={clsx(
+                'group flex items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-sm cursor-pointer',
+                selected === name
+                  ? 'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300'
+                  : 'hover:bg-gray-50 dark:hover:bg-slate-800/60 text-gray-800 dark:text-slate-200'
+              )}
+              onClick={() => onSelect(name)}
+            >
+              <span className="flex items-center gap-1.5 truncate">
+                {name}
+                {selected === name && <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
+              </span>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onRemove(name); }}
+                  className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  aria-label={`Remove ${name}`}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+      {canEdit && !disabled && (
+        <div className="flex items-center gap-1.5 p-1.5 border-t border-gray-100 dark:border-slate-800">
+          <input
+            className="flex-1 rounded-md border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder={placeholder.add}
+            value={draftValue}
+            onChange={onDraftChange}
+            onKeyDown={onKey(onAdd)}
+          />
+          <Button type="button" size="sm" onClick={onAdd}><Plus className="w-4 h-4" /> Add</Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Global Country → State → City master editor. Feeds the location dropdowns on
+// the hospital and company-identity forms. Same drill-down UX as the tenant app.
+function LocationsCard({ canEdit }) {
+  const [tree, setTree] = useState([]);
+  const [selCountry, setSelCountry] = useState('');
+  const [selState, setSelState] = useState('');
+  const [drafts, setDrafts] = useState({ country: '', state: '', city: '' });
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.get(endpoints.settings.locations)
+      .then((res) => {
+        if (cancelled) return;
+        const list = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+        setTree(list);
+        setSelCountry(list[0]?.name || '');
+      })
+      .catch((err) => { if (!cancelled) toast.error(extractServerError(err, 'Failed to load locations')); })
+      .finally(() => { if (!cancelled) setFetching(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const states = tree.find((c) => c.name === selCountry)?.states || [];
+  const cities = states.find((s) => s.name === selState)?.cities || [];
+  const setDraft = (k) => (e) => setDrafts((d) => ({ ...d, [k]: e.target.value }));
+  const exists = (list, name) => list.some((n) => n.toLowerCase() === name.toLowerCase());
+  const onKey = (fn) => (e) => { if (e.key === 'Enter') { e.preventDefault(); fn(); } };
+
+  const addCountry = () => {
+    const name = drafts.country.trim();
+    if (!name) return;
+    if (exists(tree.map((c) => c.name), name)) return toast.error(`"${name}" already exists`);
+    setTree((t) => [...t, { name, states: [] }]);
+    setSelCountry(name); setSelState('');
+    setDrafts((d) => ({ ...d, country: '' }));
+  };
+  const removeCountry = (name) => {
+    setTree((t) => t.filter((c) => c.name !== name));
+    if (selCountry === name) { setSelCountry(''); setSelState(''); }
+  };
+  const addState = () => {
+    const name = drafts.state.trim();
+    if (!name || !selCountry) return;
+    if (exists(states.map((s) => s.name), name)) return toast.error(`"${name}" already exists`);
+    setTree((t) => t.map((c) => c.name === selCountry ? { ...c, states: [...c.states, { name, cities: [] }] } : c));
+    setSelState(name);
+    setDrafts((d) => ({ ...d, state: '' }));
+  };
+  const removeState = (name) => {
+    setTree((t) => t.map((c) => c.name === selCountry ? { ...c, states: c.states.filter((s) => s.name !== name) } : c));
+    if (selState === name) setSelState('');
+  };
+  const addCity = () => {
+    const name = drafts.city.trim();
+    if (!name || !selState) return;
+    if (exists(cities, name)) return toast.error(`"${name}" already exists`);
+    setTree((t) => t.map((c) => c.name === selCountry
+      ? { ...c, states: c.states.map((s) => s.name === selState ? { ...s, cities: [...s.cities, name] } : s) }
+      : c));
+    setDrafts((d) => ({ ...d, city: '' }));
+  };
+  const removeCity = (name) => {
+    setTree((t) => t.map((c) => c.name === selCountry
+      ? { ...c, states: c.states.map((s) => s.name === selState ? { ...s, cities: s.cities.filter((ct) => ct !== name) } : s) }
+      : c));
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const res = await api.put(endpoints.settings.updateLocations, { locations: tree });
+      const saved = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+      setTree(saved);
+      if (!saved.some((c) => c.name === selCountry)) { setSelCountry(saved[0]?.name || ''); setSelState(''); }
+      toast.success('Locations saved');
+    } catch (err) {
+      toast.error(extractServerError(err, 'Failed to save locations'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalStates = tree.reduce((n, c) => n + (c.states?.length || 0), 0);
+  const totalCities = tree.reduce((n, c) => n + (c.states || []).reduce((m, s) => m + (s.cities?.length || 0), 0), 0);
+
+  return (
+    <Card className="p-5 lg:col-span-2">
+      <div className="flex items-center gap-3 mb-1">
+        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
+          <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-300" />
+        </div>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100">Locations</h2>
+      </div>
+      <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
+        Global Country / State / City list feeding the dropdowns on hospital and
+        billing forms. Pick a country to edit its states, then a state to edit its cities.
+      </p>
+      {fetching ? (
+        <div className="py-10 flex justify-center"><Spinner size="md" /></div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <LocationListPanel
+              title="Countries"
+              items={tree.map((c) => c.name)}
+              selected={selCountry}
+              onSelect={(n) => { setSelCountry(n); setSelState(''); }}
+              onRemove={removeCountry}
+              canEdit={canEdit}
+              draftValue={drafts.country}
+              onDraftChange={setDraft('country')}
+              onAdd={addCountry}
+              onKey={onKey}
+              placeholder={{ add: 'Add country', empty: '' }}
+            />
+            <LocationListPanel
+              title={selCountry ? `States · ${selCountry}` : 'States'}
+              items={states.map((s) => s.name)}
+              selected={selState}
+              onSelect={setSelState}
+              onRemove={removeState}
+              canEdit={canEdit}
+              draftValue={drafts.state}
+              onDraftChange={setDraft('state')}
+              onAdd={addState}
+              onKey={onKey}
+              placeholder={{ add: 'Add state', empty: 'Select a country first' }}
+              disabled={!selCountry}
+            />
+            <div className="rounded-lg border border-gray-200 dark:border-slate-700 flex flex-col min-h-[16rem]">
+              <div className="px-3 py-2 border-b border-gray-100 dark:border-slate-800 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                {selState ? `Cities · ${selState}` : 'Cities'}
+              </div>
+              <div className="flex-1 overflow-y-auto max-h-72 p-2">
+                {!selState ? (
+                  <p className="text-xs text-gray-400 dark:text-slate-500 italic px-1 py-2">Select a state first</p>
+                ) : cities.length === 0 ? (
+                  <p className="text-xs text-gray-400 dark:text-slate-500 italic px-1 py-2">No cities yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {cities.map((name) => (
+                      <span key={name} className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 px-2.5 py-1 text-sm text-gray-800 dark:text-slate-200">
+                        {name}
+                        {canEdit && (
+                          <button type="button" onClick={() => removeCity(name)} className="rounded-full p-0.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" aria-label={`Remove ${name}`}>
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {canEdit && selState && (
+                <div className="flex items-center gap-1.5 p-1.5 border-t border-gray-100 dark:border-slate-800">
+                  <input
+                    className="flex-1 rounded-md border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Add city"
+                    value={drafts.city}
+                    onChange={setDraft('city')}
+                    onKeyDown={onKey(addCity)}
+                  />
+                  <Button type="button" size="sm" onClick={addCity}><Plus className="w-4 h-4" /> Add</Button>
+                </div>
+              )}
+            </div>
+          </div>
+          {canEdit && (
+            <div className="mt-6 flex items-center gap-3">
+              <Button onClick={handleSave} loading={loading}>Save Locations</Button>
+              <span className="text-xs text-gray-400 dark:text-slate-500">
+                {tree.length} countries · {totalStates} states · {totalCities} cities
+              </span>
+            </div>
+          )}
+        </>
+      )}
+    </Card>
+  );
+}
+
 export default function SettingsPage() {
   const { user, updateUser, isSuperAdmin } = useAuth();
 
@@ -134,6 +381,7 @@ export default function SettingsPage() {
         <PlatformCard canEdit={isSuperAdmin} />
         <AbdmCard canEdit={isSuperAdmin} />
         <BillingCard canEdit={isSuperAdmin} />
+        <LocationsCard canEdit={isSuperAdmin} />
       </div>
     </div>
   );
@@ -266,10 +514,13 @@ function AbdmCard({ canEdit }) {
 function BillingCard({ canEdit }) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const { data: locations } = useFetch(endpoints.settings.locations);
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm({
     resolver: zodResolver(billingSchema),
@@ -340,11 +591,20 @@ function BillingCard({ canEdit }) {
             <Input label="Company Name" error={errors.companyName?.message} {...register('companyName')} />
             <Input label="GSTIN" placeholder="22AAAAA0000A1Z5" error={errors.companyGstin?.message} {...register('companyGstin')} />
             <Input label="PAN" placeholder="ABCDE1234F" error={errors.companyPan?.message} {...register('companyPan')} />
-            <Input label="Country" error={errors.companyCountry?.message} {...register('companyCountry')} />
             <div className="sm:col-span-2">
               <Input label="Registered Address" error={errors.companyAddress?.message} {...register('companyAddress')} />
             </div>
-            <Input label="State" placeholder="Karnataka" error={errors.companyState?.message} {...register('companyState')} />
+            <LocationSelect
+              locations={locations}
+              showCity={false}
+              country={watch('companyCountry')}
+              state={watch('companyState')}
+              errors={{ country: errors.companyCountry?.message, state: errors.companyState?.message }}
+              onChange={({ country, state }) => {
+                setValue('companyCountry', country, { shouldDirty: true });
+                setValue('companyState', state, { shouldDirty: true });
+              }}
+            />
             <Input label="Pincode" error={errors.companyPincode?.message} {...register('companyPincode')} />
             <Input label="Default GST Rate (%)" type="number" step="0.01" error={errors.defaultGstRate?.message} {...register('defaultGstRate')} />
             <Input label="Default HSN/SAC Code" error={errors.defaultHsnCode?.message} {...register('defaultHsnCode')} />
