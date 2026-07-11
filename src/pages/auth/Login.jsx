@@ -14,13 +14,13 @@ function friendlyLoginError(err) {
   const status = err.response?.status;
   const raw = String(err.response?.data?.message || '').toLowerCase();
   if (/invalid.*credential|incorrect|wrong.*password|email.*not.*found|user.*not.*found/.test(raw)) {
-    return 'Email or password is incorrect.';
+    return 'Email/mobile or password is incorrect.';
   }
   if (/inactive|disabled|suspended/.test(raw)) {
     return 'Your account is inactive. Contact a super admin.';
   }
   if (status === 400) return err.response.data?.message || 'Some details look off — please check and try again.';
-  if (status === 401) return 'Email or password is incorrect.';
+  if (status === 401) return 'Email/mobile or password is incorrect.';
   if (status === 403) return 'You do not have access to the operator console.';
   if (status === 429) return 'Too many attempts. Please wait a minute and try again.';
   if (status >= 500) return 'Something went wrong on our side. Please try again in a moment.';
@@ -28,7 +28,9 @@ function friendlyLoginError(err) {
 }
 
 const schema = z.object({
-  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  // Identifier may be an email OR a mobile number — the backend resolves either.
+  // Kept under the `email` key so the login payload shape is unchanged.
+  email: z.string().min(1, 'Email or mobile is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -85,14 +87,14 @@ export default function Login() {
         {/* Email */}
         <div>
           <label className="text-[11px] font-semibold text-blue-200/70 uppercase tracking-[0.12em]">
-            Professional email
+            Email or mobile
           </label>
           <div className="mt-1.5 group relative">
             <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300/50 group-focus-within:text-blue-300 transition-colors" />
             <input
-              type="email"
-              placeholder="name@hospital.com"
-              autoComplete="email"
+              type="text"
+              placeholder="name@hospital.com or mobile number"
+              autoComplete="username"
               className="w-full pl-10 pr-3 py-3 text-sm bg-white/[0.04] border border-white/10 rounded-xl text-white placeholder:text-blue-200/30 focus:outline-none focus:border-blue-400/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-blue-500/15 transition"
               {...register('email')}
               onKeyDown={clearOnKey}

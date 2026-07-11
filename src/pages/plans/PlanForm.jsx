@@ -15,24 +15,6 @@ import { usePlatformSettings } from '../../hooks/usePlatformSettings';
 
 const CYCLE_DAYS = { monthly: 30, yearly: 365 };
 
-const featuresList = [
-  'Patient Management',
-  'Appointment Scheduling',
-  'Prescription Management',
-  'Billing & Invoicing',
-  'Insurance Management',
-  'Lab & Tests',
-  'Inventory Management',
-  'Staff Management',
-  'IPD / Wards',
-  'Leads / CRM',
-  'Reports & Analytics',
-  'AI Growth Engine',
-  'AI Assistant (Ask AI)',
-  'ABDM Integration',
-  'Priority Support',
-];
-
 const legacyFeatureLabels = {
   abdm_integration: 'ABDM Integration',
 };
@@ -63,6 +45,10 @@ const schema = z.object({
 export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [features, setFeatures] = useState(() => normalizeFeatures(plan?.features));
+  // The toggleable module catalog is owned by the backend (single source of
+  // truth shared with the hospital editor) — fetch it instead of hardcoding a
+  // copy that drifts. Labels are what we store in the plan's `features` array.
+  const [moduleCatalog, setModuleCatalog] = useState([]);
   const isEditing = !!plan;
   const { currency } = usePlatformSettings();
   const currencySymbol = getCurrencySymbol(currency);
@@ -83,6 +69,19 @@ export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
   });
 
   const billingCycle = useWatch({ control, name: 'billingCycle' });
+
+  // Load the module catalog once when the form opens.
+  useEffect(() => {
+    if (!isOpen) return;
+    let active = true;
+    api.get(endpoints.plans.modules)
+      .then((res) => {
+        const data = res.data?.data || res.data;
+        if (active) setModuleCatalog(data?.modules || []);
+      })
+      .catch(() => { /* leave empty — the Features section just won't render */ });
+    return () => { active = false; };
+  }, [isOpen]);
 
   useEffect(() => {
     if (plan) {
@@ -197,8 +196,8 @@ export default function PlanForm({ isOpen, onClose, plan, onSuccess }) {
         <div>
           <p className="text-sm font-medium text-gray-700 mb-2">Features</p>
           <div className="grid grid-cols-2 gap-2">
-            {featuresList.map((f) => (
-              <label key={f} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+            {moduleCatalog.map(({ key, label: f }) => (
+              <label key={key} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
                 <div
                   onClick={() => toggleFeature(f)}
                   className={`w-9 h-5 rounded-full relative transition-colors cursor-pointer flex-shrink-0 ${

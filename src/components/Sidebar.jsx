@@ -213,11 +213,11 @@ export default function Sidebar({ collapsed, onToggle, gutter = 12 }) {
         {/* Brand */}
         <div className={clsx('pt-6 pb-4 flex items-center', collapsed ? 'justify-center' : 'px-5')}>
           <div className="flex items-center gap-1.5">
-            <img src="/trasnparent_bg_hms_logo.png" alt="Hosgic" className="w-9 h-9 object-contain" />
+            <img src="/trasnparent_bg_hms_logo.png" alt="MedNote" className="w-9 h-9 object-contain" />
             {!collapsed && (
               <span className="text-[19px] font-bold tracking-tight leading-none">
-                <span className="text-blue-600 dark:text-blue-400">Hos</span>
-                <span className="text-slate-800 dark:text-slate-100">gic</span>
+                <span className="text-blue-600 dark:text-blue-400">Med</span>
+                <span className="text-slate-800 dark:text-slate-100">Note</span>
               </span>
             )}
           </div>

@@ -55,8 +55,8 @@ function OfflinePage() {
                       <Command className="h-7 w-7" />
                     </div>
                     <span className="text-2xl font-bold tracking-tight">
-                      <span className="text-blue-300">Hos</span>
-                      <span className="text-white">gic</span>
+                      <span className="text-blue-300">Med</span>
+                      <span className="text-white">Note</span>
                     </span>
                   </div>
 
@@ -110,7 +110,7 @@ function OfflinePage() {
                   Waiting for a stable connection
                 </h2>
                 <p className="mt-4 max-w-xl text-base leading-8 text-slate-600 dark:text-slate-300">
-                  Hosgic will return to your current workspace as soon as the browser is back online.
+                  MedNote will return to your current workspace as soon as the browser is back online.
                 </p>
 
                 <div className="mt-8 grid gap-3 sm:grid-cols-3">

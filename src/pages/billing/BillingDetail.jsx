@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Wallet, Building2, Mail, CalendarDays, RefreshCw, Receipt } from 'lucide-react';
+import { ArrowLeft, Wallet, Building2, Mail, CalendarDays, RefreshCw, Receipt, RotateCw } from 'lucide-react';
 import dayjs from 'dayjs';
 import api from '../../api/axios';
 import endpoints from '../../api/endpoints';
@@ -10,6 +10,7 @@ import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import { formatCurrency } from '../../utils/formatters';
 import PaymentModal from './PaymentModal';
+import RenewModal from './RenewModal';
 
 const statusColor = (s) => ({ active: 'success', expired: 'danger', trial: 'warning', cancelled: 'gray' }[s] || 'gray');
 const paymentColor = (s) => ({ paid: 'success', partial: 'warning', advance: 'info', refunded: 'danger', pending: 'gray' }[s] || 'gray');
@@ -37,6 +38,7 @@ export default function BillingDetail() {
   const [sub, setSub] = useState(null);
   const [loading, setLoading] = useState(true);
   const [payOpen, setPayOpen] = useState(false);
+  const [renewOpen, setRenewOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -99,7 +101,10 @@ export default function BillingDetail() {
             <Mail className="w-3.5 h-3.5" /> {sub.hospital?.email || '—'}
           </p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex gap-2">
+          <Button variant="secondary" icon={RotateCw} onClick={() => setRenewOpen(true)}>
+            Renew / Change Plan
+          </Button>
           <Button icon={Wallet} onClick={() => setPayOpen(true)} disabled={effStatus === 'cancelled'}>
             Record Payment
           </Button>
@@ -186,6 +191,19 @@ export default function BillingDetail() {
         subscription={modalRow}
         onClose={() => setPayOpen(false)}
         onSuccess={load}
+      />
+
+      <RenewModal
+        isOpen={renewOpen}
+        subscription={sub}
+        onClose={() => setRenewOpen(false)}
+        onSuccess={(newSub) => {
+          // A renewal opens a NEW active period; jump to it so we're not left
+          // viewing the just-expired row. Fall back to a reload if the id is
+          // somehow unchanged.
+          if (newSub?.id && newSub.id !== sub.id) navigate(`/billing/${newSub.id}`);
+          else load();
+        }}
       />
     </div>
   );

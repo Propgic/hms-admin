@@ -11,7 +11,7 @@ import DatePicker from '../../components/ui/DatePicker';
 import Select from '../../components/ui/Select';
 import LocationSelect from '../../components/LocationSelect';
 import Button from '../../components/ui/Button';
-import { nameField, optionalNameField, phoneField, pincodeField, blockDigits, allowDigitsOnly, allowPhoneChars } from '../../utils/validators';
+import { nameField, optionalNameField, optionalPhoneField, pincodeField, blockDigits, allowDigitsOnly, allowPhoneChars } from '../../utils/validators';
 
 const SLUG_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -24,14 +24,19 @@ const schema = z.object({
     .regex(SLUG_REGEX, 'Lowercase letters, digits and hyphens only (e.g. huda-hospitals)')
     .optional()
     .or(z.literal('')),
-  email: z.string().email('Invalid email'),
-  phone: phoneField(),
+  // Email is optional — a hospital can be onboarded with just a phone, and the
+  // admin then signs in with that mobile. At least one of email/phone is
+  // required (enforced by the .refine below).
+  email: z.string().email('Invalid email').optional().or(z.literal('')),
+  phone: optionalPhoneField(),
   address: z.string().min(5, 'Address is required'),
   country: z.string().optional().or(z.literal('')),
   city: nameField('City'),
   state: nameField('State'),
   pincode: pincodeField(),
   planId: z.string().min(1, 'Please select a plan'),
+  planStartDate: z.string().optional().or(z.literal('')),
+  planEndDate: z.string().optional().or(z.literal('')),
   gstin: z.string().optional().or(z.literal('')),
   isActive: z.boolean().optional(),
   isTrial: z.boolean().optional(),
@@ -39,7 +44,15 @@ const schema = z.object({
   adminName: optionalNameField('Admin name'),
   adminEmail: z.string().email('Invalid admin email').optional().or(z.literal('')),
   adminPassword: z.string().min(6, 'Min 6 characters').optional().or(z.literal('')),
-});
+}).refine(
+  (d) => !d.planStartDate || !d.planEndDate || d.planEndDate > d.planStartDate,
+  { message: 'End date must be after the start date', path: ['planEndDate'] },
+).refine(
+  // The admin login needs an identity: require an email or a phone (either one
+  // becomes the admin's sign-in credential).
+  (d) => (d.email && d.email.trim()) || (d.phone && d.phone.trim()),
+  { message: 'Provide an email or a phone number', path: ['email'] },
+);
 
 function deriveSlug(name) {
   return String(name || '')
@@ -72,14 +85,16 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
     resolver: zodResolver(schema),
     defaultValues: {
       name: '', slug: '', email: '', phone: '', address: '', country: 'India', city: '', state: '', pincode: '',
-      planId: '', gstin: '', isActive: true, isTrial: false, trialEndsAt: '',
+      planId: '', planStartDate: '', planEndDate: '', gstin: '', isActive: true, isTrial: false, trialEndsAt: '',
       adminName: '', adminEmail: '', adminPassword: '',
     },
   });
 
   const statusValue = watch('isActive') ? 'active' : 'suspended';
   const nameValue = watch('name');
+  const planIdValue = watch('planId');
   const [slugTouched, setSlugTouched] = useState(false);
+  const [datesTouched, setDatesTouched] = useState(false);
 
   // Auto-fill slug from name on create until the user types in the slug field.
   useEffect(() => {
@@ -87,13 +102,27 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
     setValue('slug', deriveSlug(nameValue), { shouldValidate: false });
   }, [nameValue, isEditing, slugTouched, setValue]);
 
+  // Default the subscription period from the selected plan's duration
+  // (start = today, end = today + durationInDays) until the operator edits a
+  // date. On edit the existing period is loaded and marked touched below.
+  useEffect(() => {
+    if (datesTouched) return;
+    const plan = plans.find((p) => p.value === planIdValue);
+    if (!plan) return;
+    const start = new Date();
+    const end = new Date(start);
+    end.setDate(end.getDate() + (Number(plan.durationInDays) || 30));
+    setValue('planStartDate', start.toISOString().slice(0, 10), { shouldValidate: false });
+    setValue('planEndDate', end.toISOString().slice(0, 10), { shouldValidate: false });
+  }, [planIdValue, plans, datesTouched, setValue]);
+
   useEffect(() => {
     if (isOpen) {
       api.get(endpoints.plans.list, { params: { limit: 100 } })
         .then((res) => {
           const d = res.data.data || res.data;
           const list = d.plans || d.rows || d.items || (Array.isArray(d) ? d : []);
-          setPlans(list.map((p) => ({ value: p.id || p._id, label: p.name })));
+          setPlans(list.map((p) => ({ value: p.id || p._id, label: p.name, durationInDays: p.durationInDays })));
         })
         .catch(() => { toast.error('Could not load plans'); setPlans([]); });
       api.get(endpoints.settings.locations)
@@ -118,6 +147,12 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
   useEffect(() => {
     const source = fullHospital || hospital;
     if (source && isEditing) {
+      // Prefill the plan period from the current active subscription so editing
+      // shows the real dates rather than re-defaulting from the plan duration.
+      const activeSub = (source.subscriptions || []).find((s) => s.status === 'active')
+        || (source.subscriptions || [])[0] || null;
+      const toDate = (d) => (d ? new Date(d).toISOString().slice(0, 10) : '');
+      setDatesTouched(true);
       reset({
         name: source.name || '',
         slug: source.slug || '',
@@ -129,6 +164,8 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
         state: source.state || '',
         pincode: source.pincode || '',
         planId: source.planId || source.plan?.id || source.plan?._id || '',
+        planStartDate: toDate(activeSub?.startDate),
+        planEndDate: toDate(activeSub?.endDate),
         gstin: source.gstin || '',
         isActive: source.isActive !== undefined ? !!source.isActive : (source.status !== 'suspended'),
         isTrial: !!source.isTrial,
@@ -143,10 +180,11 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
     } else if (!isEditing) {
       reset({
         name: '', slug: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
-        planId: '', gstin: '', isActive: true, isTrial: false, trialEndsAt: '',
+        planId: '', planStartDate: '', planEndDate: '', gstin: '', isActive: true, isTrial: false, trialEndsAt: '',
         adminName: '', adminEmail: '', adminPassword: '',
       });
       setSlugTouched(false);
+      setDatesTouched(false);
     }
   }, [fullHospital, hospital, isEditing, reset]);
 
@@ -205,7 +243,7 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
               })}
             />
           )}
-          <Input label="Email" type="email" error={errors.email?.message} {...register('email')} />
+          <Input label="Email (optional)" type="email" error={errors.email?.message} {...register('email')} />
           <Input
             label="Phone"
             inputMode="numeric"
@@ -219,6 +257,33 @@ export default function HospitalForm({ isOpen, onClose, hospital, onSuccess }) {
             control={control}
             render={({ field }) => (
               <Select label="Plan" options={plans} placeholder="Select a plan" error={errors.planId?.message} {...field} />
+            )}
+          />
+          <div />
+          <Controller
+            control={control}
+            name="planStartDate"
+            render={({ field }) => (
+              <DatePicker
+                label="Plan Start Date"
+                value={field.value}
+                onChange={(v) => { setDatesTouched(true); field.onChange(v); }}
+                onBlur={field.onBlur}
+                error={errors.planStartDate?.message}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="planEndDate"
+            render={({ field }) => (
+              <DatePicker
+                label="Plan End Date"
+                value={field.value}
+                onChange={(v) => { setDatesTouched(true); field.onChange(v); }}
+                onBlur={field.onBlur}
+                error={errors.planEndDate?.message}
+              />
             )}
           />
           <div className="col-span-2">

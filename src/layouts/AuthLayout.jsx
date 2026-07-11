@@ -49,11 +49,11 @@ export default function AuthLayout() {
       <div className="hidden lg:flex lg:w-1/2 relative px-12 py-8 flex-col">
         {/* brand bar — match sidebar logo (blue-600 → indigo-700) */}
         <div className="flex items-center gap-1.5">
-          <img src="/trasnparent_bg_hms_logo.png" alt="Hosgic" className="w-10 h-10 object-contain" />
+          <img src="/trasnparent_bg_hms_logo.png" alt="MedNote" className="w-10 h-10 object-contain" />
           <div>
             <p className="text-base font-bold tracking-tight leading-none">
-              <span className="text-blue-300">Hos</span>
-              <span className="text-white">gic</span>
+              <span className="text-blue-300">Med</span>
+              <span className="text-white">Note</span>
             </p>
             <p className="text-[11px] text-blue-200/80 mt-0.5">Operator console</p>
           </div>
@@ -123,11 +123,11 @@ export default function AuthLayout() {
       <div className="flex-1 flex flex-col p-6 sm:p-10 lg:p-12 relative">
         {/* mobile-only brand bar — flows above the card */}
         <div className="lg:hidden flex items-center gap-1.5 mb-6">
-          <img src="/trasnparent_bg_hms_logo.png" alt="Hosgic" className="w-10 h-10 shrink-0 object-contain" />
+          <img src="/trasnparent_bg_hms_logo.png" alt="MedNote" className="w-10 h-10 shrink-0 object-contain" />
           <div>
             <p className="font-bold text-sm leading-none">
-              <span className="text-blue-300">Hos</span>
-              <span className="text-white">gic</span>
+              <span className="text-blue-300">Med</span>
+              <span className="text-white">Note</span>
             </p>
             <p className="text-[10px] text-blue-200 mt-0.5">Operator console</p>
           </div>
@@ -139,7 +139,7 @@ export default function AuthLayout() {
             <RouteTransition><Outlet /></RouteTransition>
           </div>
           <p className="mt-6 text-center text-[11px] text-blue-200/50">
-            © {new Date().getFullYear()} Hosgic · Operator Console · Secured by TLS 1.3
+            © {new Date().getFullYear()} MedNote · Operator Console · Secured by TLS 1.3
           </p>
         </div>
         </div>

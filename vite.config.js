@@ -21,6 +21,12 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), ...cssStubPlugin],
   server: {
     port: 7005,
+    // Bind 7005 or fail — never silently hop to the next free port. If this
+    // console drifts onto 7006 (the tenant app's port), the impersonation link
+    // it opens (localhost:7006/impersonate) lands back on THIS app, which has
+    // no such route, and bounces to login — the "impersonate redirects to
+    // localhost" bug.
+    strictPort: true,
     // Proxy API calls to the backend so the browser talks to a single origin
     // (localhost:7005). This keeps the httpOnly refresh cookie first-party, so
     // the silent token refresh works and users aren't logged out hourly.

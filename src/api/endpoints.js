@@ -34,8 +34,10 @@ const endpoints = {
     stats: (id) => `${PLATFORM}/hospitals/${id}/stats`,
     subscriptions: (id) => `${PLATFORM}/hospitals/${id}/subscriptions`,
     sweepExpiredTrials: `${PLATFORM}/hospitals/sweep-expired-trials`,
+    resetAdminPassword: (id) => `${PLATFORM}/hospitals/${id}/reset-admin-password`,
     accessControl: (id) => `${PLATFORM}/hospitals/${id}/access-control`,
     saveAccessRole: (id, role) => `${PLATFORM}/hospitals/${id}/access-control/${role}`,
+    modules: (id) => `${PLATFORM}/hospitals/${id}/modules`,
   },
 
   // Coupons
@@ -63,6 +65,7 @@ const endpoints = {
   // Plans
   plans: {
     list: `${PLATFORM}/plans`,
+    modules: `${PLATFORM}/plans/modules`,
     create: `${PLATFORM}/plans`,
     get: (id) => `${PLATFORM}/plans/${id}`,
     update: (id) => `${PLATFORM}/plans/${id}`,
@@ -75,6 +78,7 @@ const endpoints = {
     get: (id) => `${PLATFORM}/billing/${id}`,
     stats: `${PLATFORM}/billing/stats`,
     recordPayment: (id) => `${PLATFORM}/billing/${id}/payment`,
+    renew: (id) => `${PLATFORM}/billing/${id}/renew`,
   },
 
   // FAQs
