@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, CreditCard, Activity, Hourglass, LogIn, Hash, Receipt, Globe, BadgeCheck, User, Power, KeyRound, Copy, Check, Boxes, Save, Info, Lock, Smartphone } from 'lucide-react';
+import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, CreditCard, Activity, Hourglass, LogIn, Hash, Receipt, Globe, BadgeCheck, User, Power, KeyRound, Copy, Check, Boxes, Save, Info, Lock, Smartphone, RotateCcw, Trash2, AlertTriangle, ShieldAlert } from 'lucide-react';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
@@ -96,27 +96,26 @@ export default function HospitalDetail() {
     }
   };
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [hRes, sRes] = await Promise.allSettled([
-          api.get(endpoints.hospitals.get(id)),
-          api.get(endpoints.hospitals.stats(id)),
-        ]);
-        if (hRes.status === 'fulfilled') {
-          const h = hRes.value.data.data || hRes.value.data;
-          setHospital(h);
-          setSubscriptions(Array.isArray(h?.subscriptions) ? h.subscriptions : []);
-        }
-        if (sRes.status === 'fulfilled') setStats(sRes.value.data.data || sRes.value.data);
-      } catch {
-        // handled below with null checks
-      } finally {
-        setLoading(false);
+  const load = useCallback(async () => {
+    try {
+      const [hRes, sRes] = await Promise.allSettled([
+        api.get(endpoints.hospitals.get(id)),
+        api.get(endpoints.hospitals.stats(id)),
+      ]);
+      if (hRes.status === 'fulfilled') {
+        const h = hRes.value.data.data || hRes.value.data;
+        setHospital(h);
+        setSubscriptions(Array.isArray(h?.subscriptions) ? h.subscriptions : []);
       }
+      if (sRes.status === 'fulfilled') setStats(sRes.value.data.data || sRes.value.data);
+    } catch {
+      // handled below with null checks
+    } finally {
+      setLoading(false);
     }
-    load();
   }, [id]);
+
+  useEffect(() => { load(); }, [load]);
 
   if (loading) return <Spinner fullPage size="lg" />;
   if (!hospital) {
@@ -410,6 +409,8 @@ export default function HospitalDetail() {
         )}
       </Card>
 
+      {isSuperAdmin && <DangerZone hospitalId={id} hospital={hospital} onChanged={load} />}
+
       <Modal isOpen={resetOpen} onClose={closeResetDialog} title="Reset admin password" size="sm">
         {resetResult ? (
           <div className="space-y-4">
@@ -666,6 +667,182 @@ function ModulesCard({ hospitalId, isSuperAdmin }) {
           <Button icon={Save} onClick={save} loading={saving} disabled={!dirty}>Save Modules</Button>
         )}
       </div>
+    </Card>
+  );
+}
+
+// Destructive tenant-lifecycle actions — super-admin only (the parent gates the
+// render). Both actions require typing the hospital's exact slug (Hospital ID)
+// to arm the confirm button:
+//   • Hard reset  — POST /hard-reset: wipes every bit of tenant data and
+//                   re-provisions a fresh, empty schema. The account, plan and
+//                   subscription survive; the admin login is restored and its
+//                   new temp password is shown once.
+//   • Delete      — DELETE /:id: removes the hospital, its subscription history
+//                   and its entire database schema, then returns to the list.
+function DangerZone({ hospitalId, hospital, onChanged }) {
+  const navigate = useNavigate();
+  const [mode, setMode] = useState(null); // 'reset' | 'delete' | null
+  const [confirmText, setConfirmText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [resetResult, setResetResult] = useState(null); // { tempPassword, adminEmail } after a hard reset
+  const [copied, setCopied] = useState(false);
+
+  const slug = hospital.slug || '';
+  const armed = confirmText.trim() === slug && !!slug;
+  const isDelete = mode === 'delete';
+
+  const close = () => {
+    if (busy) return;
+    setMode(null);
+    setConfirmText('');
+    setResetResult(null);
+    setCopied(false);
+  };
+
+  const doHardReset = async () => {
+    if (!armed) return;
+    setBusy(true);
+    try {
+      const res = await api.post(endpoints.hospitals.hardReset(hospitalId));
+      setResetResult(res.data?.data || res.data);
+      toast.success('Tenant hard reset — all data wiped');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Hard reset failed');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const doDelete = async () => {
+    if (!armed) return;
+    setBusy(true);
+    try {
+      await api.delete(endpoints.hospitals.delete(hospitalId));
+      toast.success('Tenant deleted permanently');
+      navigate('/hospitals');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Delete failed');
+      setBusy(false);
+    }
+  };
+
+  // After a hard reset the modal closes and the page reloads so the stats,
+  // health and admin panels reflect the now-empty tenant.
+  const finishReset = () => {
+    close();
+    onChanged?.();
+  };
+
+  const copyTempPassword = async () => {
+    try {
+      await navigator.clipboard.writeText(resetResult?.tempPassword || '');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Could not copy — select and copy manually');
+    }
+  };
+
+  return (
+    <Card className="p-6 border border-rose-200 dark:border-rose-900/50">
+      <div className="flex items-center gap-2 mb-1">
+        <ShieldAlert className="w-4 h-4 text-rose-500" />
+        <h2 className="text-base font-semibold text-rose-700 dark:text-rose-400">Danger Zone</h2>
+      </div>
+      <p className="text-xs text-gray-500 dark:text-slate-400 mb-5">
+        Irreversible actions for this tenant. Handle with care.
+      </p>
+
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50/40 dark:bg-amber-900/10">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-900 dark:text-slate-100">Hard reset tenant</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+              Permanently wipe all data (patients, appointments, billing, staff…) and re-provision a fresh, empty workspace. The account, plan and subscription are kept, and the admin login is restored.
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            icon={RotateCcw}
+            className="shrink-0 !text-amber-700 !border-amber-300 hover:!bg-amber-50 dark:!text-amber-400 dark:!border-amber-500/40 dark:hover:!bg-amber-500/10"
+            onClick={() => { setConfirmText(''); setMode('reset'); }}
+          >
+            Hard Reset
+          </Button>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-900/10">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-900 dark:text-slate-100">Delete tenant permanently</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+              Remove the hospital, its subscription history and its entire database schema. This cannot be undone.
+            </p>
+          </div>
+          <Button variant="danger" icon={Trash2} className="shrink-0" onClick={() => { setConfirmText(''); setMode('delete'); }}>
+            Delete
+          </Button>
+        </div>
+      </div>
+
+      <Modal isOpen={!!mode} onClose={close} title={isDelete ? 'Delete tenant permanently' : 'Hard reset tenant'} size="sm">
+        {resetResult ? (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 dark:text-slate-400">
+              <span className="font-medium text-gray-900 dark:text-slate-100">{hospital.name}</span> has been reset to a clean workspace.
+              The admin can sign in with the temporary password below — share it securely, it is shown only once.
+            </p>
+            <div className="text-xs text-gray-500 dark:text-slate-400">
+              Login: <span className="font-mono text-gray-800 dark:text-slate-200">{resetResult.adminEmail || hospital.phone || hospital.email || '—'}</span>
+            </div>
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+              <code className="flex-1 text-sm font-mono text-gray-900 dark:text-slate-100 break-all">{resetResult.tempPassword}</code>
+              <Button variant="secondary" size="sm" icon={copied ? Check : Copy} onClick={copyTempPassword}>
+                {copied ? 'Copied' : 'Copy'}
+              </Button>
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={finishReset}>Done</Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className={`flex items-start gap-3 p-3 rounded-lg ${isDelete ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-amber-50 dark:bg-amber-900/20'}`}>
+              <AlertTriangle className={`w-5 h-5 shrink-0 ${isDelete ? 'text-rose-600' : 'text-amber-600'}`} />
+              <p className="text-sm text-gray-700 dark:text-slate-300">
+                {isDelete ? (
+                  <>This permanently deletes <span className="font-semibold">{hospital.name}</span>, its subscription history and its entire database. <span className="font-semibold">This cannot be undone.</span></>
+                ) : (
+                  <>This permanently wipes all data for <span className="font-semibold">{hospital.name}</span> and provisions a fresh, empty workspace. The account and subscription are kept. <span className="font-semibold">This cannot be undone.</span></>
+                )}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-slate-400 mb-1.5">
+                Type the Hospital ID <code className="font-mono font-semibold text-gray-900 dark:text-slate-100">{slug}</code> to confirm.
+              </p>
+              <Input
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder={slug}
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={close} disabled={busy}>Cancel</Button>
+              <Button
+                variant={isDelete ? 'danger' : 'primary'}
+                onClick={isDelete ? doDelete : doHardReset}
+                loading={busy}
+                disabled={!armed}
+                icon={isDelete ? Trash2 : RotateCcw}
+              >
+                {isDelete ? 'Delete permanently' : 'Hard reset'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </Card>
   );
 }

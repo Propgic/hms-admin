@@ -30,6 +30,7 @@ const endpoints = {
     get: (id) => `${PLATFORM}/hospitals/${id}`,
     update: (id) => `${PLATFORM}/hospitals/${id}`,
     delete: (id) => `${PLATFORM}/hospitals/${id}`,
+    hardReset: (id) => `${PLATFORM}/hospitals/${id}/hard-reset`,
     toggleStatus: (id) => `${PLATFORM}/hospitals/${id}/toggle-status`,
     stats: (id) => `${PLATFORM}/hospitals/${id}/stats`,
     subscriptions: (id) => `${PLATFORM}/hospitals/${id}/subscriptions`,
