@@ -1,12 +1,12 @@
 node_modules/
 dist/
 
-# Local secrets — VITE_API_URL etc. May still leak if committed to public
-# repo since Vite inlines them at build time, but at least we don't help.
+# Environment files — never commit. Vite inlines these at build time, so a
+# committed .env leaks straight into the shipped bundle. Document the required
+# variables in .env.example instead.
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
 .DS_Store
 *.log
-.env.example
