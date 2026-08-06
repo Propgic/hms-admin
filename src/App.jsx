@@ -1,11 +1,11 @@
 import { BrowserRouter } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './store/authStore.jsx';
 import { ThemeProvider } from './store/themeStore.jsx';
 import { PlatformSettingsProvider } from './store/platformSettingsContext.jsx';
 import AppRoutes from './routes/AppRoutes';
 import OfflineGuard from './components/OfflineGuard.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
+import DialogToaster from './components/DialogToaster.jsx';
 
 export default function App() {
   return (
@@ -17,23 +17,7 @@ export default function App() {
               <ErrorBoundary>
                 <AppRoutes />
               </ErrorBoundary>
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 3000,
-                  style: {
-                    fontSize: '14px',
-                    borderRadius: '8px',
-                    padding: '12px 16px',
-                  },
-                  success: {
-                    iconTheme: { primary: '#16A34A', secondary: '#fff' },
-                  },
-                  error: {
-                    iconTheme: { primary: '#DC2626', secondary: '#fff' },
-                  },
-                }}
-              />
+              <DialogToaster />
             </PlatformSettingsProvider>
           </AuthProvider>
         </BrowserRouter>
